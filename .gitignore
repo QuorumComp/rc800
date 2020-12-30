@@ -1,0 +1,17 @@
+target/**
+spinal/project/project
+spinal/project/target
+spinal/target
+spinal/verbose.log
+spinal/TopLevel.v
+spinal/Alu.v
+spinal/CPU.v
+spinal/Decoder.v
+spinal/code.bin
+spinal/simWorkspace/**
+spinal/tmp/**
+RC811.v
+spinal/.bloop/
+spinal/.metals/
+spinal/project/
+spinal/.bsp/

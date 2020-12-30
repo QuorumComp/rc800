@@ -1,0 +1,704 @@
+IO_PRINT	EQU	$1234
+IO_ROTATE	EQU	$1235
+
+println:	MACRO
+		jal	Print
+		DB	\1,"\n",0
+		ENDM
+
+		SECTION "Reset",CODE[0]
+		ld	ft,Main
+		j	(ft)
+
+		SECTION "Main",CODE[$80]
+Main:
+		jal	TestStore
+
+		jal	TestConditions8Bit
+		jal	TestConditions16Bit
+		jal	TestShift
+		jal	TestBitwise
+		jal	TestJumps
+		jal	TestArithmetic16Bit
+		jal	TestArithmetic8Bit
+		jal	TestUnary
+;		jal	TestStore
+		jal	TestLIO
+		jal	TestStackPointer
+		jal	TestExchange
+
+		println "Welcome to the RC800 processor"
+		ld	bc,$F00D
+		jal	PrintHexBC
+
+.spin		ld	bc,IO_PRINT
+		ld	t,42
+		lio	(bc),t
+		j	.spin
+
+TestConditions8Bit:
+		ld	bc,IO_PRINT
+		ld	t,1
+		lio	(bc),t
+
+		ld	d,127
+		cmp	d,0
+		ld	t,0
+		ld/le	t,$FF
+		lio	(bc),t	; $00
+
+		ld	d,0
+		cmp	d,0
+		ld	t,0
+		ld/le	t,$FF
+		lio	(bc),t	; $FF
+
+		ld	d,-1
+		cmp	d,0
+		ld	t,0
+		ld/le	t,$FF
+		lio	(bc),t	; $FF
+
+		ld	d,-128
+		cmp	d,0
+		ld	t,0
+		ld/le	t,$FF
+		lio	(bc),t	; $FF
+
+		ld	d,127
+		cmp	d,0
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t	; $00
+
+		ld	d,0
+		cmp	d,0
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t	; $00
+
+		IF	0
+		ld	t,-1
+		sm
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,-128
+		sm
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,127
+		ld	d,255
+		sleu	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,255
+		ld	d,127
+		sleu	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,0
+		ld	d,0
+		sleu	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,0
+		ld	d,255
+		sleu	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,255
+		ld	d,0
+		sleu	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,127
+		ld	d,255
+		sltu	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,255
+		ld	d,127
+		sltu	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,0
+		ld	d,0
+		sltu	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,0
+		ld	d,255
+		sltu	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,255
+		ld	d,0
+		sltu	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,127
+		ld	d,-128
+		sle	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,-128
+		ld	d,127
+		sle	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,0
+		ld	d,0
+		sle	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,0
+		ld	d,127
+		sle	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,127
+		ld	d,0
+		sle	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,127
+		ld	d,-128
+		slt	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,-128
+		ld	d,127
+		slt	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,0
+		ld	d,0
+		slt	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		ld	t,0
+		ld	d,127
+		slt	d
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	t,127
+		ld	d,0
+		slt	d
+		ld	t,f
+		lio	(bc),t	; $00
+
+		clr	f
+		clr	d
+		ld	t,d
+		sz	t
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		add	d,1
+		ld	t,d
+		sz	t
+		ld	t,f
+		lio	(bc),t	; $00
+		ENDC
+
+		j	(hl)
+
+
+TestConditions16Bit:
+		ld	bc,IO_PRINT
+		ld	t,2
+		lio	(bc),t		; $02
+
+		ld	ft,32767
+		ld	de,-32768
+		cmp	de
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	ft,-32768
+		ld	de,32767
+		cmp	de
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t		; $FF *
+
+		ld	ft,0
+		ld	de,0
+		cmp	de
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	ft,0
+		ld	de,32767
+		cmp	de
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t		; $FF *
+
+		ld	ft,32767
+		ld	de,0
+		cmp	de
+		ld	t,0
+		ld/lt	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	ft,32767
+		ld	de,32768
+		cmp	de
+		ld	t,0
+		ld/ltu	t,$FF
+		lio	(bc),t		; $FF *
+
+		ld	ft,32767
+		ld	de,65535
+		cmp	de
+		ld	t,0
+		ld/ltu	t,$FF
+		lio	(bc),t		; $FF *
+
+		ld	ft,65535
+		ld	de,32767
+		cmp	de
+		ld	t,0
+		ld/ltu	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	ft,0
+		ld	de,0
+		cmp	de
+		ld	t,0
+		ld/ltu	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	ft,0
+		ld	de,65535
+		cmp	de
+		ld	t,0
+		ld/ltu	t,$FF
+		lio	(bc),t		; $FF *
+
+		ld	ft,65535
+		ld	de,0
+		cmp	de
+		ld	t,0
+		ld/ltu	t,$FF
+		lio	(bc),t		; $00 *
+
+		tst	bc
+		ld	t,0
+		ld/z	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	de,0
+		tst	de
+		ld	t,0
+		ld/z	t,$FF
+		lio	(bc),t		; $FF *
+
+		ld	de,$0100
+		tst	de
+		ld	t,0
+		ld/z	t,$FF
+		lio	(bc),t		; $00 *
+
+		ld	de,$0001
+		tst	de
+		ld	t,0
+		ld/z	t,$FF
+		lio	(bc),t		; $00 *
+
+		j	(hl)
+
+TestShift:
+		ld	bc,IO_PRINT
+		ld	t,3	; $03
+		lio	(bc),t
+
+		ld	ft,$FEDC
+		ls	ft,4
+		lio	(bc),t	; $C0
+		ld	t,f
+		lio	(bc),t	; $ED
+
+		ld	ft,$FEDC
+		ld	d,4
+		ls	ft,d
+		lio	(bc),t	; $C0
+		ld	t,f
+		lio	(bc),t	; $ED
+
+		ld	ft,$FEDC
+		rs	ft,4
+		lio	(bc),t	; $ED
+		ld	t,f
+		lio	(bc),t	; $0F
+
+		ld	ft,$FEDC
+		ld	d,4
+		rs	ft,d
+		lio	(bc),t	; $ED
+		ld	t,f
+		lio	(bc),t	; $0F
+
+		ld	ft,$FEDC
+		rsa	ft,4
+		lio	(bc),t	; $ED
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		ld	ft,$FEDC
+		ld	d,4
+		rsa	ft,d
+		lio	(bc),t	; $ED
+		ld	t,f
+		lio	(bc),t	; $FF
+
+		j	(hl)
+
+TestBitwise:
+		ld	bc,IO_PRINT
+		ld	t,4
+		lio	(bc),t
+
+		ld	t,$0A
+		or	t,$59
+		lio	(bc),t	; $5B
+
+		ld	t,$0A
+		xor	t,$59
+		lio	(bc),t	; $53
+
+		ld	t,$0A
+		and	t,$08
+		lio	(bc),t	; $08
+
+		ld	t,$0A
+		ld	d,$59
+		or	t,d
+		lio	(bc),t	; $5B
+
+		ld	t,$0A
+		ld	d,$59
+		xor	t,d
+		lio	(bc),t	; $53
+
+		ld	t,$0A
+		ld	d,$59
+		and	t,d
+		lio	(bc),t	; $08
+
+		j	(hl)
+
+TestJumps:
+		ld	bc,IO_PRINT
+		ld	t,5		; $05
+		lio	(bc),t
+
+		ld	t,$25
+		cmp	t,0
+		j/ne	.skip
+		ld	t,1
+.skip		ld	bc,IO_PRINT
+		lio	(bc),t		; $25
+
+		ld	d,$52
+		cmp	d,0
+		add/ne	t,d
+		ld	bc,IO_PRINT
+		lio	(bc),t		; $77
+
+		sub	t,d		; $25
+		lio	(bc),t
+
+		j	(hl)		
+
+TestArithmetic16Bit:
+		ld	bc,IO_PRINT
+		ld	t,6
+		lio	(bc),t		; $06
+
+		ld	bc,IO_PRINT
+
+		ld	de,$ABCD
+		add	de,$73
+		ld	t,d
+		lio	(bc),t		; $AC
+		ld	t,e
+		lio	(bc),t		; $40
+
+		ld	de,$AB3F
+		sub	de,$73
+		ld	t,d
+		lio	(bc),t		; $AA
+		ld	t,e
+		lio	(bc),t		; $CC
+
+		ld	ft,$1234
+		ld	de,$ABCD
+		add	ft,de
+		lio	(bc),t		; $01
+		ld	t,f
+		lio	(bc),t		; $BE
+
+		ld	ft,$1234
+		ld	de,$ABCD
+		sub	ft,de
+		lio	(bc),t		; $67
+		ld	t,f
+		lio	(bc),t		; $66
+
+		j	(hl)
+
+TestArithmetic8Bit:
+		ld	bc,IO_PRINT
+		ld	t,7
+		lio	(bc),t		; 07
+
+		ld	d,$42
+		add	d,$1F
+		ld	t,d
+		lio	(bc),t		; 61
+
+		ld	d,$42
+		sub	d,$1F
+		ld	t,d
+		lio	(bc),t		; 23
+
+		ld	bc,IO_PRINT
+		ld	t,$A5
+		add	t,1
+		lio	(bc),t		; A6
+		ld	t,0
+		sub	t,1
+		lio	(bc),t		; FF
+
+		ld	d,$45
+		add	t,d		; 44
+		lio	(bc),t
+		j	(hl)
+
+TestUnary:
+		ld	bc,IO_PRINT
+		ld	t,8
+		lio	(bc),t
+
+		ld	bc,IO_PRINT
+		ld	t,$34
+		neg	t
+		lio	(bc),t		; $CC
+		ld	f,t
+		not	f
+		ld	t,f
+		lio	(bc),t		; $33
+		j	(hl)
+
+TestStore:
+		ld	bc,IO_PRINT
+		ld	t,9
+		lio	(bc),t		; 09
+
+		ld	bc,StoredData
+		ld	t,$87
+		ld	(bc),t
+
+		ld	de,StoredData
+		ld	t,0
+		ld	t,(de)
+
+		ld	bc,IO_PRINT
+		lio	(bc),t		; 87
+
+		ld	ft,StoredData
+		ld	d,$88
+		ld	(ft),d
+		ld	c,0
+		ld	c,(ft)
+		ld	t,c
+
+		ld	bc,IO_PRINT
+		lio	(bc),t		; 88
+
+		j	(hl)
+
+TestExchange:
+		ld	bc,IO_PRINT
+		ld	t,12
+		lio	(bc),t		; 0C
+
+		ld	ft,$1234
+		ld	de,$5678
+		exg	ft,de
+		lio	(bc),t		; 78
+		ld	t,f
+		lio	(bc),t		; 56
+		ld	t,e
+		lio	(bc),t		; 34
+		ld	t,d
+		lio	(bc),t		; 12
+		
+
+
+		ld	t,$35
+		ld	d,$12
+		exg	t,d
+		lio	(bc),t		; 12
+		ld	t,d
+		lio	(bc),t		; 35
+
+		ld	t,$34
+		ld	e,$12
+		exg	t,e
+		lio	(bc),t		; 12
+		ld	t,e
+		lio	(bc),t		; 34
+		ld	t,d
+		lio	(bc),t		; 35
+
+		ld	ft,$1234
+		exg	t,f
+		lio	(bc),t		; 12
+		ld	t,f
+		lio	(bc),t		; 34
+
+		j	(hl)
+
+
+TestStackPointer:
+		ld	bc,IO_PRINT
+		ld	t,11
+		lio	(bc),t		; 0B
+
+		ld	c,0
+		lcr	t,(c)
+		lio	(bc),t		; FF
+
+		push	ft
+		
+		ld	c,0
+		lcr	t,(c)
+		ld	bc,IO_PRINT
+		lio	(bc),t		; FE
+
+		pop	ft
+
+		ld	c,0
+		ld	t,$5a
+		lcr	(c),t
+		ld	t,0
+		lcr	t,(c)
+		ld	bc,IO_PRINT	; 5A
+		lio	(bc),t
+
+		ld	c,0
+		ld	t,255
+		lcr	(c),t
+
+		j	(hl)
+
+TestLIO:
+		ld	bc,IO_PRINT
+		ld	t,10
+		lio	(bc),t		; 0A
+
+		ld	bc,IO_ROTATE
+		ld	t,$5A
+		lio	(bc),t
+		lio	t,(bc)
+		sub	bc,1
+		lio	(bc),t		; A5
+		j	(hl)
+
+Print:
+		ld	bc,IO_PRINT
+.loop		ld	t,(hl)
+		add	hl,1
+		cmp	t,0
+		j/eq	(hl)
+		lio	(bc),t
+		j	.loop
+
+; -- Print Hex Number.
+; -- bc : hex number to print
+PrintHexBC:
+		push	hl
+
+		ld	ft,bc
+		ld	de,ft
+
+		ld	f,0
+		ld	t,d
+		ld	c,4
+		rs	ft,c
+		ld	b,t
+		jal	PrintHexChar
+
+		ld	t,$f
+		and	t,d
+		ld	b,t
+		jal	PrintHexChar
+
+		ld	f,0
+		ld	t,e
+		ld	c,4
+		rs	ft,c
+		ld	b,t
+		jal	PrintHexChar
+
+		ld	t,$f
+		and	t,e
+		ld	b,t
+		jal	PrintHexChar
+
+		pop	hl
+		j	(hl)
+
+; b - hex char
+PrintHexChar:
+		pusha
+
+		ld	t,b
+		ld	e,t
+		ld	d,0
+
+		ld	bc,IO_PRINT
+
+		; bc - I/O port
+		; de - hex
+		; hl - return
+
+		ld	ft,.hexchars
+		add	ft,de
+		ld	t,(ft)
+		lio	(bc),t
+
+		popa
+		j	(hl)
+
+.hexchars	DB	"0123456789ABCDEF"
+
+		SECTION	"Variables",BSS
+StoredData:	DS	1
+
