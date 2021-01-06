@@ -9,11 +9,11 @@
 Performs I/O access. If I/O ports are not supported, accesses memory instead.
 
 ```
-1. if d = 0 then
-     IO[BC] <- T
-   else
-     T <- IO[BC]  
-2. PC <- PC + 1
+if d = 0 then
+    IO[BC] <- T
+else
+    T <- IO[BC]  
+PC <- PC + 1
 ```
 
 ## Assembler syntax examples

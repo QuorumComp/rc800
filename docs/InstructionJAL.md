@@ -6,9 +6,11 @@
 | 001110 | r  |
 
 ## Operation
-1. TEMP <- PC + 1
-2. PC <- Reg16[r]
-3. HL <- TEMP
+```
+TEMP <- PC + 1
+PC <- Reg16[r]
+HL <- TEMP
+```
 
 ## Assembler syntax examples
 ```

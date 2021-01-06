@@ -6,8 +6,10 @@
 | 11111001 |
 
 ## Operation
-1. Pop FT, BC, DE, HL register stacks
-2. PC <- PC + 1
+```
+Pop FT, BC, DE, HL register stacks
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

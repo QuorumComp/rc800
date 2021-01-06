@@ -1,4 +1,5 @@
 # Opcode Matrix
+<div style="white-space:nowrap;">
 
 | xy rrr \ sss | 000         | 001         | 010         | 011         | 100         | 101         | 110         | 111         |
 |--------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
@@ -18,14 +19,14 @@
 | 01_101       | AND T,F     |             | AND T,B     | AND T,C     | AND T,D     | AND T,E     | AND T,H     | AND T,L     |
 | 01_110       | XOR T,F     |             | XOR T,B     | XOR T,C     | XOR T,D     | XOR T,E     | XOR T,H     | XOR T,L     |
 | 01_111       | LD F,T      |             | LD B,T      | LD C,T      | LD D,T      | LD E,T      | LD H,T      | LD L,T      |
-| 10_000       | LD F,n8     | LD T,n8     | LD B,n8     | LD C,n8     | LD D,n8     | LD E,n8     | LD H,n8     | LD L,n8     |
-| 10_001       | DJ F,n8     | DJ T,n8     | DJ B,n8     | DJ C,n8     | DJ D,n8     | DJ E,n8     | DJ H,n8     | DJ L,n8     |
-| 10_010       | J/LE n8     | J/GT n8     | J/LT n8     | J/GE n8     | J/LEU n8    | J/GTU n8    | J/LTU n8    | J/GEU n8    |
-| 10_011       | J/EQ n8     | J/NE n8     | J n8        | SYS n8      |             |             |             |             |
-| 10_100       | ADD F,n8    | ADD T,n8    | ADD B,n8    | ADD C,n8    | ADD D,n8    | ADD E,n8    | ADD H,n8    | ADD L,n8    |
-| 10_101       | CMP F,n8    | CMP T,n8    | CMP B,n8    | CMP C,n8    | CMP D,n8    | CMP E,n8    | CMP H,n8    | CMP L,n8    |
-| 10_110       | OR T,n8     | AND T,n8    | XOR T,n8    |             |             |             |             |             |
-| 10_111       | LS n8       | RS n8       |             | RSA n8      | ADD FT,n8   | ADD BC,n8   | ADD DE,n8   | ADD HL,n8   |
+| 10_000       | LD F,i8     | LD T,i8     | LD B,i8     | LD C,i8     | LD D,i8     | LD E,i8     | LD H,i8     | LD L,i8     |
+| 10_001       | DJ F,s8     | DJ T,s8     | DJ B,s8     | DJ C,s8     | DJ D,s8     | DJ E,s8     | DJ H,s8     | DJ L,s8     |
+| 10_010       | J/LE s8     | J/GT s8     | J/LT s8     | J/GE s8     | J/LEU s8    | J/GTU s8    | J/LTU s8    | J/GEU s8    |
+| 10_011       | J/EQ s8     | J/NE s8     | J s8        | SYS i8      |             |             |             |             |
+| 10_100       | ADD F,i8    | ADD T,i8    | ADD B,i8    | ADD C,i8    | ADD D,i8    | ADD E,i8    | ADD H,i8    | ADD L,i8    |
+| 10_101       | CMP F,i8    | CMP T,i8    | CMP B,i8    | CMP C,i8    | CMP D,i8    | CMP E,i8    | CMP H,i8    | CMP L,i8    |
+| 10_110       | OR T,i8     | AND T,i8    | XOR T,i8    |             |             |             |             |             |
+| 10_111       | LS i8       | RS i8       |             | RSA i8      | ADD FT,s8   | ADD BC,s8   | ADD DE,s8   | ADD HL,s8   |
 | 11_000       | PUSH FT     | PUSH BC     | PUSH DE     | PUSH HL     | POP FT      | POP BC      | POP DE      | POP HL      |
 | 11_001       |             | EXG BC      | EXG DE      | EXG HL      |             | CMP FT,BC   | CMP FT,DE   | CMP FT,HL   |
 | 11_010       |             | LD BC,FT    | LD DE,FT    | LD HL,FT    | TST FT      | TST BC      | TST DE      | TST HL      |
@@ -34,8 +35,17 @@
 | 11_101       |             |             | RS FT,B     | RS FT,C     | RS FT,D     | RS FT,E     | RS FT,H     | RS FT,L     |
 | 11_110       | NEG FT      | SUB FT,BC   | SUB FT,DE   | SUB FT,HL   | ADD FT,FT   | ADD FT,BC   | ADD FT,DE   | ADD FT,HL   |
 | 11_111       | PUSHA       | POPA        | RSA FT,B    | RSA FT,C    | RSA FT,D    | RSA FT,E    | RSA FT,H    | RSA FT,L    |
+</div>
 
+# Continue reading
+[Introduction and overview](Introduction.md)
 
-# Added
-LD r8,(FT)
-LD (FT),r8
+[Instruction groups](InstructionGroups.md)
+
+[Opcode matrix](OpcodeMatrix.md)
+
+[Alphabetical list of mnemonics](AlphabeticalMnemonics.md)
+
+[Configuration registers](ConfigurationRegisters.md)
+
+[Interrupts](Interrupts.md)

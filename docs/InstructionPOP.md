@@ -6,8 +6,10 @@
 | 110001 | r  |
 
 ## Operation
-1. Pop register stack Reg16[r]
-2. PC <- PC + 1
+```
+Pop register stack Reg16[r]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

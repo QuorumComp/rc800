@@ -6,8 +6,10 @@
 | 01010 | r   | Not valid when r = 1 |
 
 ## Operation
-1. T <- T - Reg8[r]
-2. PC <- PC + 1
+```
+T <- T - Reg8[r]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -24,8 +26,10 @@ SUB C
 | 111100 | r  | Not valid when r = 0 |
 
 ## Operation
-1. FT <- FT - Reg16[r]
-2. PC <- PC + 1
+```
+FT <- FT - Reg16[r]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

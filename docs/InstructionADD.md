@@ -24,9 +24,11 @@ ADD H
 | 10100 | r   |
 
 ## Operation
-1. PC <- PC + 1
-2. Reg8[r] <- Reg8[r] + Code[PC]
-3. PC <- PC + 1
+```
+PC <- PC + 1
+Reg8[r] <- Reg8[r] + Code[PC]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -43,8 +45,10 @@ ADD H,-87
 | 111101 | r  |
 
 ## Operation
-1. FT <- FT + Reg16[r]
-2. PC <- PC + 1
+```
+FT <- FT + Reg16[r]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -60,9 +64,11 @@ ADD HL
 | 101111 | r  |
 
 ## Operation
-1. PC <- PC + 1
-2. Reg16[r] <- Reg16[r] + SignExtend(Code[PC])
-3. PC <- PC + 1
+```
+PC <- PC + 1
+Reg16[r] <- Reg16[r] + SignExtend(Code[PC])
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

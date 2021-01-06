@@ -1,20 +1,20 @@
-# SYS (Perform syscall)
+# TST (16 bit, compare register pair with zero)
 
 The SYS instruction performs a software interrupt and sets the PC to the location specified by the following byte times 8. The handle interrupt flag is set.
 
 ## Opcode
-| 76543210 |
-|----------|
-| 10011011 |
+| 765432 | 10 |
+|--------|----|
+| 110101 | r  |
 
 ## Operation
 ```
-SYSF <- 1
-Push (PC + 2) to register HL stack
-PC <- Code[PC + 1] * 8
+F <- Flags[Reg16[r] - 0]
+PC <- PC + 1
 ```
 
 ## Assembler syntax examples
 ```
-SYS $12
+TST	BC
+TST	DE
 ```

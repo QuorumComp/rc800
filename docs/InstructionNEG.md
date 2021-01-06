@@ -6,8 +6,10 @@
 | 01010001 |
 
 ## Operation
-1. T <- -T
-2. PC <- PC + 1
+```
+T <- -T
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -23,8 +25,10 @@ NEG T
 | 11110000 |
 
 ## Operation
-1. FT <- -FT
-2. PC <- PC + 1
+```
+FT <- -FT
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

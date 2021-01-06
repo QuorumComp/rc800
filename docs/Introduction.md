@@ -6,7 +6,7 @@ It is inspired by several existing architectures, such as the Z80, MIPS, and 680
 
 Internally it has eight 8 bit registers. These are named ```F``` (for ```F```lag), ```T``` (```T```emporary), ```B```, ```C```, ```D```, ```E```, ```H```, and ```L```. They can also be combined to form four 16 bit register - , ```FT```, ```BC```, ```DE```, and ```HL```. There's an extensive set of instructions that perform 16 bit operations, such as comparisons, shifts and addition. There's also a program counter, interrupt enable flag, stack pointers and a set of configuration registers.
 
-The architecture features on-chip stacks - one per each register pair. The register pair can be viewed as a window into the stack - when a register is pushed onto its stack, the top value is duplicated and the pointer decremented. Because the stacks are independent, all registers can be pushed at once, enabling very fast interrupt handling.
+The architecture features on-chip stacks - one per each register pair. The register pair can be viewed as a window into the stack - when a register is pushed onto its stack, the top value is duplicated and the pointer decremented. Because the stacks are independent, all registers can be pushed at once, enabling very fast interrupt response.
 
 The ISA has been designed so it will fit into a four stage RISC-like pipeline. As the data bus is 8 bits wide, this means the CPU is only able to move one 8 bit value (two, if you count the opcode) to or from memory per instruction. Thus the architecture is neither little or big endian - the system designer or programmer gets to choose which endianness is the most appropriate.
 
@@ -25,10 +25,23 @@ The JAL instruction is used with the J instruction to form subroutines. The JAL 
 The 8 bit family follows the naming scheme RC8```xy```, where ```x``` is the microarchitecture implementation or revision, and ```y``` is the ISA level.
 
 ## Implementation 1
-The first implementation utilizes a classic RISC fixed four stage pipeline. However, the design is *not* pipelined. All instructions complete in 4 clock cycles.
+The first implementation utilizes a fixed four stage RISC pipeline. However, the design is *not* pipelined. All instructions complete in 4 clock cycles.
 
 All stacks are 256 16 bit words deep.
 
 The address bus is 16 bits wide. However, the CPU also provides code/data/sys signals, with which the system designer can choose to implement a Harvard architecture.
 
 The RC811 is implementation 1.
+
+# Continue reading
+[Introduction and overview](Introduction.md)
+
+[Instruction groups](InstructionGroups.md)
+
+[Opcode matrix](OpcodeMatrix.md)
+
+[Alphabetical list of mnemonics](AlphabeticalMnemonics.md)
+
+[Configuration registers](ConfigurationRegisters.md)
+
+[Interrupts](Interrupts.md)

@@ -6,8 +6,10 @@
 | 01100 | r   | Not valid when r = 1 |
 
 ## Operation
-1. T <- T | Reg8[r]
-2. PC <- PC + 1
+```
+T <- T | Reg8[r]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -24,9 +26,11 @@ OR H
 | 10110000 |
 
 ## Operation
-1. PC <- PC + 1
-2. T <- T | Code[PC]
-3. PC <- PC + 1
+```
+PC <- PC + 1
+T <- T | Code[PC]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

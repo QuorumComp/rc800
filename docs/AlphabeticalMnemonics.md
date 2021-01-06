@@ -28,5 +28,18 @@
 * [RSA](InstructionRSA.md) - Right shift arithmetic
 * [SUB](InstructionSUB.md) - Subtraction
 * [SYS](InstructionSYS.md) - Perform syscall
+* [TST](InstructionTST.md) - Test register
 * [XOR](InstructionXOR.md) - Bitwise exclusive-OR
 
+# Continue reading
+[Introduction and overview](Introduction.md)
+
+[Instruction groups](InstructionGroups.md)
+
+[Opcode matrix](OpcodeMatrix.md)
+
+[Alphabetical list of mnemonics](AlphabeticalMnemonics.md)
+
+[Configuration registers](ConfigurationRegisters.md)
+
+[Interrupts](Interrupts.md)

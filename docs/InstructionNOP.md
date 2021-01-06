@@ -6,7 +6,9 @@
 | 00000000 |
 
 ## Operation
-1. PC <- PC + 1
+```
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

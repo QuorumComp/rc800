@@ -7,11 +7,11 @@
 
 ## Operation
 ```
-1. if d = 0 then
-     CR[C] <- T
-   else
-     T <- CR[C]
-2. PC <- PC + 1
+if d = 0 then
+    CR[C] <- T
+else
+    T <- CR[C]
+PC <- PC + 1
 ```
 
 ## Assembler syntax examples

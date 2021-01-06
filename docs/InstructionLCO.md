@@ -6,8 +6,10 @@
 | 000011 | r  |
 
 ## Operation
-1. T <- Code[Reg16[r]]
-2. PC <- PC + 1
+```
+T <- Code[Reg16[r]]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

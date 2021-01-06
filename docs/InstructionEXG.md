@@ -6,10 +6,12 @@
 | 00010 | r   | Not valid when r = 1 |
 
 ## Operation
-1. Temp <- T
-2. T <- Reg8[r]
-3. Reg8[r] <- Temp
-4. PC <- PC + 1
+```
+Temp <- T
+T <- Reg8[r]
+Reg8[r] <- Temp
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -26,10 +28,12 @@ EXG D
 | 110010 | r  | Not valid when r = 0 |
 
 ## Operation
-1. Temp <- FT
-2. FT <- Reg16[r]
-3. Reg16[r] <- Temp
-4. PC <- PC + 1
+```
+Temp <- FT
+FT <- Reg16[r]
+Reg16[r] <- Temp
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```

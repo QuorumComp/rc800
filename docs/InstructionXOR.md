@@ -6,8 +6,10 @@
 | 01110 | r   | Not valid when r = 1 |
 
 ## Operation
-1. T <- T ^ Reg8[r]
-2. PC <- PC + 1
+```
+T <- T ^ Reg8[r]
+PC <- PC + 1
+```
 
 ## Assembler syntax examples
 ```
@@ -15,3 +17,24 @@ XOR T,F
 XOR H
 ```
 
+
+---
+# XOR (8 bit, bitwise XOR immediate to register)
+
+## Opcode
+| 76543210 |
+|----------|
+| 10110010 |
+
+## Operation
+```
+PC <- PC + 1
+T <- T | Code[PC]
+PC <- PC + 1
+```
+
+## Assembler syntax examples
+```
+OR T,$C0
+OR $04
+```

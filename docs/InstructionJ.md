@@ -6,8 +6,10 @@
 | 10011010 |
 
 ## Operation
-1. PC <- PC + 1
-2. PC <- PC + SignExtend(Code[PC])
+```
+PC <- PC + 1
+PC <- PC + SignExtend(Code[PC])
+```
 
 ## Assembler syntax examples
 ```
@@ -24,7 +26,9 @@ J Label
 | 001111 | r  |
 
 ## Operation
-1. PC <- Reg16[r]
+```
+PC <- Reg16[r]
+```
 
 ## Assembler syntax examples
 ```
