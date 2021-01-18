@@ -8,6 +8,8 @@ Internally it has eight 8 bit registers. These are named ```F``` (for ```F```lag
 
 The architecture features on-chip stacks, one per each register pair. All registers can be pushed at once, enabling very fast interrupt response.
 
+The first implementation is called RC811.
+
 # Continue reading
 [Introduction and overview](docs/Introduction.md)
 
