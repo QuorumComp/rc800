@@ -32,6 +32,7 @@ For instance ```LD/EQ T,1``` will load T with the value 1 if the flags in F sati
 | SUB&nbsp;R8,i8   | Subtract immediate byte from 8 bit register | (synthesized) |
 | SUB&nbsp;R16,s8  | Subtract immediate signed byte from 16 bit register | (synthesized) |
 | SUB&nbsp;R16,i16 | Subtract immediate 16 bit value from 16 bit register | (synthesized) |
+| EXT&nbsp;        | Sign extend T register ||
 | NEG&nbsp;T       | Negate T register ||
 | NEG&nbsp;FT      | Negate FT register ||
 
