@@ -52,8 +52,8 @@ class Alu extends Component {
 	val condition = new Area {
 		private val overflow = io.operand1(11)
 		private val negative = io.operand1(10)
-		private val carry    = io.operand1(9)
-		private val zero     = io.operand1(8)
+		private val zero     = io.operand1(9)
+		private val carry    = io.operand1(8)
 
 		private val cc_le  = (overflow ^ negative || zero)
 		private val cc_lt  = (overflow ^ negative)
@@ -99,7 +99,7 @@ class Alu extends Component {
 
 		io.highByteZero := result(15 downto 8) === U(0)
 
-		val out = B(0, 4 bits) ## overflow ## negative ## carry ## zero ## B(0, 8 bits)
+		val out = B(0, 4 bits) ## overflow ## negative ## zero ## carry ## B(0, 8 bits)
 	}
 
 	private val selectFlags = io.operation === AluOperation.compare
