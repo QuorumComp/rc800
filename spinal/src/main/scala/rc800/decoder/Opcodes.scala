@@ -4,12 +4,13 @@ import spinal.core._
 
 object Opcodes {
 	def illegals = List(
+		M"0000100-",
 		M"00010001",
 		M"00011001",
 		M"000111--",
 		M"0010000-",
 		M"00101001",
-		M"00110---",
+		M"00110000",
 		M"01100001",
 		M"01101001",
 		M"01110001",
@@ -33,9 +34,9 @@ object Opcodes {
 	def EI         = M"00011010"
 	def EXT_T      = M"01001001"
 	def LD_CR_T    = M"00001010"
-	def LD_IO_T    = M"00001000"		// Load I/O with T
+	def LD_IO_T    = M"001100--"		// Load I/O with T
 	def LD_T_CR    = M"00001011"
-	def LD_T_IO    = M"00001001"		// Load T with I/O
+	def LD_T_IO    = M"001101--"		// Load T with I/O
 	def LS_FT_I    = M"10111000"
 	def NEG_T      = M"01010001"
 	def NEG_FT     = M"11110000"

@@ -4,12 +4,12 @@
 | xy rrr \ sss | 000         | 001         | 010         | 011         | 100         | 101         | 110         | 111         |
 |--------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
 | 00_000       | NOP         | LD (BC),T   | LD (DE),T   | LD (HL),T   | LD T,(FT)   | LD T,(BC)   | LD T,(DE)   | LD T,(HL)   |
-| 00_001       | LIO (BC),T  | LIO T,(BC)  | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
+| 00_001       |             |             | LCR (L),T   | LCR T,(L)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
 | 00_010       | EXG F       |             | EXG B       | EXG C       | EXG D       | EXG E       | EXG H       | EXG L       |
 | 00_011       | NOT F       |             | EI          | DI          |             |             |             |             |
 | 00_100       |             |             | LD (FT),B   | LD (FT),C   | LD (FT),D   | LD (FT),E   | LD (FT),H   | LD (FT),L   |
 | 00_101       | LD F,(FT)   |             | LD B,(FT)   | LD C,(FT)   | LD D,(FT)   | LD E,(FT)   | LD H,(FT)   | LD L,(FT)   |
-| 00_110       |             |             |             |             |             |             |             |             |
+| 00_110       |             | LIO (BC),T  | LIO (DE),T  | LIO (HL),T  | LIO T,(FT)  | LIO T,(BC)  | LIO T,(DE)  | LIO T,(HL)  |
 | 00_111       | JAL (FT)    | JAL (BC)    | JAL (DE)    | JAL (HL)    | J (FT)      | J (BC)      | J (DE)      | J (HL)      |
 | 01_000       | ADD T,F     | ADD T,T     | ADD T,B     | ADD T,C     | ADD T,D     | ADD T,E     | ADD T,H     | ADD T,L     |
 | 01_001       | CMP T,F     | EXT         | CMP T,B     | CMP T,C     | CMP T,D     | CMP T,E     | CMP T,H     | CMP T,L     |

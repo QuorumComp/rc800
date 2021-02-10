@@ -134,9 +134,7 @@ case class Decoder() extends Component {
 			is (Opcodes.EI)       { ei() }
 			is (Opcodes.EXT_T)    { ext_T() }
 			is (Opcodes.LD_CR_T)  { ld_CR_T() }
-			is (Opcodes.LD_IO_T)  { ld_IO_T() }
 			is (Opcodes.LD_T_CR)  { ld_T_CR() }
-			is (Opcodes.LD_T_IO)  { ld_T_IO() }
 			is (Opcodes.LS_FT_I)  { shift_FT(ShiftOperation.ls, Operand.immediate_byte) }
 			is (Opcodes.NEG_T)    { operation_T(Operand.zero, AluOperation.sub) }
 			is (Opcodes.NEG_FT)   { modifyRegisterPair(Operand.zero, AluOperation.sub) }
@@ -168,8 +166,10 @@ case class Decoder() extends Component {
 			is (Opcodes.JAL_R16)    { jal_R16() }
 			is (Opcodes.J_R16)      { j_R16() }
 			is (Opcodes.LD_FT_R16)  { ld_FT_R16() }
+			is (Opcodes.LD_IO_T)    { ld_IO_T() }
 			is (Opcodes.LD_MEM_T)   { ld_MEM_T() }
 			is (Opcodes.LD_R16_FT)  { ld_R16_FT() }
+			is (Opcodes.LD_T_IO)    { ld_T_IO() }
 			is (Opcodes.LD_T_CODE)  { ld_T_CODE() }
 			is (Opcodes.LD_T_MEM)   { ld_T_MEM() }
 			is (Opcodes.POP)        { stackOperation(StackOperation.pop) }
@@ -483,13 +483,13 @@ case class Decoder() extends Component {
 	}
 
 	def ld_IO_T(): Unit = {
-		operand1 := Operand.bc
+		operand1 := Operand.opcode_r16
 		operand2 := Operand.t
 		writeMemory(ValueSource.register1, ValueSource.register2, doIo = True)
 	}
 
 	def ld_T_IO(): Unit = {
-		operand1 := Operand.bc
+		operand1 := Operand.opcode_r16
 		readMemory(ValueSource.register1, doIo = True)
 		Destination.t := WriteSource.memory
 	}
