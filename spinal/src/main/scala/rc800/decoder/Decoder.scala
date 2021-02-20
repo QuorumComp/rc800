@@ -146,6 +146,7 @@ case class Decoder() extends Component {
 			is (Opcodes.RETI)     { reti() }
 			is (Opcodes.RS_FT_I)  { shift_FT(ShiftOperation.rs, Operand.immediate_byte) }
 			is (Opcodes.RSA_FT_I) { shift_FT(ShiftOperation.rsa, Operand.immediate_byte) }
+			is (Opcodes.SWAPA)    { stackOperation(StackOperation.swapAll) }
 			is (Opcodes.SYS_I)    {
 				when (anyActive) {
 					io.output.nmiActive := True
@@ -175,6 +176,7 @@ case class Decoder() extends Component {
 			is (Opcodes.POP)        { stackOperation(StackOperation.pop) }
 			is (Opcodes.PUSH)       { stackOperation(StackOperation.push) }
 			is (Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
+			is (Opcodes.SWAP)       { stackOperation(StackOperation.swap) }
 			is (Opcodes.TST_R16)    { tst_R16() }
 
 

@@ -20,10 +20,8 @@ object Opcodes {
 		M"101101--",
 		M"10111010",
 		M"11001000",
-		M"11001100",
 		M"11010000",
 		M"11011000",
-		M"110111--",
 		M"1110000-",
 		M"1110100-",
 	)
@@ -48,6 +46,7 @@ object Opcodes {
 	def RETI       = M"01011001"
 	def RS_FT_I    = M"10111001"
 	def RSA_FT_I   = M"10111011"
+	def SWAPA      = M"11001100"
 	def SYS_I      = M"10011011"
 	def XOR_T_I    = M"10110010"
 
@@ -65,6 +64,7 @@ object Opcodes {
 	def POP        = M"110001--"
 	def PUSH       = M"110000--"
 	def SUB_FT_R16 = M"111100--"
+	def SWAP       = M"110111--"
 	def TST_R16    = M"110101--"
 
 	def ADD_T_R8   = M"01000---"

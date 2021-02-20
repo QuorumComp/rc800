@@ -91,17 +91,22 @@ For instance ```LD/EQ T,1``` will load T with the value 1 if the flags in F sati
 | PUSH&nbsp;R16   | Push contents of 16 bit register onto its stack ||
 | PUSH&nbsp;Rlist | Push contents of specified 16 bit registers onto their stacks | (synthesized) |
 | PUSHA           | Push contents of 16 bit registers onto their stacks ||
+| SWAP&nbsp;R16   | Swap two topmost register stack entries ||
+| SWAP&nbsp;Rlist | Swap two topmost stack entries for specified registers | (synthesized) |
+| SWAPA           | Swap two topmost stack entries for all registers ||
 
 # External Memory and I/O
-| Mnemonic         | Operation | Remarks |
-|------------------|-----------|---------|
-| LCO&nbsp;T,(R16) | Load T with byte in code area pointed to by 16 bit register ||
-| LD&nbsp;T,(R16)  | Load T with byte in data area pointed to by 16 bit register ||
-| LD&nbsp;(R16),T  | Store T in data area pointed to by 16 bit register ||
-| LCR&nbsp;T,(C)   | Load T with contents of configuration register ||
-| LCR&nbsp;(C),T   | Load configuration register with contents of T ||
-| LIO&nbsp;T,(BC)  | Load T with byte in I/O space pointed to by 16 bit register ||
-| LIO&nbsp;(BC),T  | Store T in I/O space pointed to by 16 bit register ||
+| Mnemonic          | Operation | Remarks |
+|-------------------|-----------|---------|
+| LCO&nbsp;T,(R16)  | Load T with byte in code area pointed to by 16 bit register ||
+| LD&nbsp;T,(R16)   | Load T with byte in data area pointed to by 16 bit register ||
+| LD&nbsp;(R16),T   | Store T in data area pointed to by 16 bit register ||
+| LD&nbsp;R8,(FT)   | Load 8 bit register with byte in data area pointed to by FT ||
+| LD&nbsp;(FT),R8   | Store 8 bit register in data area pointed to by FT ||
+| LCR&nbsp;T,(C)    | Load T with contents of configuration register ||
+| LCR&nbsp;(C),T    | Load configuration register with contents of T ||
+| LIO&nbsp;T,(R16)  | Load T with byte in I/O space pointed to by 16 bit register ||
+| LIO&nbsp;(R16),T  | Store T in I/O space pointed to by 16 bit register ||
 
 ## System control
 | Mnemonic | Operation | Remarks |

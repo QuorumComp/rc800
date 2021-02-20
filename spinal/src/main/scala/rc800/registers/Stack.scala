@@ -24,35 +24,34 @@ class Stack extends Component {
 	val memory = Mem(UInt(16 bits), 256)
 
 	val memReadTopAddress = Reg(UInt(8 bits))
-	val memReadTopEnable = Reg(Bool)
-	val memReadTopEnableNext = RegNext(memReadTopEnable, False)
+	val memReadTopEnable = RegInit(False)
 	val memReadNextTopAddress = Reg(UInt(8 bits))
-	val memReadNextTopEnable = Reg(Bool)
-	val memReadNextTopEnableNext = RegNext(memReadNextTopEnable, False)
-
-	memReadNextTopEnable := False
-	memReadTopEnable := False
+	val memReadNextTopEnable = RegInit(False)
 
 	val readAddress = memReadTopEnable ? memReadTopAddress | memReadNextTopAddress
 	val readValue = memory.readSync(readAddress)
-	when (memReadTopEnableNext || memReadNextTopEnableNext) {
-		when (memReadTopEnableNext) {
-			top := readValue
-			memReadTopEnable := False
-		}.otherwise {
-			nextTop := readValue
-			memReadNextTopEnable := False
-		}
+	when (RegNext(memReadTopEnable, False)) {
+		top := readValue
+		memReadTopEnable := False
+	} elsewhen (RegNext(memReadNextTopEnable, False)) {
+		nextTop := readValue
+		memReadNextTopEnable := False
 	}
 
-	val memWriteAddress = UInt(8 bits)
-	val memWriteData = UInt(16 bits)
-	val memWriteEnable = Bool()
+	val memWriteAddress = Reg(UInt(8 bits))
+	val memWriteData = Reg(UInt(16 bits))
+	val memWriteEnable = RegInit(False)
+	val memWriteNextAddress = Reg(UInt(8 bits))
+	val memWriteNextData = Reg(UInt(16 bits))
+	val memWriteNextEnable = RegInit(False)
+
 	memory.write(memWriteAddress, memWriteData, memWriteEnable)
 
-	memWriteAddress := 0
-	memWriteData := 0
-	memWriteEnable := False
+	memWriteAddress := memWriteNextAddress
+	memWriteData := memWriteNextData
+	memWriteEnable := memWriteNextEnable
+
+	memWriteNextEnable := False
 
 	val pushPointer = pointer - 1
 
@@ -70,6 +69,17 @@ class Stack extends Component {
 			memWriteEnable := True
 			nextTop := top
 			pointer := pushPointer
+		}
+		is (RegisterOperation.swap) {
+			top := nextTop
+			nextTop := top
+
+			memWriteAddress := pointer
+			memWriteData := nextTop
+			memWriteEnable := True
+			memWriteNextAddress := pointer + 1
+			memWriteNextData := top
+			memWriteNextEnable := True
 		}
 		is (RegisterOperation.pushValue) {
 			memWriteAddress := pushPointer

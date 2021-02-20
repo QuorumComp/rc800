@@ -9,7 +9,7 @@ object WritePart extends SpinalEnum {
 }
 
 object RegisterOperation extends SpinalEnum {
-	val read, write, push, pop, pushValue, writePointer = newElement()
+	val read, write, push, pop, swap, pushValue, writePointer = newElement()
 }
 
 object Register extends SpinalEnum {
@@ -17,7 +17,7 @@ object Register extends SpinalEnum {
 }
 
 object StackOperation extends SpinalEnum {
-	val read, write, push, pop, pushAll, popAll, pushValue, writePointer, exchangeT, exchangeFT = newElement()
+	val read, write, push, pop, swap, pushAll, popAll, swapAll, pushValue, writePointer, exchangeT, exchangeFT = newElement()
 }
 
 
@@ -66,8 +66,10 @@ class RegisterFile extends Component {
 			StackOperation.write        -> (isSelected ? RegisterOperation.write | RegisterOperation.read),
 			StackOperation.push         -> (isSelected ? RegisterOperation.push  | RegisterOperation.read),
 			StackOperation.pop          -> (isSelected ? RegisterOperation.pop   | RegisterOperation.read),
+			StackOperation.swap         -> (isSelected ? RegisterOperation.swap  | RegisterOperation.read),
 			StackOperation.pushAll      -> (RegisterOperation.push),
 			StackOperation.popAll       -> (RegisterOperation.pop),
+			StackOperation.swapAll      -> (RegisterOperation.swap),
 			StackOperation.pushValue    -> (isSelected ? RegisterOperation.pushValue | RegisterOperation.read),
 			StackOperation.writePointer -> (isSelected ? RegisterOperation.writePointer | RegisterOperation.read),
 			StackOperation.exchangeT    -> exchangeOp,

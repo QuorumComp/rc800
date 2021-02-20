@@ -27,6 +27,8 @@
 * [RS](InstructionRS.md) - Right shift
 * [RSA](InstructionRSA.md) - Right shift arithmetic
 * [SUB](InstructionSUB.md) - Subtraction
+* [SWAP](InstructionSWAP.md) - Swap two topmost register stack entries
+* [SWAPA](InstructionSWAPA.md) - Swap two topmost stack entries for all registers
 * [SYS](InstructionSYS.md) - Perform syscall
 * [TST](InstructionTST.md) - Test register
 * [XOR](InstructionXOR.md) - Bitwise exclusive-OR

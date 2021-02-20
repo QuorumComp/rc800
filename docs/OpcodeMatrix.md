@@ -28,9 +28,9 @@
 | 10_110       | OR T,i8     | AND T,i8    | XOR T,i8    |             |             |             |             |             |
 | 10_111       | LS i8       | RS i8       |             | RSA i8      | ADD FT,s8   | ADD BC,s8   | ADD DE,s8   | ADD HL,s8   |
 | 11_000       | PUSH FT     | PUSH BC     | PUSH DE     | PUSH HL     | POP FT      | POP BC      | POP DE      | POP HL      |
-| 11_001       |             | EXG BC      | EXG DE      | EXG HL      |             | CMP FT,BC   | CMP FT,DE   | CMP FT,HL   |
+| 11_001       |             | EXG BC      | EXG DE      | EXG HL      | SWAPA       | CMP FT,BC   | CMP FT,DE   | CMP FT,HL   |
 | 11_010       |             | LD BC,FT    | LD DE,FT    | LD HL,FT    | TST FT      | TST BC      | TST DE      | TST HL      |
-| 11_011       |             | LD FT,BC    | LD FT,DE    | LD FT,HL    |             |             |             |             |
+| 11_011       |             | LD FT,BC    | LD FT,DE    | LD FT,HL    | SWAP FT     | SWAP BC     | SWAP DE     | SWAP HL     |
 | 11_100       |             |             | LS FT,B     | LS FT,C     | LS FT,D     | LS FT,E     | LS FT,H     | LS FT,L     |
 | 11_101       |             |             | RS FT,B     | RS FT,C     | RS FT,D     | RS FT,E     | RS FT,H     | RS FT,L     |
 | 11_110       | NEG FT      | SUB FT,BC   | SUB FT,DE   | SUB FT,HL   | ADD FT,FT   | ADD FT,BC   | ADD FT,DE   | ADD FT,HL   |
