@@ -4,109 +4,62 @@ import spinal.core._
 import spinal.lib._
 
 
+object RegisterOperation extends SpinalEnum {
+	// organize write and push so write is enabled when "1-1" and push when "11-"
+	val read, pop, swap, _dummy1,
+		_dummy2, write, push, pushValue = newElement()
+}
+
 class Stack extends Component {
 	val io = new Bundle {
 		val operation = in (RegisterOperation())
 		val writeData = in UInt(16 bits)
 		val writeMask = in Bits(16 bits)
 
-		val pointer   = out UInt(8 bits)
+		val pointer   = in UInt(8 bits)
 		val dataOut   = out UInt(16 bits)
 	}
 
-	val pointer = Reg(UInt(8 bits)) init(255)
-	io.pointer := pointer
-
-	val top = Reg(UInt(16 bits))
-	val nextTop = Reg(UInt(16 bits))
-	io.dataOut := top
-
 	val memory = Mem(UInt(16 bits), 256)
 
-	val memReadTopAddress = Reg(UInt(8 bits))
-	val memReadTopEnable = RegInit(False)
-	val memReadNextTopAddress = Reg(UInt(8 bits))
-	val memReadNextTopEnable = RegInit(False)
+	val top = Reg(UInt(16 bits))
+	val top1 = Reg(UInt(16 bits))
+	val popTop2 = memory.readSync(io.pointer + 1)
+	val pick = memory.readSync(io.pointer + top(7 downto 0))
 
-	val readAddress = memReadTopEnable ? memReadTopAddress | memReadNextTopAddress
-	val readValue = memory.readSync(readAddress)
-	when (RegNext(memReadTopEnable, False)) {
-		top := readValue
-		memReadTopEnable := False
-	} elsewhen (RegNext(memReadNextTopEnable, False)) {
-		nextTop := readValue
-		memReadNextTopEnable := False
-	}
+	io.dataOut := top
 
 	val memWriteAddress = Reg(UInt(8 bits))
 	val memWriteData = Reg(UInt(16 bits))
 	val memWriteEnable = RegInit(False)
-	val memWriteNextAddress = Reg(UInt(8 bits))
-	val memWriteNextData = Reg(UInt(16 bits))
-	val memWriteNextEnable = RegInit(False)
+	memWriteEnable := False
 
 	memory.write(memWriteAddress, memWriteData, memWriteEnable)
 
-	memWriteAddress := memWriteNextAddress
-	memWriteData := memWriteNextData
-	memWriteEnable := memWriteNextEnable
+	val doWrite = (io.operation === RegisterOperation.write || io.operation === RegisterOperation.pushValue)
+	val doPush = (io.operation === RegisterOperation.push || io.operation === RegisterOperation.pushValue)
+	val doPop = (io.operation === RegisterOperation.pop)
+	val doSwap = (io.operation === RegisterOperation.swap)
 
-	memWriteNextEnable := False
-
-	val pushPointer = pointer - 1
-
-	switch (io.operation) {
-		is (RegisterOperation.write) {
-			val newTop = (io.writeData & io.writeMask.asUInt) | (top & ~io.writeMask.asUInt)
-			top := newTop
-			memWriteAddress := pointer
-			memWriteData := newTop
-			memWriteEnable := True
-		}
-		is (RegisterOperation.push) {
-			memWriteAddress := pushPointer
-			memWriteData := top
-			memWriteEnable := True
-			nextTop := top
-			pointer := pushPointer
-		}
-		is (RegisterOperation.swap) {
-			top := nextTop
-			nextTop := top
-
-			memWriteAddress := pointer
-			memWriteData := nextTop
-			memWriteEnable := True
-			memWriteNextAddress := pointer + 1
-			memWriteNextData := top
-			memWriteNextEnable := True
-		}
-		is (RegisterOperation.pushValue) {
-			memWriteAddress := pushPointer
-			memWriteData := io.writeData
-			memWriteEnable := True
-			nextTop := top
-			top := io.writeData
-			pointer := pushPointer
-		}
-		is (RegisterOperation.pop) {
-			val nextPointer = pointer + 1
-			val nextTopPointer = pointer + 2
-			top := nextTop
-			memReadNextTopAddress := nextTopPointer
-			memReadNextTopEnable := True
-			pointer := nextPointer
-		}
-		is (RegisterOperation.writePointer) {
-			val newPointer = io.writeData(7 downto 0)
-			memReadTopAddress := newPointer
-			memReadTopEnable := True
-			memReadNextTopAddress := newPointer + 1
-			memReadNextTopEnable := True
-			pointer := newPointer
-		}
+	when (doWrite) {
+		top := (io.writeData & io.writeMask.asUInt) | (top & ~io.writeMask.asUInt)
 	}
 
+	when (doPush) {
+		top1 := top
+
+		memWriteAddress := io.pointer + 2
+		memWriteData := top1
+		memWriteEnable := True
+	}
+
+	when (doPop) {
+		top := top1
+		top1 := popTop2
+	}
+
+	when (doSwap) {
+		top := top1
+		top1 := top
+	}
 }
-
-

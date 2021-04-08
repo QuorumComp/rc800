@@ -13,6 +13,8 @@ case class MemoryStageControl() extends Bundle {
 	val io      = Bool
 	val code    = Bool
 	val config  = Bool
+	val push    = Bits(4 bits)
+	val pop     = Bits(4 bits)
 	val data    = ValueSource()
 	val address = ValueSource()
 }

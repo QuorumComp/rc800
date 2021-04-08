@@ -5,7 +5,7 @@ import spinal.lib._
 
 
 object OperandSelection extends SpinalEnum {
-	val zero, one, ones, register, pc, memory, signed_memory = newElement()
+	val zero, ones, register, pc, memory, signed_memory = newElement()
 }
 
 case class OperandSelector() extends Component {
@@ -20,7 +20,6 @@ case class OperandSelector() extends Component {
 
 	io.dataOut := io.selection.mux(
 		OperandSelection.zero          -> U(0, 16 bits),
-		OperandSelection.one           -> U(1, 16 bits),
 		OperandSelection.ones          -> U(0xFFFF, 16 bits),
 		OperandSelection.register      -> io.register,
 		OperandSelection.pc            -> io.pc,

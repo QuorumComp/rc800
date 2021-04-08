@@ -8,16 +8,26 @@ object WritePart extends SpinalEnum {
 	val low, high, full = newElement()
 }
 
-object RegisterOperation extends SpinalEnum {
-	val read, write, push, pop, swap, pushValue, writePointer = newElement()
-}
-
 object Register extends SpinalEnum {
 	val ft, bc, de, hl = newElement()
 }
 
-object StackOperation extends SpinalEnum {
-	val read, write, push, pop, swap, pushAll, popAll, swapAll, pushValue, writePointer, exchangeT, exchangeFT = newElement()
+object RegisterFileOperation extends SpinalEnum {
+	// organize values so read, popAll, swapAll and pushAll
+	// share the same lower 3 bit patten as pop, swap and push 
+	val read, pop, swap, _dummy1,
+		_dummy2, write, push, pushValue ,
+		_dummy3, popAll, swapAll, exchangeFT,
+		exchangeT, _dummy4, pushAll, _dummy5  = newElement()
+
+	def isSingleRegisterOperation(op: RegisterFileOperation.C): Bool =
+		!op.asBits(3)
+
+	def isExchangeOperation(op: RegisterFileOperation.C): Bool =
+		(op === exchangeFT) || (op === exchangeT)
+
+	def asRegisterOperation(op: RegisterFileOperation.C): RegisterOperation.C =
+		op.asBits(2 downto 0).as(RegisterOperation())	
 }
 
 
@@ -26,22 +36,22 @@ class RegisterFile extends Component {
 		val readRegisters = in Vec(Register(), 2)
 		val dataOut = out Vec(UInt(16 bits), 2)
 
-		val pointerFT = out UInt(8 bits)
-		val pointerBC = out UInt(8 bits)
-		val pointerDE = out UInt(8 bits)
-		val pointerHL = out UInt(8 bits)
+		val pointerFT = in UInt(8 bits)
+		val pointerBC = in UInt(8 bits)
+		val pointerDE = in UInt(8 bits)
+		val pointerHL = in UInt(8 bits)
 
 		val writeRegister  = in (Register())
 		val writePart      = in (WritePart())
-		val writeOperation = in (StackOperation())
+		val writeOperation = in (RegisterFileOperation)
 		val dataIn         = in UInt(16 bits)
 		val dataInExg      = in UInt(16 bits)
 	}
 
 	val ftStack, bcStack, deStack, hlStack = new Stack()
 
-	val isExgR8Operation = (io.writeOperation === StackOperation.exchangeT)
-	val isExgR16Operation = (io.writeOperation === StackOperation.exchangeFT)
+	val isExgR8Operation = (io.writeOperation === RegisterFileOperation.exchangeT)
+	val isExgR16Operation = (io.writeOperation === RegisterFileOperation.exchangeFT)
 	val isExgOperation = isExgR8Operation || isExgR16Operation
 
 	val writeMask = io.writePart.mux (
@@ -61,24 +71,19 @@ class RegisterFile extends Component {
 		val isSelected = io.writeRegister === register
 		val exchangeFT = (isExgOperation && register === Register.ft)
 		val exchangeOp = ((exchangeFT || isSelected) ? RegisterOperation.write | RegisterOperation.read)
-		stack.io.operation := io.writeOperation.mux[RegisterOperation.C](
-			StackOperation.read         -> (RegisterOperation.read),
-			StackOperation.write        -> (isSelected ? RegisterOperation.write | RegisterOperation.read),
-			StackOperation.push         -> (isSelected ? RegisterOperation.push  | RegisterOperation.read),
-			StackOperation.pop          -> (isSelected ? RegisterOperation.pop   | RegisterOperation.read),
-			StackOperation.swap         -> (isSelected ? RegisterOperation.swap  | RegisterOperation.read),
-			StackOperation.pushAll      -> (RegisterOperation.push),
-			StackOperation.popAll       -> (RegisterOperation.pop),
-			StackOperation.swapAll      -> (RegisterOperation.swap),
-			StackOperation.pushValue    -> (isSelected ? RegisterOperation.pushValue | RegisterOperation.read),
-			StackOperation.writePointer -> (isSelected ? RegisterOperation.writePointer | RegisterOperation.read),
-			StackOperation.exchangeT    -> exchangeOp,
-			StackOperation.exchangeFT   -> exchangeOp
-		)
+		val operation = io.writeOperation
+
+		when (RegisterFileOperation.isSingleRegisterOperation(operation)) {
+			stack.io.operation := isSelected ? RegisterFileOperation.asRegisterOperation(operation) | RegisterOperation.read
+		} elsewhen (RegisterFileOperation.isExchangeOperation(operation)) {
+			stack.io.operation := exchangeOp
+		} otherwise {
+			stack.io.operation := RegisterFileOperation.asRegisterOperation(operation)
+		}
 
 		stack.io.writeData := exchangeFT ? exgDataToFT | writeData
 		stack.io.writeMask := exchangeFT ? exgMaskToFT | writeMask
-		pointer := stack.io.pointer
+		stack.io.pointer := pointer
 	}
 
 	wireStack(Register.ft, ftStack, io.pointerFT)
