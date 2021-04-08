@@ -5,7 +5,7 @@
 |--------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
 | 00_000       | NOP         | LD (BC),T   | LD (DE),T   | LD (HL),T   | LD T,(FT)   | LD T,(BC)   | LD T,(DE)   | LD T,(HL)   |
 | 00_001       |             |             | LCR (L),T   | LCR T,(L)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
-| 00_010       | EXG F       |             | EXG B       | EXG C       | EXG D       | EXG E       | EXG H       | EXG L       |
+| 00_010       | EXG T,F     |             | EXG T,B     | EXG T,C     | EXG T,D     | EXG T,E     | EXG T,H     | EXG T,L     |
 | 00_011       | NOT F       |             | EI          | DI          |             |             |             |             |
 | 00_100       |             |             | LD (FT),B   | LD (FT),C   | LD (FT),D   | LD (FT),E   | LD (FT),H   | LD (FT),L   |
 | 00_101       | LD F,(FT)   |             | LD B,(FT)   | LD C,(FT)   | LD D,(FT)   | LD E,(FT)   | LD H,(FT)   | LD L,(FT)   |
@@ -26,9 +26,9 @@
 | 10_100       | ADD F,i8    | ADD T,i8    | ADD B,i8    | ADD C,i8    | ADD D,i8    | ADD E,i8    | ADD H,i8    | ADD L,i8    |
 | 10_101       | CMP F,i8    | CMP T,i8    | CMP B,i8    | CMP C,i8    | CMP D,i8    | CMP E,i8    | CMP H,i8    | CMP L,i8    |
 | 10_110       | OR T,i8     | AND T,i8    | XOR T,i8    |             |             |             |             |             |
-| 10_111       | LS i8       | RS i8       |             | RSA i8      | ADD FT,s8   | ADD BC,s8   | ADD DE,s8   | ADD HL,s8   |
+| 10_111       | LS FT,i8    | RS FT,i8    |             | RSA FT,i8   | ADD FT,s8   | ADD BC,s8   | ADD DE,s8   | ADD HL,s8   |
 | 11_000       | PUSH FT     | PUSH BC     | PUSH DE     | PUSH HL     | POP FT      | POP BC      | POP DE      | POP HL      |
-| 11_001       |             | EXG BC      | EXG DE      | EXG HL      | SWAPA       | CMP FT,BC   | CMP FT,DE   | CMP FT,HL   |
+| 11_001       |             | EXG FT,BC   | EXG FT,DE   | EXG FT,HL   | SWAPA       | CMP FT,BC   | CMP FT,DE   | CMP FT,HL   |
 | 11_010       |             | LD BC,FT    | LD DE,FT    | LD HL,FT    | TST FT      | TST BC      | TST DE      | TST HL      |
 | 11_011       |             | LD FT,BC    | LD FT,DE    | LD FT,HL    | SWAP FT     | SWAP BC     | SWAP DE     | SWAP HL     |
 | 11_100       |             |             | LS FT,B     | LS FT,C     | LS FT,D     | LS FT,E     | LS FT,H     | LS FT,L     |
