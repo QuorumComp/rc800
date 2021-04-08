@@ -4,7 +4,7 @@ import spinal.core._
 import spinal.lib._
 
 
-object RegisterOperation extends SpinalEnum {
+object RegisterOperation extends SpinalEnum(defaultEncoding = binarySequential) {
 	// organize write and push so write is enabled when "1-1" and push when "11-"
 	val read, pop, swap, _dummy1,
 		_dummy2, write, push, pushValue = newElement()
@@ -14,7 +14,7 @@ class Stack extends Component {
 	val io = new Bundle {
 		val operation = in (RegisterOperation())
 		val writeData = in UInt(16 bits)
-		val writeMask = in Bits(16 bits)
+		val writeMask = in Bits(2 bits)
 
 		val pointer   = in UInt(8 bits)
 		val dataOut   = out UInt(16 bits)
@@ -42,7 +42,12 @@ class Stack extends Component {
 	val doSwap = (io.operation === RegisterOperation.swap)
 
 	when (doWrite) {
-		top := (io.writeData & io.writeMask.asUInt) | (top & ~io.writeMask.asUInt)
+		when (io.writeMask(1)) {
+			top(15 downto 8) := io.writeData(15 downto 8)
+		}
+		when (io.writeMask(0)) {
+			top(7 downto 0) := io.writeData(7 downto 0)
+		}
 	}
 
 	when (doPush) {
