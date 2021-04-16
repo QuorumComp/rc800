@@ -31,12 +31,12 @@ object Condition extends SpinalEnum {
 
 class Alu extends Component {
 	val io = new Bundle {
-		val operand1 = in  UInt(16 bits)
-		val operand2 = in  UInt(16 bits)
+		val operand1 = in UInt(16 bits)
+		val operand2 = in UInt(16 bits)
 
-		val operation      = in  (AluOperation())
-		val shiftOperation = in  (ShiftOperation())
-		val condition      = in  (Condition())
+		val operation      = in (AluOperation())
+		val shiftOperation = in (ShiftOperation())
+		val condition      = in (Condition())
 
 		val dataOut      = out UInt(16 bits)
 		val conditionMet = out Bool

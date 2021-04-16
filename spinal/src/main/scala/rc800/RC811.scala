@@ -7,18 +7,19 @@ import spinal.core.sim._
 import registers.OperandModifier
 import registers.Register
 import registers.RegisterFile
-import registers.RegisterFileOperation
-import registers.WritePart
+import registers.RegisterFileControl
+import registers.RegisterName
+import registers.WriteMask
 
 import decoder.Decoder
 import decoder.ValueSource
-import decoder.WriteSource
 import decoder.WriteBackControl
+import decoder.WriteSource
 
-import alu.AluStage
-import alu.OperandSelection
 import alu.AluOperation
+import alu.AluStage
 import alu.Condition
+import alu.OperandSelection
 
 import stage.PcCalc
 
@@ -95,35 +96,37 @@ class RC811() extends Component {
 	}
 
 	private val registers = new Area() {
-		val writeRegister  = Reg(Register())
-		val writePart      = Reg(WritePart())
-		val writeOperation = Reg(RegisterFileOperation()) init(RegisterFileOperation.read)
-		val writeData      = Reg(UInt(16 bits))
-		val writeDataExg   = Reg(UInt(16 bits))
-		val stackPointers  = Vec(Reg(UInt(8 bits)) init(0xFF), 4)
+		val writeControl  = Reg(Vec(RegisterFileControl(),4))
+		val writeData     = Reg(UInt(16 bits))
+		val writeDataExg  = Reg(UInt(16 bits))
+		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFF), 4)
+
+		for (i <- 0 to 3) {
+			val ctrl = writeControl(i).registerControl
+			ctrl.write init(False)
+			ctrl.push init(False)
+			ctrl.pop init(False)
+			ctrl.swap init(False)
+			ctrl.mask init(WriteMask.none)
+		}
 
 		private val registers = new RegisterFile()
-		val io = registers.io
+		private val io = registers.io
 
 		registers.io.readRegisters := decodeArea.readControl.registers
 
-		registers.io.writeRegister  <> writeRegister
-		registers.io.writePart      <> writePart
-		registers.io.writeOperation <> writeOperation
-		registers.io.dataIn         <> writeData
-		registers.io.dataInExg      <> writeDataExg
-		registers.io.pointerFT      <> stackPointers(0)
-		registers.io.pointerBC      <> stackPointers(1)
-		registers.io.pointerDE      <> stackPointers(2)
-		registers.io.pointerHL      <> stackPointers(3)
+		registers.io.registerControl <> writeControl
+		registers.io.dataIn          <> writeData
+		registers.io.dataInExg       <> writeDataExg
+		registers.io.pointers        <> stackPointers
 
 		private val modifiers = Array.fill(2)(OperandModifier())
-		val values = Vec(UInt(16 bits), 2)
+		val readValues = Vec(UInt(16 bits), 2)
 
 		for (index <- 0 to 1) {
 			modifiers(index).io.operand <> registers.io.dataOut(index)
 			modifiers(index).io.part <> decodeArea.readControl.part(index)
-			values(index) := modifiers(index).io.dataOut
+			readValues(index) := modifiers(index).io.dataOut
 		}
 	}
 
@@ -136,14 +139,20 @@ class RC811() extends Component {
 		val writeControl = Reg(WriteBackControl())
 		val result = Reg(Bits(8 bits)) init(0)
 
-		writeControl.enable init(False)
 		writeControl.intActive init(False)
-		writeControl.operation init(RegisterFileOperation.read)
+		for (i <- 0 to 3) {
+			val control = writeControl.fileControl(0).registerControl
+			control.write init(False)
+			control.push  init(False)
+			control.pop   init(False)
+			control.swap  init(False)
+			control.mask  init(WriteMask.none)
+		}
 
 		private def selectSource(source: ValueSource.C): UInt =
 			source.mux(
-				ValueSource.register1 -> registers.values(0),
-				ValueSource.register2 -> registers.values(1),
+				ValueSource.register1 -> registers.writeData,
+				ValueSource.register2 -> registers.writeDataExg,
 				ValueSource.pc -> pcPlusOne
 			)
 
@@ -183,11 +192,11 @@ class RC811() extends Component {
 		when (stage === 1) {
 			writeControl := decodeArea.writeControl
 
-			for (i <- 0 until 4) {
+			for (i <- 0 to 3) {
 				val sp = registers.stackPointers(i)
-				when (decodeArea.memoryControl.push(i)) {
+				when (decodeArea.writeControl.fileControl(i).registerControl.push) {
 					sp := sp - 1
-				} elsewhen (decodeArea.memoryControl.pop(i)) {
+				} elsewhen (decodeArea.writeControl.fileControl(i).registerControl.pop) {
 					sp := sp + 1
 				}
 			}
@@ -210,7 +219,7 @@ class RC811() extends Component {
 		private val memoryIn = RegNextWhen(io.dataIn, stage === 2)
 
 		private val alu = AluStage()
-		alu.io.registers := registers.values
+		alu.io.registers := registers.readValues
 		alu.io.pc        := pcPlusOne
 		alu.io.memory    := memoryIn.asUInt
 		alu.io.control   := decodeArea.aluControl
@@ -222,8 +231,7 @@ class RC811() extends Component {
 
 		private val pcCalc = PcCalc()
 		pcCalc.io.pc           := pcPlusOne
-		pcCalc.io.operand1     := registers.values(0)
-		pcCalc.io.operand2     := registers.values(1)
+		pcCalc.io.operands     := registers.readValues
 		pcCalc.io.memory       := memoryIn
 		pcCalc.io.conditionMet := conditionMet
 		pcCalc.io.resultZero   := highByteZero
@@ -240,14 +248,12 @@ class RC811() extends Component {
 		val control = memoryArea.writeControl
 
 		when (stage === 3) {
-			registers.writeRegister  := control.register
-			registers.writePart      := control.part
-			registers.writeOperation := control.operation
-			registers.writeData      := control.source.mux (
+			registers.writeControl := control.fileControl
+			registers.writeData := control.source.mux (
 				WriteSource.alu -> aluArea.result,
 				WriteSource.memory -> (memoryArea.result << 8).asUInt
 			)
-			registers.writeDataExg   := registers.values(1)	// T or FT
+			registers.writeDataExg := registers.readValues(1) // T or FT
 
 			pc := aluArea.pcOut
 
@@ -260,7 +266,14 @@ class RC811() extends Component {
 
 			intActive := control.intActive
 		}.otherwise {
-			registers.writeOperation := RegisterFileOperation.read
+			for (i <- 0 to 3) {
+				val ctrl = registers.writeControl(i).registerControl
+				ctrl.write := False
+				ctrl.push  := False
+				ctrl.pop   := False
+				ctrl.swap  := False
+				ctrl.mask  := WriteMask.none
+			}
 		}
 	}
 }
