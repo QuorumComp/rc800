@@ -31,7 +31,6 @@ case class Register() extends Component {
 	val top = Reg(UInt(16 bits))
 	val top1 = Reg(UInt(16 bits))
 	val popTop2 = memory.readSync(io.pointer + 1)
-	val pick = memory.readSync(io.pointer + top(7 downto 0))
 
 	io.dataOut := top
 

@@ -53,8 +53,8 @@ case class Decoder() extends Component {
 		val de = Operand(register = RegisterName.de, part = OperandPart.full, selection = OperandSelection.register)
 		val hl = Operand(register = RegisterName.hl, part = OperandPart.full, selection = OperandSelection.register)
 
-		def opcode_r8 = Operand(register = registerPair3, part = registerPair3Part, selection = OperandSelection.register)
-		def opcode_r16 = Operand(register = registerPair2, part = OperandPart.full, selection = OperandSelection.register)
+		val opcode_r8 = Operand(register = registerPair3, part = registerPair3Part, selection = OperandSelection.register)
+		val opcode_r16 = Operand(register = registerPair2, part = OperandPart.full, selection = OperandSelection.register)
 		val immediate_byte = Operand(register = RegisterName.ft, part = OperandPart.full, selection = OperandSelection.memory)
 		val signed_immediate_byte = Operand(register = RegisterName.ft, part = OperandPart.full, selection = OperandSelection.signed_memory)
 		val ones = Operand(register = RegisterName.ft, part = OperandPart.full, selection = OperandSelection.ones)
@@ -76,64 +76,101 @@ case class Decoder() extends Component {
 	private val operand1 = OperandWriter(0)
 	private val operand2 = OperandWriter(1)
 
-	private case class Destination(val register: RegisterName.C, val mask: WriteMask.C) {
+	private class Destination(val register: RegisterName.C, val mask: WriteMask.C) {
+		private val control = io.output.writeStageControl.fileControl(register)
 		def := (source: WriteSource.E): Unit = {
 			io.output.writeStageControl.source := source
-			
-			val control = io.output.writeStageControl.fileControl(register)
+
 			control.rot8 := mask === WriteMask.low
 			control.sourceExg := False
 			control.registerControl.write := True
 			control.registerControl.mask := mask
 		}
-	}
 
-	private object Destination {
-		val f = Destination(register = RegisterName.ft, mask = WriteMask.high)
-		val t = Destination(register = RegisterName.ft, mask = WriteMask.low)
-		val b = Destination(register = RegisterName.bc, mask = WriteMask.high)
-		val c = Destination(register = RegisterName.bc, mask = WriteMask.low)
-		val d = Destination(register = RegisterName.de, mask = WriteMask.high)
-		val e = Destination(register = RegisterName.de, mask = WriteMask.low)
-		val h = Destination(register = RegisterName.hl, mask = WriteMask.high)
-		val l = Destination(register = RegisterName.hl, mask = WriteMask.low)
+		def := (source: Operand): Unit = {
+			operand1 := source
+			io.output.aluStageControl.operation := AluOperation.operand1
+			this := WriteSource.alu
+		}
 
-		val ft = Destination(register = RegisterName.ft, mask = WriteMask.full)
-		val bc = Destination(register = RegisterName.bc, mask = WriteMask.full)
-		val de = Destination(register = RegisterName.de, mask = WriteMask.full)
-		val hl = Destination(register = RegisterName.hl, mask = WriteMask.full)
-
-		def opcode_r8 = Destination(register = registerPair3, mask = registerPair3WritePart)
-		def opcode_r16 = Destination(register = registerPair2, mask = WriteMask.full)
-
-		def exchange(register: RegisterName.C, mask: WriteMask.C) {
-			operand1 := Operand.opcode_r16
+		def exchange(opcodeOperand: Operand, opcodeRegister: Destination): Unit = {
+			operand1 := opcodeOperand
 			operand2 := Operand.ft
 			io.output.aluStageControl.operation := AluOperation.operand1
 
-			val destRegister = Destination(register, mask)
-			destRegister := WriteSource.alu
+			val opcodeControl = io.output.writeStageControl.fileControl(opcodeRegister.register)
+			opcodeRegister := WriteSource.alu
+			opcodeControl.sourceExg := True
 
-			val destControl = io.output.writeStageControl.fileControl(register)
-			destControl.sourceExg := True
-			destControl.rot8 := mask === WriteMask.high
-
-			val control = io.output.writeStageControl.fileControl(RegisterName.ft)
-			control.rot8 := True
-			control.sourceExg := False
+			val control = io.output.writeStageControl.fileControl(register)
 			control.registerControl.write := True
-			control.registerControl.mask := WriteMask.low
 		}
-
-		def exchange_r8() = exchange(register = registerPair3, mask = registerPair3WritePart)
-		def exchange_r16() = exchange(register = registerPair2, mask = WriteMask.full)
 	}
 
-	setDefaults()
+	private object Destination {
+		val f = new Destination(register = RegisterName.ft, mask = WriteMask.high)
+		val t = new Destination(register = RegisterName.ft, mask = WriteMask.low)
+		val b = new Destination(register = RegisterName.bc, mask = WriteMask.high)
+		val c = new Destination(register = RegisterName.bc, mask = WriteMask.low)
+		val d = new Destination(register = RegisterName.de, mask = WriteMask.high)
+		val e = new Destination(register = RegisterName.de, mask = WriteMask.low)
+		val h = new Destination(register = RegisterName.hl, mask = WriteMask.high)
+		val l = new Destination(register = RegisterName.hl, mask = WriteMask.low)
+
+		val ft = new Destination(register = RegisterName.ft, mask = WriteMask.full)
+		val bc = new Destination(register = RegisterName.bc, mask = WriteMask.full)
+		val de = new Destination(register = RegisterName.de, mask = WriteMask.full)
+		val hl = new Destination(register = RegisterName.hl, mask = WriteMask.full)
+
+		val opcode_r8 = new Destination(register = registerPair3, mask = registerPair3WritePart)
+		val opcode_r16 = new Destination(register = registerPair2, mask = WriteMask.full)
+	}
 
 	private val anyActive = io.nmiActive || io.intActive || io.sysActive
 
 	private val reqExtInt = io.intReq && io.intEnable && !io.intActive && !io.nmiActive
+
+	def setDefaults(): Unit = {
+		io.output.intEnable := io.intEnable
+		io.output.nmiActive := io.nmiActive
+		io.output.intActive := io.intActive
+		io.output.sysActive := io.sysActive
+		
+		io.output.readStageControl.registers.foreach(_ := RegisterName.ft)
+		io.output.readStageControl.part.foreach(_ := OperandPart.full)
+
+		io.output.memoryStageControl.enable  := False
+		io.output.memoryStageControl.write   := False
+		io.output.memoryStageControl.io      := False
+		io.output.memoryStageControl.code    := False
+		io.output.memoryStageControl.config  := False
+		io.output.memoryStageControl.data    := ValueSource.register1
+		io.output.memoryStageControl.address := ValueSource.register2
+
+		io.output.aluStageControl.selection.foreach(_ := OperandSelection.register)
+		io.output.aluStageControl.operation := AluOperation.and
+		io.output.aluStageControl.condition := Condition.t
+		io.output.aluStageControl.shiftOperation := ShiftOperation.ls
+
+		io.output.writeStageControl.source    := WriteSource.alu
+		for (i <- 0 to 3) {
+			val fileControl = io.output.writeStageControl.fileControl(i)
+			fileControl.rot8 := False
+			fileControl.sourceExg := False
+			fileControl.registerControl.write := False
+			fileControl.registerControl.push  := False
+			fileControl.registerControl.pop   := False
+			fileControl.registerControl.swap  := False
+			fileControl.registerControl.mask  := WriteMask.none
+		}
+
+		io.output.pcControl.truePath      := PcTruePath.offsetFromDecoder
+		io.output.pcControl.decodedOffset := U(0)
+		io.output.pcControl.vector        := U(0)
+		io.output.pcControl.condition     := PcCondition.always
+	}
+
+	setDefaults()
 
 	when (io.nmiReq) {
 		io.output.nmiActive := True
@@ -250,11 +287,11 @@ case class Decoder() extends Component {
 	}
 
 	def exg_T_R8(): Unit = {
-		Destination.exchange_r8()
+		Destination.t.exchange(Operand.opcode_r8, Destination.opcode_r8)
 	}
 
 	def exg_FT_R16(): Unit = {
-		Destination.exchange_r16()
+		Destination.ft.exchange(Operand.opcode_r16, Destination.opcode_r16)
 	}
 
 	def operation_T_I(operation: AluOperation.E): Unit = {
@@ -288,7 +325,7 @@ case class Decoder() extends Component {
 		Destination.ft := WriteSource.alu
 	}
 
-	def ext_T() {
+	def ext_T(): Unit = {
 		operand1 := Operand.t
 
 		io.output.aluStageControl.operation := AluOperation.extend1
@@ -330,12 +367,6 @@ case class Decoder() extends Component {
 		io.output.aluStageControl.operation := operation
 
 		Destination.opcode_r8 := WriteSource.alu
-	}
-
-	def moveRegister(dest: Destination, source: Operand): Unit = {
-		operand1 := source
-		io.output.aluStageControl.operation := AluOperation.operand1
-		dest := WriteSource.alu
 	}
 
 	def operation_FT_R16(operation: AluOperation.C): Unit = {
@@ -487,19 +518,19 @@ case class Decoder() extends Component {
 	}
 
 	def ld_R8_T(): Unit = {
-		moveRegister(Destination.opcode_r8, Operand.t)
+		Destination.opcode_r8 := Operand.t
 	}
 
 	def ld_T_R8(): Unit = {
-		moveRegister(Destination.t, Operand.opcode_r8)
+		Destination.t := Operand.opcode_r8
 	}
 
 	def ld_FT_R16(): Unit = {
-		moveRegister(Destination.ft, Operand.opcode_r16)
+		Destination.ft := Operand.opcode_r16
 	}
 
 	def ld_R16_FT(): Unit = {
-		moveRegister(Destination.opcode_r16, Operand.ft)
+		Destination.opcode_r16 := Operand.ft
 	}
 
 	def ld_R8_I(): Unit = {
@@ -587,46 +618,5 @@ case class Decoder() extends Component {
 			interrupt(Vectors.IllegalInterrupt)
 		}
 	}
-
-	def setDefaults(): Unit = {
-		io.output.intEnable := io.intEnable
-		io.output.nmiActive := io.nmiActive
-		io.output.intActive := io.intActive
-		io.output.sysActive := io.sysActive
-		
-		io.output.readStageControl.registers.foreach(_ := RegisterName.ft)
-		io.output.readStageControl.part.foreach(_ := OperandPart.full)
-
-		io.output.memoryStageControl.enable  := False
-		io.output.memoryStageControl.write   := False
-		io.output.memoryStageControl.io      := False
-		io.output.memoryStageControl.code    := False
-		io.output.memoryStageControl.config  := False
-		io.output.memoryStageControl.data    := ValueSource.register1
-		io.output.memoryStageControl.address := ValueSource.register2
-
-		io.output.aluStageControl.selection.foreach(_ := OperandSelection.register)
-		io.output.aluStageControl.operation := AluOperation.and
-		io.output.aluStageControl.condition := Condition.t
-		io.output.aluStageControl.shiftOperation := ShiftOperation.ls
-
-		io.output.writeStageControl.source    := WriteSource.alu
-		for (i <- 0 to 3) {
-			val fileControl = io.output.writeStageControl.fileControl(i)
-			fileControl.rot8 := False
-			fileControl.sourceExg := False
-			fileControl.registerControl.write := False
-			fileControl.registerControl.push  := False
-			fileControl.registerControl.pop   := False
-			fileControl.registerControl.swap  := False
-			fileControl.registerControl.mask  := WriteMask.none
-		}
-
-		io.output.pcControl.truePath      := PcTruePath.offsetFromDecoder
-		io.output.pcControl.decodedOffset := U(0)
-		io.output.pcControl.vector        := U(0)
-		io.output.pcControl.condition     := PcCondition.always
-	}
-
 }
 

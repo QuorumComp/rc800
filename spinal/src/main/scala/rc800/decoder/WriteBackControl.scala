@@ -15,10 +15,5 @@ case class WriteBackControl() extends Bundle {
 	val fileControl = Vec(RegisterFileControl(), 4)
 
 	def fileControl(name: RegisterName.C): RegisterFileControl =
-		name.mux(
-			RegisterName.ft -> fileControl(0),
-			RegisterName.bc -> fileControl(1),
-			RegisterName.de -> fileControl(2),
-			RegisterName.hl -> fileControl(3),
-		)
+		fileControl(name.as(UInt))
 }
