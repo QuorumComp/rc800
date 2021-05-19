@@ -103,7 +103,7 @@ object TopLevelSim {
 			dut.clockDomain.waitSampling()
 
 			var modelState = 0
-			for (idx <- 0 to 500) {
+			for (idx <- 0 to 600) {
 				dut.clockDomain.waitFallingEdge()
 
 				val pc = dut.pc.toInt

@@ -151,8 +151,8 @@ class RC811() extends Component {
 
 		private def selectSource(source: ValueSource.C): UInt =
 			source.mux(
-				ValueSource.register1 -> registers.writeData,
-				ValueSource.register2 -> registers.writeDataExg,
+				ValueSource.register1 -> registers.readValues(0),
+				ValueSource.register2 -> registers.readValues(1),
 				ValueSource.pc -> pcPlusOne
 			)
 

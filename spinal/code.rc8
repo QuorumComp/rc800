@@ -12,19 +12,17 @@ println:	MACRO
 
 		SECTION "Main",CODE[$80]
 Main:
-		jal	TestStore
-
-		jal	TestConditions8Bit
-		jal	TestConditions16Bit
-		jal	TestShift
-		jal	TestBitwise
-		jal	TestJumps
-		jal	TestArithmetic16Bit
-		jal	TestArithmetic8Bit
-		jal	TestUnary
+;		jal	TestConditions8Bit
+;		jal	TestConditions16Bit
+;		jal	TestShift
+;		jal	TestBitwise
+;		jal	TestJumps
+;		jal	TestArithmetic16Bit
+;		jal	TestArithmetic8Bit
+;		jal	TestUnary
 ;		jal	TestStore
-		jal	TestLIO
-		jal	TestStackPointer
+;		jal	TestLIO
+;		jal	TestStackPointer
 		jal	TestExchange
 
 		println "Welcome to the RC800 processor"
@@ -39,7 +37,7 @@ Main:
 TestConditions8Bit:
 		ld	bc,IO_PRINT
 		ld	t,1
-		lio	(bc),t
+		lio	(bc),t	; $01
 
 		ld	d,127
 		cmp	d,0
@@ -76,151 +74,6 @@ TestConditions8Bit:
 		ld	t,0
 		ld/lt	t,$FF
 		lio	(bc),t	; $00
-
-		IF	0
-		ld	t,-1
-		sm
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,-128
-		sm
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,127
-		ld	d,255
-		sleu	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,255
-		ld	d,127
-		sleu	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,0
-		ld	d,0
-		sleu	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,0
-		ld	d,255
-		sleu	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,255
-		ld	d,0
-		sleu	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,127
-		ld	d,255
-		sltu	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,255
-		ld	d,127
-		sltu	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,0
-		ld	d,0
-		sltu	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,0
-		ld	d,255
-		sltu	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,255
-		ld	d,0
-		sltu	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,127
-		ld	d,-128
-		sle	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,-128
-		ld	d,127
-		sle	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,0
-		ld	d,0
-		sle	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,0
-		ld	d,127
-		sle	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,127
-		ld	d,0
-		sle	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,127
-		ld	d,-128
-		slt	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,-128
-		ld	d,127
-		slt	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,0
-		ld	d,0
-		slt	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		ld	t,0
-		ld	d,127
-		slt	d
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		ld	t,127
-		ld	d,0
-		slt	d
-		ld	t,f
-		lio	(bc),t	; $00
-
-		clr	f
-		clr	d
-		ld	t,d
-		sz	t
-		ld	t,f
-		lio	(bc),t	; $FF
-
-		add	d,1
-		ld	t,d
-		sz	t
-		ld	t,f
-		lio	(bc),t	; $00
-		ENDC
 
 		j	(hl)
 
@@ -380,7 +233,7 @@ TestShift:
 
 TestBitwise:
 		ld	bc,IO_PRINT
-		ld	t,4
+		ld	t,4	; $04
 		lio	(bc),t
 
 		ld	t,$0A
@@ -479,7 +332,7 @@ TestArithmetic8Bit:
 
 		ld	d,$42
 		add	d,$1F
-		ld	t,d
+		ld	t,d 
 		lio	(bc),t		; 61
 
 		ld	d,$42
@@ -503,7 +356,7 @@ TestArithmetic8Bit:
 TestUnary:
 		ld	bc,IO_PRINT
 		ld	t,8
-		lio	(bc),t
+		lio	(bc),t		; $08
 
 		ld	bc,IO_PRINT
 		ld	t,$34
@@ -518,18 +371,18 @@ TestUnary:
 TestStore:
 		ld	bc,IO_PRINT
 		ld	t,9
-		lio	(bc),t		; 09
+		lio	(bc),t		; $09
 
 		ld	bc,StoredData
 		ld	t,$87
-		ld	(bc),t
+		ld	(bc),t		; $87
 
 		ld	de,StoredData
 		ld	t,0
 		ld	t,(de)
 
 		ld	bc,IO_PRINT
-		lio	(bc),t		; 87
+		lio	(bc),t		; $87
 
 		ld	ft,StoredData
 		ld	d,$88
@@ -539,7 +392,7 @@ TestStore:
 		ld	t,c
 
 		ld	bc,IO_PRINT
-		lio	(bc),t		; 88
+		lio	(bc),t		; $88
 
 		j	(hl)
 
