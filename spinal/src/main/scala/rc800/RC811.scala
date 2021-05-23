@@ -7,13 +7,15 @@ import spinal.core.sim._
 import registers.OperandModifier
 import registers.Register
 import registers.RegisterFile
-import registers.RegisterFileControl
-import registers.RegisterName
-import registers.WriteMask
 
 import decoder.Decoder
+import decoder.DecoderOutput
+import decoder.RegisterControl
+import decoder.RegisterFileControl
+import decoder.RegisterName
 import decoder.ValueSource
 import decoder.WriteBackControl
+import decoder.WriteMask
 import decoder.WriteSource
 
 import alu.AluOperation
@@ -38,7 +40,7 @@ class RC811() extends Component {
 		val io        = out Bool
 		val code      = out Bool
 		val write     = out Bool
-		val intActive = out Bool
+		val int       = out Bool
 	}
 
 	val stage = Reg(UInt(2 bits)) init(1) simPublic()
@@ -47,13 +49,13 @@ class RC811() extends Component {
 	val pc = Reg(UInt(16 bits)) init(0xFFFF) simPublic()
 	private val pcPlusOne = pc + 1
 
-	private val intActive = Reg(Bool) init(False)
+	private val intPin = Reg(Bool) init(False)
 
 	io.busEnable := False
 	io.write := False
 	io.io := False
 	io.code := False
-	io.intActive := intActive
+	io.int := intPin
 	io.address := 0
 	io.dataOut := 0
 
@@ -70,29 +72,30 @@ class RC811() extends Component {
 		private val opcode = Reg(Bits(8 bits)) init(0)
 		private val intReq = Reg(Bool()) init(False)
 
-		val decoder = Decoder()
-		decoder.io.opcode := opcode
-		decoder.io.nmiReq := False
-		decoder.io.intReq := intReq
-		decoder.io.intEnable := intEnable
-		decoder.io.nmiActive := nmiActive
-		decoder.io.intActive := intActive
-		decoder.io.sysActive := sysActive
+		val decoderUnit = new Decoder()
+		decoderUnit.io.opcode := opcode
+		decoderUnit.io.nmiReq := False
+		decoderUnit.io.intReq := intReq
+		decoderUnit.io.intEnable := intEnable
+		decoderUnit.io.nmiActive := nmiActive
+		decoderUnit.io.intActive := intActive
+		decoderUnit.io.sysActive := sysActive
 
 		when (stage === 0) {
 			opcode := io.dataIn
 			intReq := io.irq
-			intEnable := decoder.io.output.intEnable
-			nmiActive := decoder.io.output.nmiActive
-			intActive := decoder.io.output.intActive
-			sysActive := decoder.io.output.sysActive
+			intEnable := decoderUnit.io.output.intEnable
+			nmiActive := decoderUnit.io.output.nmiActive
+			intActive := decoderUnit.io.output.intActive
+			sysActive := decoderUnit.io.output.sysActive
 		}
 		
-		val readControl   = decoder.io.output.readStageControl
-		val aluControl    = decoder.io.output.aluStageControl
-		val memoryControl = decoder.io.output.memoryStageControl
-		val pcControl     = decoder.io.output.pcControl
-		val writeControl  = decoder.io.output.writeStageControl
+		val readControl   = decoderUnit.io.output.stageControl.readStageControl
+		val aluControl    = decoderUnit.io.output.stageControl.aluStageControl
+		val memoryControl = decoderUnit.io.output.stageControl.memoryStageControl
+		val pcControl     = decoderUnit.io.output.stageControl.pcControl
+		val writeControl  = decoderUnit.io.output.stageControl.writeStageControl
+		val anyIntActive  = decoderUnit.io.output.anyActive
 	}
 
 	private val registers = new Area() {
@@ -139,7 +142,6 @@ class RC811() extends Component {
 		val writeControl = Reg(WriteBackControl())
 		val result = Reg(Bits(8 bits)) init(0)
 
-		writeControl.intActive init(False)
 		for (i <- 0 to 3) {
 			val control = writeControl.fileControl(0).registerControl
 			control.write init(False)
@@ -262,9 +264,9 @@ class RC811() extends Component {
 			io.write := False
 			io.io := False
 			io.code := True
-			io.intActive := control.intActive
+			io.int := decodeArea.anyIntActive
 
-			intActive := control.intActive
+			intPin := decodeArea.anyIntActive
 		}.otherwise {
 			for (i <- 0 to 3) {
 				val ctrl = registers.writeControl(i).registerControl

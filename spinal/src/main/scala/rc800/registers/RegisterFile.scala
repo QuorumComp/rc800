@@ -3,17 +3,8 @@ package rc800.registers
 import spinal.core._
 import spinal.lib._
 
-
-object RegisterName extends SpinalEnum(defaultEncoding = binarySequential) {
-	val ft, bc, de, hl = newElement()
-}
-
-
-case class RegisterFileControl() extends Bundle {
-	val registerControl = RegisterControl()
-	val rot8      = Bool
-	val sourceExg = Bool
-}
+import rc800.decoder.RegisterFileControl
+import rc800.decoder.RegisterName
 
 
 class RegisterFile extends Component {

@@ -26,6 +26,7 @@ object Opcodes {
 		M"1110100-",
 	)
 
+	def NOP_opcode = 0x00
 
 	def AND_T_I    = M"10110001"
 	def DI         = M"00011011"
