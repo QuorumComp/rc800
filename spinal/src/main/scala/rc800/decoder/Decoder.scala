@@ -4,10 +4,13 @@ import spinal.core._
 
 import rc800.alu.AluOperation
 import rc800.alu.Condition
-import rc800.alu.OperandSelection
+import rc800.alu.OperandSource
 import rc800.alu.ShiftOperation
 
+import rc800.control.RC811Control
+
 import rc800.Vectors
+
 
 case class Decoder() extends Component {
 	val io = new Bundle {
@@ -19,7 +22,7 @@ case class Decoder() extends Component {
 		val intActive = in Bool
 		val sysActive = in Bool
 
-		val output = out (DecoderOutput())
+		val output = out (RC811Control())
 	}
 
 	val opcodeDecoder = OpcodeDecoder()

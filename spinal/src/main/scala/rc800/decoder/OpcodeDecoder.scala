@@ -5,15 +5,28 @@ import spinal.lib._
 
 import rc800.alu.AluOperation
 import rc800.alu.Condition
-import rc800.alu.OperandSelection
+import rc800.alu.OperandSource
+import rc800.alu.PcCondition
+import rc800.alu.PcTruePathSource
 import rc800.alu.ShiftOperation
 
+import rc800.control.MemoryStageAddressSource
+import rc800.control.PipelineControl
+import rc800.control.WriteBackValueSource
+
+import rc800.control.component.RegisterControl
+
+import rc800.registers.OperandPart
+import rc800.registers.RegisterName
+import rc800.registers.WriteMask
+
 import rc800.Vectors
+
 
 case class OpcodeDecoder() extends Component {
 	val io = new Bundle {
 		val opcode = in Bits(8 bits)
-		val controlSignals = out (StageControl())
+		val controlSignals = out (PipelineControl())
 	}
 
 	private val registerPair2 = io.opcode(1 downto 0).as(RegisterName())
@@ -25,8 +38,8 @@ case class OpcodeDecoder() extends Component {
 	registerPair3WritePart := registerPair3Low ? WriteMask.low | WriteMask.high
 
 	private object Operand {
-		def opcode_r8 = StageControl.Operand(register = registerPair3, part = registerPair3Part, selection = OperandSelection.register)
-		def opcode_r16 = StageControl.Operand(register = registerPair2, part = OperandPart.full, selection = OperandSelection.register)
+		def opcode_r8 = PipelineControl.Operand(register = registerPair3, part = registerPair3Part, selection = OperandSource.register)
+		def opcode_r16 = PipelineControl.Operand(register = registerPair2, part = OperandPart.full, selection = OperandSource.register)
 	}
 
 
@@ -44,15 +57,14 @@ case class OpcodeDecoder() extends Component {
 		io.controlSignals.memoryStageControl.io      := False
 		io.controlSignals.memoryStageControl.code    := False
 		io.controlSignals.memoryStageControl.config  := False
-		io.controlSignals.memoryStageControl.data    := ValueSource.register1
-		io.controlSignals.memoryStageControl.address := ValueSource.register2
+		io.controlSignals.memoryStageControl.address := MemoryStageAddressSource.register1
 
-		io.controlSignals.aluStageControl.selection.foreach(_ := OperandSelection.register)
-		io.controlSignals.aluStageControl.operation := AluOperation.and
-		io.controlSignals.aluStageControl.condition := Condition.t
-		io.controlSignals.aluStageControl.shiftOperation := ShiftOperation.ls
+		io.controlSignals.aluStageControl.selection.foreach(_ := OperandSource.register)
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.and
+		io.controlSignals.aluStageControl.aluControl.condition := Condition.t
+		io.controlSignals.aluStageControl.aluControl.shiftOperation := ShiftOperation.ls
 
-		io.controlSignals.writeStageControl.source    := WriteSource.alu
+		io.controlSignals.writeStageControl.source    := WriteBackValueSource.alu
 		for (i <- 0 to 3) {
 			val fileControl = io.controlSignals.writeStageControl.fileControl(i)
 			fileControl.rot8 := False
@@ -64,10 +76,10 @@ case class OpcodeDecoder() extends Component {
 			fileControl.registerControl.mask  := WriteMask.none
 		}
 
-		io.controlSignals.pcControl.truePath      := PcTruePath.offsetFromDecoder
-		io.controlSignals.pcControl.decodedOffset := U(0)
-		io.controlSignals.pcControl.vector        := U(0)
-		io.controlSignals.pcControl.condition     := PcCondition.always
+		io.controlSignals.aluStageControl.pcControl.truePath      := PcTruePathSource.offsetFromDecoder
+		io.controlSignals.aluStageControl.pcControl.decodedOffset := U(0)
+		io.controlSignals.aluStageControl.pcControl.vector        := U(0)
+		io.controlSignals.aluStageControl.pcControl.condition     := PcCondition.always
 	}
 
 	setDefaults()
@@ -80,17 +92,17 @@ case class OpcodeDecoder() extends Component {
 		is (Opcodes.EXT_T)    { ext_T() }
 		is (Opcodes.LD_CR_T)  { ld_CR_T() }
 		is (Opcodes.LD_T_CR)  { ld_T_CR() }
-		is (Opcodes.LS_FT_I)  { shift_FT(ShiftOperation.ls, StageControl.Operand.immediate_byte) }
-		is (Opcodes.NEG_T)    { operation_T(StageControl.Operand.zero, AluOperation.sub) }
-		is (Opcodes.NEG_FT)   { modifyRegisterPair(StageControl.Operand.zero, AluOperation.sub) }
+		is (Opcodes.LS_FT_I)  { shift_FT(ShiftOperation.ls, PipelineControl.Operand.immediate_byte) }
+		is (Opcodes.NEG_T)    { operation_T(PipelineControl.Operand.zero, AluOperation.sub) }
+		is (Opcodes.NEG_FT)   { modifyRegisterPair(PipelineControl.Operand.zero, AluOperation.sub) }
 		is (Opcodes.NOP)      { }
 		is (Opcodes.NOT_F)    { not_F() }
 		is (Opcodes.OR_T_I)   { operation_T_I(AluOperation.or) }
 		is (Opcodes.POPA)     { stackAll(_.pop := True) }
 		is (Opcodes.PUSHA)    { stackAll(_.push := True) }
 		is (Opcodes.RETI)     { reti() }
-		is (Opcodes.RS_FT_I)  { shift_FT(ShiftOperation.rs, StageControl.Operand.immediate_byte) }
-		is (Opcodes.RSA_FT_I) { shift_FT(ShiftOperation.rsa, StageControl.Operand.immediate_byte) }
+		is (Opcodes.RS_FT_I)  { shift_FT(ShiftOperation.rs, PipelineControl.Operand.immediate_byte) }
+		is (Opcodes.RSA_FT_I) { shift_FT(ShiftOperation.rsa, PipelineControl.Operand.immediate_byte) }
 		is (Opcodes.SWAPA)    { stackAll(_.swap := True) }
 		is (Opcodes.SYS_I)    { sys() }
 		is (Opcodes.XOR_T_I)  { operation_T_I(AluOperation.xor) }
@@ -155,157 +167,157 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def operation_T_I(operation: AluOperation.E): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.t
-		io.controlSignals.operand2 := StageControl.Operand.immediate_byte
-		io.controlSignals.aluStageControl.operation := operation
-		io.controlSignals.Destination.t := WriteSource.alu
+		io.controlSignals.operand1 := PipelineControl.Operand.t
+		io.controlSignals.operand2 := PipelineControl.Operand.immediate_byte
+		io.controlSignals.aluStageControl.aluControl.operation := operation
+		io.controlSignals.Destination.t := WriteBackValueSource.alu
 	}
 
 	def add_R8_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r8
-		io.controlSignals.operand2 := StageControl.Operand.immediate_byte
-		io.controlSignals.aluStageControl.operation := AluOperation.add
-		Destination.opcode_r8 := WriteSource.alu
+		io.controlSignals.operand2 := PipelineControl.Operand.immediate_byte
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.add
+		Destination.opcode_r8 := WriteBackValueSource.alu
 	}
 
 	def add_R16_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := StageControl.Operand.signed_immediate_byte
-		io.controlSignals.aluStageControl.operation := AluOperation.add
-		Destination.opcode_r16 := WriteSource.alu
+		io.controlSignals.operand2 := PipelineControl.Operand.signed_immediate_byte
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.add
+		Destination.opcode_r16 := WriteBackValueSource.alu
 	}
 
-	def shift_FT(operation: ShiftOperation.E, operand: StageControl.Operand): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.ft
+	def shift_FT(operation: ShiftOperation.E, operand: PipelineControl.Operand): Unit = {
+		io.controlSignals.operand1 := PipelineControl.Operand.ft
 		io.controlSignals.operand2 := operand
 
-		io.controlSignals.aluStageControl.operation := AluOperation.shift
-		io.controlSignals.aluStageControl.shiftOperation := operation
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.shift
+		io.controlSignals.aluStageControl.aluControl.shiftOperation := operation
 
-		io.controlSignals.Destination.ft := WriteSource.alu
+		io.controlSignals.Destination.ft := WriteBackValueSource.alu
 	}
 
 	def ext_T(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.t
+		io.controlSignals.operand1 := PipelineControl.Operand.t
 
-		io.controlSignals.aluStageControl.operation := AluOperation.extend1
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.extend1
 
-		io.controlSignals.Destination.f := WriteSource.alu
+		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
-	def operation_T(op1: StageControl.Operand, operation: AluOperation.C): Unit = {
+	def operation_T(op1: PipelineControl.Operand, operation: AluOperation.C): Unit = {
 		io.controlSignals.operand1 := op1
-		io.controlSignals.operand2 := StageControl.Operand.t
+		io.controlSignals.operand2 := PipelineControl.Operand.t
 		
-		io.controlSignals.aluStageControl.operation := operation
+		io.controlSignals.aluStageControl.aluControl.operation := operation
 
-		io.controlSignals.Destination.t := WriteSource.alu
+		io.controlSignals.Destination.t := WriteBackValueSource.alu
 	}
 
 	def operation_T_R8(operation: AluOperation.C): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.t
+		io.controlSignals.operand1 := PipelineControl.Operand.t
 		io.controlSignals.operand2 := Operand.opcode_r8
 		
-		io.controlSignals.aluStageControl.operation := operation
+		io.controlSignals.aluStageControl.aluControl.operation := operation
 
-		io.controlSignals.Destination.t := WriteSource.alu
+		io.controlSignals.Destination.t := WriteBackValueSource.alu
 	}
 	
 	def not_F(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.ones
-		io.controlSignals.operand2 := StageControl.Operand.f
+		io.controlSignals.operand1 := PipelineControl.Operand.ones
+		io.controlSignals.operand2 := PipelineControl.Operand.f
 		
-		io.controlSignals.aluStageControl.operation := AluOperation.xor
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.xor
 
-		io.controlSignals.Destination.f := WriteSource.alu
+		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 	
-	def modifyRegister(op1: StageControl.Operand, operation: AluOperation.C): Unit = {
+	def modifyRegister(op1: PipelineControl.Operand, operation: AluOperation.C): Unit = {
 		io.controlSignals.operand1 := op1
 		io.controlSignals.operand2 := Operand.opcode_r8
 
-		io.controlSignals.aluStageControl.operation := operation
+		io.controlSignals.aluStageControl.aluControl.operation := operation
 
-		Destination.opcode_r8 := WriteSource.alu
+		Destination.opcode_r8 := WriteBackValueSource.alu
 	}
 
 	def operation_FT_R16(operation: AluOperation.C): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.ft
+		io.controlSignals.operand1 := PipelineControl.Operand.ft
 		io.controlSignals.operand2 := Operand.opcode_r16
 
-		io.controlSignals.aluStageControl.operation := operation
+		io.controlSignals.aluStageControl.aluControl.operation := operation
 
-		io.controlSignals.Destination.ft := WriteSource.alu
+		io.controlSignals.Destination.ft := WriteBackValueSource.alu
 	}
 
 	def cmp_FT_R16(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.ft
+		io.controlSignals.operand1 := PipelineControl.Operand.ft
 		io.controlSignals.operand2 := Operand.opcode_r16
 
-		io.controlSignals.aluStageControl.operation := AluOperation.compare
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
 
-		io.controlSignals.Destination.f := WriteSource.alu
+		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
 	def cmp_T_R8(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.t
+		io.controlSignals.operand1 := PipelineControl.Operand.t
 		io.controlSignals.operand2 := Operand.opcode_r8
 
-		io.controlSignals.aluStageControl.operation := AluOperation.compare
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
 
-		io.controlSignals.Destination.f := WriteSource.alu
+		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
 	def cmp_R8_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r8
-		io.controlSignals.operand2 := StageControl.Operand.immediate_byte
+		io.controlSignals.operand2 := PipelineControl.Operand.immediate_byte
 
-		io.controlSignals.aluStageControl.operation := AluOperation.compare
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
 
-		io.controlSignals.Destination.f := WriteSource.alu
+		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
 	def tst_R16(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := StageControl.Operand.zero
-		io.controlSignals.aluStageControl.operation := AluOperation.compare
+		io.controlSignals.operand2 := PipelineControl.Operand.zero
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
 
-		io.controlSignals.Destination.f := WriteSource.alu
+		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
-	def modifyRegisterPair(op1: StageControl.Operand, operation: AluOperation.C): Unit = {
+	def modifyRegisterPair(op1: PipelineControl.Operand, operation: AluOperation.C): Unit = {
 		io.controlSignals.operand1 := op1
 		io.controlSignals.operand2 := Operand.opcode_r16
 
-		io.controlSignals.aluStageControl.operation := operation
+		io.controlSignals.aluStageControl.aluControl.operation := operation
 
-		Destination.opcode_r16 := WriteSource.alu
+		Destination.opcode_r16 := WriteBackValueSource.alu
 	}
 
 	def jumpLong(condition: Condition.C = Condition.t): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.f
-		io.controlSignals.readMemory(ValueSource.pc, doIo = False, code = True)
-		io.controlSignals.aluStageControl.operation := AluOperation.operand1
-		io.controlSignals.aluStageControl.condition := condition
-		io.controlSignals.pcControl.truePath  := PcTruePath.offsetFromMemory
-		io.controlSignals.pcControl.condition := PcCondition.whenConditionMet
+		io.controlSignals.operand1 := PipelineControl.Operand.f
+		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
+		io.controlSignals.aluStageControl.aluControl.condition := condition
+		io.controlSignals.aluStageControl.pcControl.truePath  := PcTruePathSource.offsetFromMemory
+		io.controlSignals.aluStageControl.pcControl.condition := PcCondition.whenConditionMet
 	}
 
 	def dj_R8_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r8
-		io.controlSignals.operand2 := StageControl.Operand.ones
-		io.controlSignals.readMemory(ValueSource.pc, doIo = False, code = True)
-		io.controlSignals.aluStageControl.operation := AluOperation.add
-		io.controlSignals.pcControl.truePath  := PcTruePath.offsetFromMemory
-		io.controlSignals.pcControl.condition := PcCondition.whenResultNotZero
-		Destination.opcode_r8 := WriteSource.alu
+		io.controlSignals.operand2 := PipelineControl.Operand.ones
+		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.add
+		io.controlSignals.aluStageControl.pcControl.truePath  := PcTruePathSource.offsetFromMemory
+		io.controlSignals.aluStageControl.pcControl.condition := PcCondition.whenResultNotZero
+		Destination.opcode_r8 := WriteBackValueSource.alu
 	}
 
 	def stack(setter: RegisterControl => Unit): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.aluStageControl.operation := AluOperation.operand1
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
 
-		io.controlSignals.writeStageControl.source := WriteSource.alu
+		io.controlSignals.writeStageControl.source := WriteBackValueSource.alu
 
 		val fileControl = io.controlSignals.writeStageControl.fileControl(registerPair2)
 		setter(fileControl.registerControl)
@@ -320,49 +332,49 @@ case class OpcodeDecoder() extends Component {
 
 	def ld_MEM_T(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := StageControl.Operand.t
-		io.controlSignals.writeMemory(ValueSource.register1, ValueSource.register2)
+		io.controlSignals.operand2 := PipelineControl.Operand.t
+		io.controlSignals.writeMemory(MemoryStageAddressSource.register1)
 	}
 
 	def ld_MEM_R8(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.ft
+		io.controlSignals.operand1 := PipelineControl.Operand.ft
 		io.controlSignals.operand2 := Operand.opcode_r8
-		io.controlSignals.writeMemory(ValueSource.register1, ValueSource.register2)
+		io.controlSignals.writeMemory(MemoryStageAddressSource.register1)
 	}
 
 	def ld_T_MEM(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.readMemory(ValueSource.register1)
-		io.controlSignals.Destination.t := WriteSource.memory
+		io.controlSignals.readMemory(MemoryStageAddressSource.register1)
+		io.controlSignals.Destination.t := WriteBackValueSource.memory
 	}
 
 	def ld_R8_MEM(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.ft
-		io.controlSignals.readMemory(ValueSource.register1)
-		Destination.opcode_r8 := WriteSource.memory
+		io.controlSignals.operand1 := PipelineControl.Operand.ft
+		io.controlSignals.readMemory(MemoryStageAddressSource.register1)
+		Destination.opcode_r8 := WriteBackValueSource.memory
 	}
 
 	def ld_T_CODE(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.readMemory(ValueSource.register1, doIo = False, code = True)
-		io.controlSignals.Destination.t := WriteSource.memory
+		io.controlSignals.readMemory(MemoryStageAddressSource.register1, doIo = False, code = True)
+		io.controlSignals.Destination.t := WriteBackValueSource.memory
 	}
 
 	def jal_R16(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.pc
+		io.controlSignals.operand1 := PipelineControl.Operand.pc
 		io.controlSignals.operand2 := Operand.opcode_r16
-		io.controlSignals.aluStageControl.operation := AluOperation.operand1
-		io.controlSignals.pcControl.truePath := PcTruePath.register2
-		io.controlSignals.Destination.hl := WriteSource.alu
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
+		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register2
+		io.controlSignals.Destination.hl := WriteBackValueSource.alu
 	}
 
 	def j_R16(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.pcControl.truePath := PcTruePath.register1
+		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register1
 	}
 
 	def ld_R8_T(): Unit = {
-		Destination.opcode_r8 := StageControl.Operand.t
+		Destination.opcode_r8 := PipelineControl.Operand.t
 	}
 
 	def ld_T_R8(): Unit = {
@@ -374,60 +386,58 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ld_R16_FT(): Unit = {
-		Destination.opcode_r16 := StageControl.Operand.ft
+		Destination.opcode_r16 := PipelineControl.Operand.ft
 	}
 
 	def ld_R8_I(): Unit = {
 		io.controlSignals.loadImmediateByte()
-		Destination.opcode_r8 := WriteSource.memory
+		Destination.opcode_r8 := WriteBackValueSource.memory
 	}
 
 	def ld_IO_T(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := StageControl.Operand.t
-		io.controlSignals.writeMemory(ValueSource.register1, ValueSource.register2, doIo = True)
+		io.controlSignals.operand2 := PipelineControl.Operand.t
+		io.controlSignals.writeMemory(MemoryStageAddressSource.register1, doIo = True)
 	}
 
 	def ld_T_IO(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.readMemory(ValueSource.register1, doIo = True)
-		io.controlSignals.Destination.t := WriteSource.memory
+		io.controlSignals.readMemory(MemoryStageAddressSource.register1, doIo = True)
+		io.controlSignals.Destination.t := WriteBackValueSource.memory
 	}
 
 	def ld_CR_T(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.t
-		io.controlSignals.operand2 := StageControl.Operand.c
+		io.controlSignals.operand1 := PipelineControl.Operand.c
+		io.controlSignals.operand2 := PipelineControl.Operand.t
 		io.controlSignals.memoryStageControl.enable := True
 		io.controlSignals.memoryStageControl.write := True
 		io.controlSignals.memoryStageControl.config := True
-		io.controlSignals.memoryStageControl.address := ValueSource.register2
-		io.controlSignals.memoryStageControl.data := ValueSource.register1
-		io.controlSignals.aluStageControl.operation := AluOperation.operand1
+		io.controlSignals.memoryStageControl.address := MemoryStageAddressSource.register1
 	}
 
 	def ld_T_CR(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.c
+		io.controlSignals.operand1 := PipelineControl.Operand.c
 		io.controlSignals.memoryStageControl.enable := True
 		io.controlSignals.memoryStageControl.config := True
 		io.controlSignals.memoryStageControl.write := False
-		io.controlSignals.memoryStageControl.address := ValueSource.register1
-		io.controlSignals.Destination.t := WriteSource.memory
+		io.controlSignals.memoryStageControl.address := MemoryStageAddressSource.register1
+		io.controlSignals.Destination.t := WriteBackValueSource.memory
 	}
 
 	def sys(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.pc
-		io.controlSignals.operand2 := StageControl.Operand.ones
-		io.controlSignals.aluStageControl.operation := AluOperation.sub
+		io.controlSignals.operand1 := PipelineControl.Operand.pc
+		io.controlSignals.operand2 := PipelineControl.Operand.ones
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.sub
 
-		io.controlSignals.readMemory(ValueSource.pc, doIo = False, code = True)
-		io.controlSignals.pcControl.truePath := PcTruePath.vectorFromMemory
+		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
+		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.vectorFromMemory
 
 		io.controlSignals.pushValueHL()
 	}
 
 	def reti(): Unit = {
-		io.controlSignals.operand1 := StageControl.Operand.hl
-		io.controlSignals.pcControl.truePath := PcTruePath.register1
+		io.controlSignals.operand1 := PipelineControl.Operand.hl
+		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register1
 
 		io.controlSignals.writeStageControl.fileControl(RegisterName.hl).registerControl.pop := True
 	}

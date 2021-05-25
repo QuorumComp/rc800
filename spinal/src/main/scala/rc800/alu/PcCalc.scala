@@ -1,11 +1,26 @@
-package rc800.stage
+package rc800.alu
 
 import spinal.core._
-import spinal.lib._
 
-import rc800.decoder.PcCondition
-import rc800.decoder.PcControl
-import rc800.decoder.PcTruePath
+import rc800.control.component.PcControl
+
+
+object PcTruePathSource extends SpinalEnum {
+	val offsetFromMemory,
+		offsetFromDecoder,
+		register1,
+		register2,
+		vectorFromMemory,
+		vectorFromDecoder = newElement()
+}
+
+
+object PcCondition extends SpinalEnum {
+	val always,
+		whenConditionMet,
+		whenResultNotZero = newElement()
+}
+
 
 case class PcCalc() extends Component {
 	val io = new Bundle {
@@ -22,12 +37,12 @@ case class PcCalc() extends Component {
 	private val offsetFromMemory = io.memory.asSInt.resize(16 bits).asUInt
 	private val offsetFromDecoder = io.control.decodedOffset.resize(16 bits)
 
-	private val pcOffset = ((io.control.truePath === PcTruePath.offsetFromMemory) ? offsetFromMemory | offsetFromDecoder)
+	private val pcOffset = ((io.control.truePath === PcTruePathSource.offsetFromMemory) ? offsetFromMemory | offsetFromDecoder)
 	private val truePath = io.control.truePath.mux(
-		PcTruePath.register1 -> io.operands(0),
-		PcTruePath.register2 -> io.operands(1),
-		PcTruePath.vectorFromDecoder -> (io.control.vector << 3).resize(16 bits),
-		PcTruePath.vectorFromMemory -> (io.memory << 3).resize(16 bits).asUInt,
+		PcTruePathSource.register1 -> io.operands(0),
+		PcTruePathSource.register2 -> io.operands(1),
+		PcTruePathSource.vectorFromDecoder -> (io.control.vector << 3).resize(16 bits),
+		PcTruePathSource.vectorFromMemory -> (io.memory << 3).resize(16 bits).asUInt,
 		default -> (io.pc + pcOffset)
 	)
 	private val falsePath = io.pc + 1

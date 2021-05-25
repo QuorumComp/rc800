@@ -3,7 +3,12 @@ package rc800.registers
 import spinal.core._
 import spinal.lib._
 
-import rc800.decoder.RegisterControl
+import rc800.control.component.RegisterControl
+
+
+object WriteMask extends SpinalEnum(defaultEncoding = binarySequential) {
+	val none, low, high, full = newElement()
+}
 
 
 case class Register() extends Component {

@@ -3,9 +3,13 @@ package rc800.registers
 import spinal.core._
 import spinal.lib._
 
-import rc800.decoder.OperandPart
 
-case class OperandModifier() extends Component {
+object OperandPart extends SpinalEnum {
+	val full, low, high = newElement()
+}
+
+
+case class OperandPartSelector() extends Component {
 	val io = new Bundle {
 		val operand = in  UInt(16 bits)
 		val part    = in  (OperandPart())

@@ -3,8 +3,7 @@ package rc800.registers
 import spinal.core._
 import spinal.lib._
 
-import rc800.decoder.RegisterFileControl
-import rc800.decoder.RegisterName
+import rc800.control.component.RegisterFileControl
 
 
 class RegisterFile extends Component {

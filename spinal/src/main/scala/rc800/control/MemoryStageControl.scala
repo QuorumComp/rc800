@@ -1,11 +1,13 @@
-package rc800.decoder
+package rc800.control
 
 import spinal.core._
 import spinal.lib._
 
-object ValueSource extends SpinalEnum {
-	val register1, register2, pc = newElement()
+
+object MemoryStageAddressSource extends SpinalEnum {
+	val register1, pc = newElement()
 }
+
 
 case class MemoryStageControl() extends Bundle {
 	val enable  = Bool
@@ -13,7 +15,6 @@ case class MemoryStageControl() extends Bundle {
 	val io      = Bool
 	val code    = Bool
 	val config  = Bool
-	val data    = ValueSource()
-	val address = ValueSource()
+	val address = MemoryStageAddressSource()
 }
 

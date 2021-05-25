@@ -1,10 +1,10 @@
-package rc800.decoder
+package rc800.control
 
 import spinal.core._
 import spinal.lib._
 
-case class DecoderOutput() extends Bundle {
-	val stageControl = StageControl()
+case class RC811Control() extends Bundle {
+	val stageControl = PipelineControl()
 
 	val intEnable = Bool
 	val nmiActive = Bool

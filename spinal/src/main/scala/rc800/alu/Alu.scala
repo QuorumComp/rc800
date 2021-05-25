@@ -3,6 +3,8 @@ package rc800.alu
 import spinal.core._
 import spinal.lib._
 
+import rc800.control.component.AluControl
+
 /*
  * This is a 16 bit ALU that supports several operations and possibly a final
  * conditional transformation depending on the operation result.
@@ -23,9 +25,10 @@ object AluOperation extends SpinalEnum {
 		operand1 = newElement()
 }
 
+
 object Condition extends SpinalEnum {
 	val	le, gt, lt, ge, leu, gtu, ltu, geu,
-		eq,  ne,  t,   f = newElement()
+		eq, ne,  t,  f = newElement()
 }
 
 
@@ -34,9 +37,7 @@ class Alu extends Component {
 		val operand1 = in UInt(16 bits)
 		val operand2 = in UInt(16 bits)
 
-		val operation      = in (AluOperation())
-		val shiftOperation = in (ShiftOperation())
-		val condition      = in (Condition())
+		val control = in (AluControl())
 
 		val dataOut      = out UInt(16 bits)
 		val conditionMet = out Bool
@@ -47,7 +48,7 @@ class Alu extends Component {
 
 	shifter.io.operand   <> io.operand1
 	shifter.io.amount    <> io.operand2(11 downto 8)
-	shifter.io.operation <> io.shiftOperation
+	shifter.io.operation <> io.control.shiftOperation
 
 	val condition = new Area {
 		private val overflow = io.operand1(11)
@@ -61,7 +62,7 @@ class Alu extends Component {
 		private val cc_ltu = (carry)
 		private val cc_eq  = (zero)
 
-		val met = io.condition.mux(
+		val met = io.control.condition.mux(
 			Condition.le   -> cc_le,
 			Condition.gt   -> !cc_le,
 			Condition.lt   -> cc_lt,
@@ -77,7 +78,7 @@ class Alu extends Component {
 		)
 	}
 
-	private val carryAndResult = io.operation.mux(
+	private val carryAndResult = io.control.operation.mux(
 		AluOperation.add       -> (io.operand1 +^ io.operand2),
 		AluOperation.and       -> (io.operand1 & io.operand2).resize(17 bits),
 		AluOperation.or        -> (io.operand1 | io.operand2).resize(17 bits),
@@ -102,7 +103,7 @@ class Alu extends Component {
 		val out = B(0, 4 bits) ## overflow ## negative ## zero ## carry ## B(0, 8 bits)
 	}
 
-	private val selectFlags = io.operation === AluOperation.compare
+	private val selectFlags = io.control.operation === AluOperation.compare
 	
 	io.dataOut := selectFlags ? flags.out.asUInt | result
 	io.conditionMet := condition.met

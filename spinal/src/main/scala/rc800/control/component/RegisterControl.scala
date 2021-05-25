@@ -1,10 +1,9 @@
-package rc800.decoder
+package rc800.control.component
 
 import spinal.core._
 
-object WriteMask extends SpinalEnum(defaultEncoding = binarySequential) {
-	val none, low, high, full = newElement()
-}
+import rc800.registers.WriteMask
+
 
 case class RegisterControl() extends Bundle {
 	val write = Bool

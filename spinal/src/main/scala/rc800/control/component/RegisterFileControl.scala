@@ -1,4 +1,4 @@
-package rc800.decoder
+package rc800.control.component
 
 import spinal.core._
 
@@ -13,5 +13,3 @@ case class RegisterFileControl() extends Bundle {
 	val rot8      = Bool
 	val sourceExg = Bool
 }
-
-
