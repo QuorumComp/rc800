@@ -13,6 +13,8 @@ import rc800.Vectors
 
 
 case class Decoder() extends Component {
+	import Pipeline._
+
 	val io = new Bundle {
 		val opcode    = in Bits(8 bits)
 		val nmiReq    = in Bool

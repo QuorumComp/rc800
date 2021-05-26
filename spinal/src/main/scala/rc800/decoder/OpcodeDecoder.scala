@@ -22,6 +22,8 @@ import rc800.registers.WriteMask
 
 import rc800.Vectors
 
+import Pipeline.PipelineControlPimp
+
 
 case class OpcodeDecoder() extends Component {
 	val io = new Bundle {
@@ -38,8 +40,8 @@ case class OpcodeDecoder() extends Component {
 	registerPair3WritePart := registerPair3Low ? WriteMask.low | WriteMask.high
 
 	private object Operand {
-		def opcode_r8 = PipelineControl.Operand(register = registerPair3, part = registerPair3Part, selection = OperandSource.register)
-		def opcode_r16 = PipelineControl.Operand(register = registerPair2, part = OperandPart.full, selection = OperandSource.register)
+		def opcode_r8 = Pipeline.Operand(register = registerPair3, part = registerPair3Part, selection = OperandSource.register)
+		def opcode_r16 = Pipeline.Operand(register = registerPair2, part = OperandPart.full, selection = OperandSource.register)
 	}
 
 
@@ -92,17 +94,17 @@ case class OpcodeDecoder() extends Component {
 		is (Opcodes.EXT_T)    { ext_T() }
 		is (Opcodes.LD_CR_T)  { ld_CR_T() }
 		is (Opcodes.LD_T_CR)  { ld_T_CR() }
-		is (Opcodes.LS_FT_I)  { shift_FT(ShiftOperation.ls, PipelineControl.Operand.immediate_byte) }
-		is (Opcodes.NEG_T)    { operation_T(PipelineControl.Operand.zero, AluOperation.sub) }
-		is (Opcodes.NEG_FT)   { modifyRegisterPair(PipelineControl.Operand.zero, AluOperation.sub) }
+		is (Opcodes.LS_FT_I)  { shift_FT(ShiftOperation.ls, Pipeline.Operand.immediate_byte) }
+		is (Opcodes.NEG_T)    { operation_T(Pipeline.Operand.zero, AluOperation.sub) }
+		is (Opcodes.NEG_FT)   { modifyRegisterPair(Pipeline.Operand.zero, AluOperation.sub) }
 		is (Opcodes.NOP)      { }
 		is (Opcodes.NOT_F)    { not_F() }
 		is (Opcodes.OR_T_I)   { operation_T_I(AluOperation.or) }
 		is (Opcodes.POPA)     { stackAll(_.pop := True) }
 		is (Opcodes.PUSHA)    { stackAll(_.push := True) }
 		is (Opcodes.RETI)     { reti() }
-		is (Opcodes.RS_FT_I)  { shift_FT(ShiftOperation.rs, PipelineControl.Operand.immediate_byte) }
-		is (Opcodes.RSA_FT_I) { shift_FT(ShiftOperation.rsa, PipelineControl.Operand.immediate_byte) }
+		is (Opcodes.RS_FT_I)  { shift_FT(ShiftOperation.rs, Pipeline.Operand.immediate_byte) }
+		is (Opcodes.RSA_FT_I) { shift_FT(ShiftOperation.rsa, Pipeline.Operand.immediate_byte) }
 		is (Opcodes.SWAPA)    { stackAll(_.swap := True) }
 		is (Opcodes.SYS_I)    { sys() }
 		is (Opcodes.XOR_T_I)  { operation_T_I(AluOperation.xor) }
@@ -167,28 +169,28 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def operation_T_I(operation: AluOperation.E): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.t
-		io.controlSignals.operand2 := PipelineControl.Operand.immediate_byte
+		io.controlSignals.operand1 := Pipeline.Operand.t
+		io.controlSignals.operand2 := Pipeline.Operand.immediate_byte
 		io.controlSignals.aluStageControl.aluControl.operation := operation
 		io.controlSignals.Destination.t := WriteBackValueSource.alu
 	}
 
 	def add_R8_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r8
-		io.controlSignals.operand2 := PipelineControl.Operand.immediate_byte
+		io.controlSignals.operand2 := Pipeline.Operand.immediate_byte
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.add
 		Destination.opcode_r8 := WriteBackValueSource.alu
 	}
 
 	def add_R16_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := PipelineControl.Operand.signed_immediate_byte
+		io.controlSignals.operand2 := Pipeline.Operand.signed_immediate_byte
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.add
 		Destination.opcode_r16 := WriteBackValueSource.alu
 	}
 
-	def shift_FT(operation: ShiftOperation.E, operand: PipelineControl.Operand): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.ft
+	def shift_FT(operation: ShiftOperation.E, operand: Pipeline.Operand): Unit = {
+		io.controlSignals.operand1 := Pipeline.Operand.ft
 		io.controlSignals.operand2 := operand
 
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.shift
@@ -198,16 +200,16 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ext_T(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.t
+		io.controlSignals.operand1 := Pipeline.Operand.t
 
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.extend1
 
 		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
-	def operation_T(op1: PipelineControl.Operand, operation: AluOperation.C): Unit = {
+	def operation_T(op1: Pipeline.Operand, operation: AluOperation.C): Unit = {
 		io.controlSignals.operand1 := op1
-		io.controlSignals.operand2 := PipelineControl.Operand.t
+		io.controlSignals.operand2 := Pipeline.Operand.t
 		
 		io.controlSignals.aluStageControl.aluControl.operation := operation
 
@@ -215,7 +217,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def operation_T_R8(operation: AluOperation.C): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.t
+		io.controlSignals.operand1 := Pipeline.Operand.t
 		io.controlSignals.operand2 := Operand.opcode_r8
 		
 		io.controlSignals.aluStageControl.aluControl.operation := operation
@@ -224,15 +226,15 @@ case class OpcodeDecoder() extends Component {
 	}
 	
 	def not_F(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.ones
-		io.controlSignals.operand2 := PipelineControl.Operand.f
+		io.controlSignals.operand1 := Pipeline.Operand.ones
+		io.controlSignals.operand2 := Pipeline.Operand.f
 		
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.xor
 
 		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 	
-	def modifyRegister(op1: PipelineControl.Operand, operation: AluOperation.C): Unit = {
+	def modifyRegister(op1: Pipeline.Operand, operation: AluOperation.C): Unit = {
 		io.controlSignals.operand1 := op1
 		io.controlSignals.operand2 := Operand.opcode_r8
 
@@ -242,7 +244,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def operation_FT_R16(operation: AluOperation.C): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.ft
+		io.controlSignals.operand1 := Pipeline.Operand.ft
 		io.controlSignals.operand2 := Operand.opcode_r16
 
 		io.controlSignals.aluStageControl.aluControl.operation := operation
@@ -251,7 +253,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def cmp_FT_R16(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.ft
+		io.controlSignals.operand1 := Pipeline.Operand.ft
 		io.controlSignals.operand2 := Operand.opcode_r16
 
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
@@ -260,7 +262,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def cmp_T_R8(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.t
+		io.controlSignals.operand1 := Pipeline.Operand.t
 		io.controlSignals.operand2 := Operand.opcode_r8
 
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
@@ -270,7 +272,7 @@ case class OpcodeDecoder() extends Component {
 
 	def cmp_R8_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r8
-		io.controlSignals.operand2 := PipelineControl.Operand.immediate_byte
+		io.controlSignals.operand2 := Pipeline.Operand.immediate_byte
 
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
 
@@ -279,13 +281,13 @@ case class OpcodeDecoder() extends Component {
 
 	def tst_R16(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := PipelineControl.Operand.zero
+		io.controlSignals.operand2 := Pipeline.Operand.zero
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.compare
 
 		io.controlSignals.Destination.f := WriteBackValueSource.alu
 	}
 
-	def modifyRegisterPair(op1: PipelineControl.Operand, operation: AluOperation.C): Unit = {
+	def modifyRegisterPair(op1: Pipeline.Operand, operation: AluOperation.C): Unit = {
 		io.controlSignals.operand1 := op1
 		io.controlSignals.operand2 := Operand.opcode_r16
 
@@ -295,7 +297,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def jumpLong(condition: Condition.C = Condition.t): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.f
+		io.controlSignals.operand1 := Pipeline.Operand.f
 		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
 		io.controlSignals.aluStageControl.aluControl.condition := condition
@@ -305,7 +307,7 @@ case class OpcodeDecoder() extends Component {
 
 	def dj_R8_I(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r8
-		io.controlSignals.operand2 := PipelineControl.Operand.ones
+		io.controlSignals.operand2 := Pipeline.Operand.ones
 		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.add
 		io.controlSignals.aluStageControl.pcControl.truePath  := PcTruePathSource.offsetFromMemory
@@ -332,12 +334,12 @@ case class OpcodeDecoder() extends Component {
 
 	def ld_MEM_T(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := PipelineControl.Operand.t
+		io.controlSignals.operand2 := Pipeline.Operand.t
 		io.controlSignals.writeMemory(MemoryStageAddressSource.register1)
 	}
 
 	def ld_MEM_R8(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.ft
+		io.controlSignals.operand1 := Pipeline.Operand.ft
 		io.controlSignals.operand2 := Operand.opcode_r8
 		io.controlSignals.writeMemory(MemoryStageAddressSource.register1)
 	}
@@ -349,7 +351,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ld_R8_MEM(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.ft
+		io.controlSignals.operand1 := Pipeline.Operand.ft
 		io.controlSignals.readMemory(MemoryStageAddressSource.register1)
 		Destination.opcode_r8 := WriteBackValueSource.memory
 	}
@@ -361,7 +363,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def jal_R16(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.pc
+		io.controlSignals.operand1 := Pipeline.Operand.pc
 		io.controlSignals.operand2 := Operand.opcode_r16
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
 		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register2
@@ -374,7 +376,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ld_R8_T(): Unit = {
-		Destination.opcode_r8 := PipelineControl.Operand.t
+		Destination.opcode_r8 := Pipeline.Operand.t
 	}
 
 	def ld_T_R8(): Unit = {
@@ -386,7 +388,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ld_R16_FT(): Unit = {
-		Destination.opcode_r16 := PipelineControl.Operand.ft
+		Destination.opcode_r16 := Pipeline.Operand.ft
 	}
 
 	def ld_R8_I(): Unit = {
@@ -396,7 +398,7 @@ case class OpcodeDecoder() extends Component {
 
 	def ld_IO_T(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.operand2 := PipelineControl.Operand.t
+		io.controlSignals.operand2 := Pipeline.Operand.t
 		io.controlSignals.writeMemory(MemoryStageAddressSource.register1, doIo = True)
 	}
 
@@ -407,8 +409,8 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ld_CR_T(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.c
-		io.controlSignals.operand2 := PipelineControl.Operand.t
+		io.controlSignals.operand1 := Pipeline.Operand.c
+		io.controlSignals.operand2 := Pipeline.Operand.t
 		io.controlSignals.memoryStageControl.enable := True
 		io.controlSignals.memoryStageControl.write := True
 		io.controlSignals.memoryStageControl.config := True
@@ -416,7 +418,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def ld_T_CR(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.c
+		io.controlSignals.operand1 := Pipeline.Operand.c
 		io.controlSignals.memoryStageControl.enable := True
 		io.controlSignals.memoryStageControl.config := True
 		io.controlSignals.memoryStageControl.write := False
@@ -425,8 +427,8 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def sys(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.pc
-		io.controlSignals.operand2 := PipelineControl.Operand.ones
+		io.controlSignals.operand1 := Pipeline.Operand.pc
+		io.controlSignals.operand2 := Pipeline.Operand.ones
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.sub
 
 		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
@@ -436,7 +438,7 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def reti(): Unit = {
-		io.controlSignals.operand1 := PipelineControl.Operand.hl
+		io.controlSignals.operand1 := Pipeline.Operand.hl
 		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register1
 
 		io.controlSignals.writeStageControl.fileControl(RegisterName.hl).registerControl.pop := True
