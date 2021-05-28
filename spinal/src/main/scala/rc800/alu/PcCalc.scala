@@ -8,7 +8,6 @@ import rc800.control.component.PcControl
 object PcTruePathSource extends SpinalEnum {
 	val offsetFromMemory,
 		offsetFromDecoder,
-		register1,
 		register2,
 		vectorFromMemory,
 		vectorFromDecoder = newElement()
@@ -37,13 +36,12 @@ case class PcCalc() extends Component {
 	private val offsetFromMemory = io.memory.asSInt.resize(16 bits).asUInt
 	private val offsetFromDecoder = io.control.decodedOffset.resize(16 bits)
 
-	private val pcOffset = ((io.control.truePath === PcTruePathSource.offsetFromMemory) ? offsetFromMemory | offsetFromDecoder)
 	private val truePath = io.control.truePath.mux(
-		PcTruePathSource.register1 -> io.operands(0),
 		PcTruePathSource.register2 -> io.operands(1),
 		PcTruePathSource.vectorFromDecoder -> (io.control.vector << 3).resize(16 bits),
 		PcTruePathSource.vectorFromMemory -> (io.memory << 3).resize(16 bits).asUInt,
-		default -> (io.pc + pcOffset)
+		PcTruePathSource.offsetFromMemory -> (io.pc + offsetFromMemory),
+		PcTruePathSource.offsetFromDecoder -> (io.pc + offsetFromDecoder)
 	)
 	private val falsePath = io.pc + 1
 

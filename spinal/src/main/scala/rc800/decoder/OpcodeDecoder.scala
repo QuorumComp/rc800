@@ -31,6 +31,8 @@ case class OpcodeDecoder() extends Component {
 		val controlSignals = out (PipelineControl())
 	}
 
+	val controlBits = io.controlSignals.asBits
+
 	private val registerPair2 = io.opcode(1 downto 0).as(RegisterName())
 	private val registerPair3 = io.opcode(2 downto 1).as(RegisterName())
 	private val registerPair3Low = io.opcode(0)
@@ -298,8 +300,9 @@ case class OpcodeDecoder() extends Component {
 
 	def jumpLong(condition: Condition.C = Condition.t): Unit = {
 		io.controlSignals.operand1 := Pipeline.Operand.f
+		io.controlSignals.operand2 := Pipeline.Operand.zero
 		io.controlSignals.readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
-		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.or
 		io.controlSignals.aluStageControl.aluControl.condition := condition
 		io.controlSignals.aluStageControl.pcControl.truePath  := PcTruePathSource.offsetFromMemory
 		io.controlSignals.aluStageControl.pcControl.condition := PcCondition.whenConditionMet
@@ -317,7 +320,8 @@ case class OpcodeDecoder() extends Component {
 
 	def stack(setter: RegisterControl => Unit): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
+		io.controlSignals.operand2 := Pipeline.Operand.zero
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.or
 
 		io.controlSignals.writeStageControl.source := WriteBackValueSource.alu
 
@@ -371,8 +375,8 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def j_R16(): Unit = {
-		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register1
+		io.controlSignals.operand2 := Operand.opcode_r16
+		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register2
 	}
 
 	def ld_R8_T(): Unit = {
@@ -438,8 +442,8 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	def reti(): Unit = {
-		io.controlSignals.operand1 := Pipeline.Operand.hl
-		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register1
+		io.controlSignals.operand2 := Pipeline.Operand.hl
+		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register2
 
 		io.controlSignals.writeStageControl.fileControl(RegisterName.hl).registerControl.pop := True
 	}
