@@ -10,16 +10,62 @@ import scala.util.Random
 
 import java.io._
 
+case class ClockedOpcodeDecoder() extends Component {
+	val io = new Bundle {
+		val opcode = in Bits(8 bits)
+		val controlSignals = out UInt
+		val width = out UInt(8 bits)
+	}
+
+	val registeredOpcode = RegNext(io.opcode)
+
+	val opcodeDecoder = OpcodeDecoder()
+	opcodeDecoder.io.opcode := registeredOpcode
+
+	io.controlSignals := opcodeDecoder.io.controlSignals.asBits.asUInt
+	io.width := opcodeDecoder.io.controlSignals.asBits.getWidth
+}
+
 
 object DecoderSim {
+	def printValue(value: BaseType): Unit = {
+		println(s"${value.getName()} = ${value.toBigInt}")
+	}
+
+	def printBundle(bundle: Bundle): Unit = {
+		bundle.flatten.foreach(printValue)
+	}
+
+	def printBits(bits: Bits): Unit = {
+		for (i <- 0 until bits.getWidth) {
+			print(bits(i).toBoolean)
+		}
+		println("")
+	}
+
+	def printBigInt(bigInt: BigInt, width: Int): Unit = {
+		print("B\"")
+		for (bit <- width -1 downto 0) {
+			print(if (bigInt.testBit(bit)) 1 else 0)
+		}
+		println("\"")
+	}
+
 	def main(args: Array[String]) {
 		SimConfig
-		.withWave
-		.compile(new OpcodeDecoder())
-		.doSim { dut =>
-			for (idx <- 0 to 255) {
+		.compile(new ClockedOpcodeDecoder())
+		.doSimUntilVoid { dut =>
+			dut.clockDomain.forkStimulus(period = 10)
+			dut.clockDomain.waitSampling()
+
+			println(s"Width = ${dut.io.width.toInt}")
+
+ 			for (idx <- 0 to 255) {
+				dut.clockDomain.waitFallingEdge()
 				dut.io.opcode #= idx
-				println(dut.controlBits.toString)
+
+				dut.clockDomain.waitRisingEdge()
+				printBigInt(dut.io.controlSignals.toBigInt, dut.io.width.toInt)
 			}
 		}
 	}

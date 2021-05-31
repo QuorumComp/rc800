@@ -69,11 +69,13 @@ class RC811() extends Component {
 		private val intActive = Reg(Bool()) init(False)
 		private val sysActive = Reg(Bool()) init(False)
 
-		private val opcode = Reg(Bits(8 bits)) init(0)
+		private val strobe = Bool(false)
+		private val opcode = io.dataIn
 		private val intReq = Reg(Bool()) init(False)
 
 		val decoderUnit = new Decoder()
-		decoderUnit.io.opcode := opcode
+		decoderUnit.io.opcodeAsync := opcode
+		decoderUnit.io.strobe := strobe
 		decoderUnit.io.nmiReq := False
 		decoderUnit.io.intReq := intReq
 		decoderUnit.io.intEnable := intEnable
@@ -82,7 +84,7 @@ class RC811() extends Component {
 		decoderUnit.io.sysActive := sysActive
 
 		when (stage === 0) {
-			opcode := io.dataIn
+			strobe := True
 			intReq := io.irq
 			intEnable := decoderUnit.io.output.intEnable
 			nmiActive := decoderUnit.io.output.nmiActive

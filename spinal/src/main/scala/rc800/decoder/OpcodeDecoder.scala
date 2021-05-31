@@ -1,6 +1,7 @@
 package rc800.decoder
 
 import spinal.core._
+import spinal.core.sim._
 import spinal.lib._
 
 import rc800.alu.AluOperation
@@ -30,8 +31,6 @@ case class OpcodeDecoder() extends Component {
 		val opcode = in Bits(8 bits)
 		val controlSignals = out (PipelineControl())
 	}
-
-	val controlBits = io.controlSignals.asBits
 
 	private val registerPair2 = io.opcode(1 downto 0).as(RegisterName())
 	private val registerPair3 = io.opcode(2 downto 1).as(RegisterName())

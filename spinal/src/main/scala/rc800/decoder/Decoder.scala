@@ -16,7 +16,9 @@ case class Decoder() extends Component {
 	import Pipeline._
 
 	val io = new Bundle {
-		val opcode    = in Bits(8 bits)
+		val strobe = in Bool
+		val opcodeAsync = in Bits(8 bits)
+
 		val nmiReq    = in Bool
 		val intReq    = in Bool
 		val intEnable = in Bool
@@ -27,8 +29,13 @@ case class Decoder() extends Component {
 		val output = out (RC811Control())
 	}
 
+	private val useLookup = false
+
+	private val opcode = if (useLookup) io.opcodeAsync else RegNextWhen(io.opcodeAsync, io.strobe)
+
+	//val opcodeDecoder = LookupDecoder()
 	val opcodeDecoder = OpcodeDecoder()
-	opcodeDecoder.io.opcode <> io.opcode
+	opcodeDecoder.io.opcode <> opcode
 	opcodeDecoder.io.controlSignals <> io.output.stageControl
 
 	private val anyActive = io.nmiActive || io.intActive || io.sysActive
@@ -47,18 +54,18 @@ case class Decoder() extends Component {
 	when (io.nmiReq) {
 		io.output.nmiActive := True
 		io.output.stageControl.interrupt(Vectors.NonMaskableInterrupt)
-		opcodeDecoder.io.opcode := Opcodes.NOP_opcode
+		opcode := Opcodes.NOP_opcode
 	}.elsewhen (reqExtInt) {
 		io.output.intActive := True
 		io.output.stageControl.interrupt(Vectors.ExternalInterrupt)
-		opcodeDecoder.io.opcode := Opcodes.NOP_opcode
+		opcode := Opcodes.NOP_opcode
 	}.otherwise {
-		switch (io.opcode) {
+		switch (opcode) {
 			for (op <- Opcodes.illegals) {
 				is (op) { 
 					io.output.nmiActive := True
 					io.output.stageControl.interrupt(Vectors.IllegalInstruction)
-					opcodeDecoder.io.opcode := Opcodes.NOP_opcode
+					opcode := Opcodes.NOP_opcode
 				}
 			}
 
@@ -74,7 +81,7 @@ case class Decoder() extends Component {
 		when (anyActive) {
 			io.output.nmiActive := True
 			io.output.stageControl.interrupt(Vectors.IllegalInterrupt)
-			opcodeDecoder.io.opcode := Opcodes.NOP_opcode
+			opcode := Opcodes.NOP_opcode
 		}.otherwise {
 			io.output.sysActive := True
 		}
@@ -93,7 +100,7 @@ case class Decoder() extends Component {
 			io.output.nmiActive := True
 			io.output.stageControl.interrupt(Vectors.IllegalInterrupt)
 
-			opcodeDecoder.io.opcode := Opcodes.NOP_opcode
+			opcode := Opcodes.NOP_opcode
 		}
 	}
 }
