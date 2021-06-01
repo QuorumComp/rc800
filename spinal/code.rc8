@@ -12,7 +12,6 @@ println:	MACRO
 
 		SECTION "Main",CODE[$80]
 Main:
-		sys	0
 ;		jal	TestConditions8Bit
 ;		jal	TestConditions16Bit
 ;		jal	TestShift

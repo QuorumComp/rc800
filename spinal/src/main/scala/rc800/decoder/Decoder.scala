@@ -32,8 +32,9 @@ case class Decoder() extends Component {
 	private val useLookup = true
 
 	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
+	private val opcode = io.strobe ? io.opcodeAsync | opcodeIn
 	private val opcodeOut = Bits(8 bits)
-	opcodeOut := io.strobe ? io.opcodeAsync | opcodeIn
+	opcodeOut := opcode
 
 	private def lookupDecoder = {
 		val v = LookupDecoder()
@@ -78,7 +79,7 @@ case class Decoder() extends Component {
 		io.output.stageControl.interrupt(Vectors.ExternalInterrupt)
 		cancel()
 	}.otherwise {
-		switch (opcodeIn) {
+		switch (opcode) {
 			for (op <- Opcodes.illegals) {
 				is (op) { 
 					io.output.nmiActive := True

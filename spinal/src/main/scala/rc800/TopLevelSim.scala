@@ -102,11 +102,16 @@ object TopLevelSim {
 
 			dut.clockDomain.waitSampling()
 
+			dut.io.irq #= false
+
 			var modelState = 0
 			for (idx <- 0 to 600) {
 				dut.clockDomain.waitFallingEdge()
 
-				dut.io.irq #= false
+				/*
+				if (idx == 10)
+					dut.io.irq #= true
+					*/
 
 				val pc = dut.pc.toInt
 				val stage = dut.stage.toInt

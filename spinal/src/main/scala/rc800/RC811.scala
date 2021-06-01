@@ -90,6 +90,9 @@ class RC811() extends Component {
 
 		when (stage === 0) {
 			strobe := True
+		}
+
+		when (stage === 3) {
 			intReq := io.irq
 			intEnable := decoderUnit.io.output.intEnable
 			nmiActive := decoderUnit.io.output.nmiActive
