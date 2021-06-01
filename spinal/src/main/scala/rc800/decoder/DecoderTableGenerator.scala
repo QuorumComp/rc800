@@ -48,7 +48,7 @@ object DecoderSim {
 		for (bit <- width -1 downto 0) {
 			print(if (bigInt.testBit(bit)) 1 else 0)
 		}
-		println("\"")
+		println("\",")
 	}
 
 	def main(args: Array[String]) {
@@ -61,9 +61,9 @@ object DecoderSim {
 			println(s"Width = ${dut.io.width.toInt}")
 
  			for (idx <- 0 to 255) {
-				dut.clockDomain.waitFallingEdge()
+				dut.clockDomain.waitRisingEdge()
 				dut.io.opcode #= idx
-
+				dut.clockDomain.waitRisingEdge()
 				dut.clockDomain.waitRisingEdge()
 				printBigInt(dut.io.controlSignals.toBigInt, dut.io.width.toInt)
 			}

@@ -29,14 +29,28 @@ case class Decoder() extends Component {
 		val output = out (RC811Control())
 	}
 
-	private val useLookup = false
+	private val useLookup = true
 
-	private val opcode = if (useLookup) io.opcodeAsync else RegNextWhen(io.opcodeAsync, io.strobe)
+	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
+	private val opcodeOut = Bits(8 bits)
+	opcodeOut := io.strobe ? io.opcodeAsync | opcodeIn
 
-	//val opcodeDecoder = LookupDecoder()
-	val opcodeDecoder = OpcodeDecoder()
-	opcodeDecoder.io.opcode <> opcode
-	opcodeDecoder.io.controlSignals <> io.output.stageControl
+	private def lookupDecoder = {
+		val v = LookupDecoder()
+		v.io.opcode <> opcodeOut
+		v.io.strobe <> True
+		v.io.controlSignals <> io.output.stageControl
+		v
+	}
+
+	private def opcodeDecoder = {
+		val v = OpcodeDecoder()
+		v.io.opcode <> opcodeOut
+		v.io.controlSignals <> io.output.stageControl
+		v
+	}
+
+	val decoder = if (useLookup) lookupDecoder else opcodeDecoder
 
 	private val anyActive = io.nmiActive || io.intActive || io.sysActive
 
@@ -51,21 +65,25 @@ case class Decoder() extends Component {
 
 	setDefaults()
 
+	def cancel(): Unit = {
+		opcodeOut := Opcodes.NOP_opcode
+	}
+
 	when (io.nmiReq) {
 		io.output.nmiActive := True
 		io.output.stageControl.interrupt(Vectors.NonMaskableInterrupt)
-		opcode := Opcodes.NOP_opcode
+		cancel()
 	}.elsewhen (reqExtInt) {
 		io.output.intActive := True
 		io.output.stageControl.interrupt(Vectors.ExternalInterrupt)
-		opcode := Opcodes.NOP_opcode
+		cancel()
 	}.otherwise {
-		switch (opcode) {
+		switch (opcodeIn) {
 			for (op <- Opcodes.illegals) {
 				is (op) { 
 					io.output.nmiActive := True
 					io.output.stageControl.interrupt(Vectors.IllegalInstruction)
-					opcode := Opcodes.NOP_opcode
+					cancel()
 				}
 			}
 
@@ -81,7 +99,7 @@ case class Decoder() extends Component {
 		when (anyActive) {
 			io.output.nmiActive := True
 			io.output.stageControl.interrupt(Vectors.IllegalInterrupt)
-			opcode := Opcodes.NOP_opcode
+			cancel()
 		}.otherwise {
 			io.output.sysActive := True
 		}
@@ -100,7 +118,7 @@ case class Decoder() extends Component {
 			io.output.nmiActive := True
 			io.output.stageControl.interrupt(Vectors.IllegalInterrupt)
 
-			opcode := Opcodes.NOP_opcode
+			cancel()
 		}
 	}
 }

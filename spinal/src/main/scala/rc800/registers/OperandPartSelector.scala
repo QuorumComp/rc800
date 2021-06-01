@@ -4,7 +4,7 @@ import spinal.core._
 import spinal.lib._
 
 
-object OperandPart extends SpinalEnum {
+object OperandPart extends SpinalEnum(defaultEncoding = binarySequential) {
 	val full, low, high = newElement()
 }
 

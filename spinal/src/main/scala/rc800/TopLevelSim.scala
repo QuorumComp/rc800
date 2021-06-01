@@ -91,12 +91,12 @@ object TopLevelSim {
 	}
 
 	def main(args: Array[String]) {
-		loadFileIntoMemory("code.bin", 0)
+		loadFileIntoMemory("rc800/spinal/code.bin", 0)
 		
 		SimConfig
 		.withWave
 		.compile(new RC811())
-		.doSim { dut =>
+		.doSim(1673871647) { dut =>
 			// Fork a process to generate the reset and the clock on the dut
 			dut.clockDomain.forkStimulus(period = 10)
 
@@ -105,6 +105,8 @@ object TopLevelSim {
 			var modelState = 0
 			for (idx <- 0 to 600) {
 				dut.clockDomain.waitFallingEdge()
+
+				dut.io.irq #= false
 
 				val pc = dut.pc.toInt
 				val stage = dut.stage.toInt

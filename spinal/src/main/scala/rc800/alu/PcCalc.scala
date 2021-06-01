@@ -5,7 +5,7 @@ import spinal.core._
 import rc800.control.component.PcControl
 
 
-object PcTruePathSource extends SpinalEnum {
+object PcTruePathSource extends SpinalEnum(defaultEncoding = binarySequential) {
 	val offsetFromMemory,
 		offsetFromDecoder,
 		register2,
@@ -14,7 +14,7 @@ object PcTruePathSource extends SpinalEnum {
 }
 
 
-object PcCondition extends SpinalEnum {
+object PcCondition extends SpinalEnum(defaultEncoding = binarySequential) {
 	val always,
 		whenConditionMet,
 		whenResultNotZero = newElement()

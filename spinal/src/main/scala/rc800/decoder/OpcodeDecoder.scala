@@ -51,41 +51,7 @@ case class OpcodeDecoder() extends Component {
 		def opcode_r16 = io.controlSignals.destination(operand = Operand.opcode_r16, mask = WriteMask.full)
 	}
 
-	def setDefaults(): Unit = {
-		io.controlSignals.readStageControl.registers.foreach(_ := RegisterName.ft)
-		io.controlSignals.readStageControl.part.foreach(_ := OperandPart.full)
-
-		io.controlSignals.memoryStageControl.enable  := False
-		io.controlSignals.memoryStageControl.write   := False
-		io.controlSignals.memoryStageControl.io      := False
-		io.controlSignals.memoryStageControl.code    := False
-		io.controlSignals.memoryStageControl.config  := False
-		io.controlSignals.memoryStageControl.address := MemoryStageAddressSource.register1
-
-		io.controlSignals.aluStageControl.selection.foreach(_ := OperandSource.register)
-		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.and
-		io.controlSignals.aluStageControl.aluControl.condition := Condition.t
-		io.controlSignals.aluStageControl.aluControl.shiftOperation := ShiftOperation.ls
-
-		io.controlSignals.writeStageControl.source    := WriteBackValueSource.alu
-		for (i <- 0 to 3) {
-			val fileControl = io.controlSignals.writeStageControl.fileControl(i)
-			fileControl.rot8 := False
-			fileControl.sourceExg := False
-			fileControl.registerControl.write := False
-			fileControl.registerControl.push  := False
-			fileControl.registerControl.pop   := False
-			fileControl.registerControl.swap  := False
-			fileControl.registerControl.mask  := WriteMask.none
-		}
-
-		io.controlSignals.aluStageControl.pcControl.truePath      := PcTruePathSource.offsetFromDecoder
-		io.controlSignals.aluStageControl.pcControl.decodedOffset := U(0)
-		io.controlSignals.aluStageControl.pcControl.vector        := U(0)
-		io.controlSignals.aluStageControl.pcControl.condition     := PcCondition.always
-	}
-
-	setDefaults()
+	io.controlSignals.setDefaults()
 
 	switch (io.opcode) {
 		// Opcodes with no fields

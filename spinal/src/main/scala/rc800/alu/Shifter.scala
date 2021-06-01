@@ -9,7 +9,7 @@ import spinal.lib._
  * reduced.
  */
 
-object ShiftOperation extends SpinalEnum {
+object ShiftOperation extends SpinalEnum(defaultEncoding = binarySequential) {
 	val ls, rs, rsa, swap = newElement()
 }
 

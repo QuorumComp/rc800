@@ -13,7 +13,7 @@ import rc800.control.component.AluControl
  * significant bits of the 16 bit operand.
  */
 
-object AluOperation extends SpinalEnum {
+object AluOperation extends SpinalEnum(defaultEncoding = binarySequential) {
 	val add,
 		sub,
 		and,
@@ -26,7 +26,7 @@ object AluOperation extends SpinalEnum {
 }
 
 
-object Condition extends SpinalEnum {
+object Condition extends SpinalEnum(defaultEncoding = binarySequential) {
 	val	le, gt, lt, ge, leu, gtu, ltu, geu,
 		eq, ne,  t,  f = newElement()
 }

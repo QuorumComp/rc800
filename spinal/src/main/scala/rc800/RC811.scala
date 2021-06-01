@@ -69,8 +69,13 @@ class RC811() extends Component {
 		private val intActive = Reg(Bool()) init(False)
 		private val sysActive = Reg(Bool()) init(False)
 
+		private val resetting = Reg(Bool()) init(True)
+		when (stage === 2) {
+			resetting := False
+		}
+
 		private val strobe = Bool(false)
-		private val opcode = io.dataIn
+		private val opcode = resetting ? B(0) | io.dataIn
 		private val intReq = Reg(Bool()) init(False)
 
 		val decoderUnit = new Decoder()
@@ -140,17 +145,18 @@ class RC811() extends Component {
 	 */
 
 	private val memoryArea = new Area {
-		val writeControl = Reg(WriteBackStageControl())
 		val result = Reg(Bits(8 bits)) init(0)
 
+		/*
 		for (i <- 0 to 3) {
-			val control = writeControl.fileControl(0).registerControl
+			val control = decodeArea.writeControl.fileControl(0).registerControl
 			control.write init(False)
 			control.push  init(False)
 			control.pop   init(False)
 			control.swap  init(False)
 			control.mask  init(WriteMask.none)
 		}
+		*/
 
 		private def selectSourceAddress(source: MemoryStageAddressSource.C): UInt =
 			source.mux(
@@ -203,8 +209,6 @@ class RC811() extends Component {
 		}
 
 		when (stage === 1) {
-			writeControl := decodeArea.writeControl
-
 			handlePushPop()
 
 			when (decodeArea.memoryControl.enable) {
@@ -239,7 +243,7 @@ class RC811() extends Component {
 	 */
 
 	val stage3 = new Area {
-		private val control = memoryArea.writeControl
+		private val control = decodeArea.writeControl
 
 		private def fetchInstruction() {
 			io.address := aluArea.pcOut

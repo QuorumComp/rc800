@@ -7,7 +7,7 @@ import rc800.control.component.RegisterFileControl
 import rc800.registers.RegisterName
 
 
-object WriteBackValueSource extends SpinalEnum {
+object WriteBackValueSource extends SpinalEnum(defaultEncoding = binarySequential) {
 	val alu, memory = newElement()
 }
 

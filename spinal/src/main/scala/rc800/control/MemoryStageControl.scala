@@ -4,7 +4,7 @@ import spinal.core._
 import spinal.lib._
 
 
-object MemoryStageAddressSource extends SpinalEnum {
+object MemoryStageAddressSource extends SpinalEnum(defaultEncoding = binarySequential) {
 	val register1, pc = newElement()
 }
 

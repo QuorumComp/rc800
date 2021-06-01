@@ -4,7 +4,7 @@ import spinal.core._
 import spinal.lib._
 
 
-object OperandSource extends SpinalEnum {
+object OperandSource extends SpinalEnum(defaultEncoding = binarySequential) {
 	val zero, ones, register, pc, memory, signed_memory = newElement()
 }
 

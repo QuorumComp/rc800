@@ -3,8 +3,11 @@ package rc800.decoder
 import spinal.core._
 
 import rc800.alu.AluOperation
+import rc800.alu.Condition
 import rc800.alu.OperandSource
+import rc800.alu.PcCondition
 import rc800.alu.PcTruePathSource
+import rc800.alu.ShiftOperation
 
 import rc800.control.MemoryStageAddressSource
 import rc800.control.PipelineControl
@@ -50,6 +53,8 @@ object Pipeline {
 			operand1 := Operand.pc
 			operand2 := Operand.ones
 			pipeline.aluStageControl.aluControl.operation := AluOperation.add
+
+			pipeline.memoryStageControl.enable := False
 
 			pipeline.aluStageControl.pcControl.vector := vector >> 3
 			pipeline.aluStageControl.pcControl.truePath := PcTruePathSource.vectorFromDecoder
@@ -130,6 +135,41 @@ object Pipeline {
 			def de = destination(operand = Operand.de, mask = WriteMask.full)
 			def hl = destination(operand = Operand.hl, mask = WriteMask.full)
 		}
+
+		def setDefaults(): Unit = {
+			pipeline.readStageControl.registers.foreach(_ := RegisterName.ft)
+			pipeline.readStageControl.part.foreach(_ := OperandPart.full)
+
+			pipeline.memoryStageControl.enable  := False
+			pipeline.memoryStageControl.write   := False
+			pipeline.memoryStageControl.io      := False
+			pipeline.memoryStageControl.code    := False
+			pipeline.memoryStageControl.config  := False
+			pipeline.memoryStageControl.address := MemoryStageAddressSource.register1
+
+			pipeline.aluStageControl.selection.foreach(_ := OperandSource.register)
+			pipeline.aluStageControl.aluControl.operation := AluOperation.and
+			pipeline.aluStageControl.aluControl.condition := Condition.t
+			pipeline.aluStageControl.aluControl.shiftOperation := ShiftOperation.ls
+
+			pipeline.writeStageControl.source    := WriteBackValueSource.alu
+			for (i <- 0 to 3) {
+				val fileControl = pipeline.writeStageControl.fileControl(i)
+				fileControl.rot8 := False
+				fileControl.sourceExg := False
+				fileControl.registerControl.write := False
+				fileControl.registerControl.push  := False
+				fileControl.registerControl.pop   := False
+				fileControl.registerControl.swap  := False
+				fileControl.registerControl.mask  := WriteMask.none
+			}
+
+			pipeline.aluStageControl.pcControl.truePath      := PcTruePathSource.offsetFromDecoder
+			pipeline.aluStageControl.pcControl.decodedOffset := U(0)
+			pipeline.aluStageControl.pcControl.vector        := U(0)
+			pipeline.aluStageControl.pcControl.condition     := PcCondition.always
+		}
+
 	}
 
 
