@@ -78,16 +78,23 @@ class Alu extends Component {
 		)
 	}
 
+	private val addArea = new Area {
+		private val carry = io.control.operation =/= AluOperation.add
+		private val operand1 = io.operand1 ## carry
+		private val operand2 = (carry ? ~io.operand2 | io.operand2) ## carry
+		private val addResult = operand1.asUInt +^ operand2.asUInt
+		val result = ((addResult(17) ^ carry) ## addResult(16 downto 1)).asUInt
+	}
+
 	private val carryAndResult = io.control.operation.mux(
-		AluOperation.add       -> (io.operand1 +^ io.operand2),
 		AluOperation.and       -> (io.operand1 & io.operand2).resize(17 bits),
 		AluOperation.or        -> (io.operand1 | io.operand2).resize(17 bits),
 		AluOperation.xor       -> (io.operand1 ^ io.operand2).resize(17 bits),
 		AluOperation.shift     -> shifter.io.result.resize(17 bits),
 		AluOperation.extend1   -> B(17 bits, default -> io.operand1.msb).asUInt,
 		AluOperation.operand1  -> io.operand1.resize(17 bits),
-		/* compare, sub */
-		default                -> (io.operand1 -^ io.operand2)
+		/* add, compare, sub */
+		default                -> addArea.result
 	)
 
 	private val result = carryAndResult(15 downto 0)
