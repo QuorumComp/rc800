@@ -35,13 +35,14 @@ case class PcCalc() extends Component {
 
 	private val offsetFromMemory = io.memory.asSInt.resize(16 bits).asUInt
 	private val offsetFromDecoder = io.control.decodedOffset.resize(16 bits)
+	private val offset = (io.control.truePath === PcTruePathSource.offsetFromMemory) ? offsetFromMemory | offsetFromDecoder
 
 	private val truePath = io.control.truePath.mux(
 		PcTruePathSource.register2 -> io.operand2,
 		PcTruePathSource.vectorFromDecoder -> (io.control.vector << 3).resize(16 bits),
 		PcTruePathSource.vectorFromMemory -> (io.memory << 3).resize(16 bits).asUInt,
-		PcTruePathSource.offsetFromMemory -> (io.pc + offsetFromMemory),
-		PcTruePathSource.offsetFromDecoder -> (io.pc + offsetFromDecoder)
+		// offsetFromMemory, offsetFromDecoder
+		default -> (io.pc + offset)
 	)
 	private val falsePath = io.pc + 1
 
