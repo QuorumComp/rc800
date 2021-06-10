@@ -78,31 +78,31 @@ class Alu extends Component {
 		)
 	}
 
-	private val addArea = new Area {
-		private val carry = io.control.operation =/= AluOperation.add
-		private val operand1 = io.operand1 ## carry
-		private val operand2 = (carry ? ~io.operand2 | io.operand2) ## carry
-		private val addResult = operand1.asUInt +^ operand2.asUInt
-		val result = ((addResult(17) ^ carry) ## addResult(16 downto 1)).asUInt
+	private val subtract = new Area {
+		private val isAdd = io.control.operation === AluOperation.add
+		private val operand1 = io.operand1 ## False
+		private val operand2 = (isAdd ? ~io.operand2 | io.operand2) ## isAdd
+		private val subResult = operand1.asUInt -^ operand2.asUInt
+
+		val result = subResult(16 downto 1)
+		val carry = subResult(17)
 	}
 
-	private val carryAndResult = io.control.operation.mux(
-		AluOperation.and       -> (io.operand1 & io.operand2).resize(17 bits),
-		AluOperation.or        -> (io.operand1 | io.operand2).resize(17 bits),
-		AluOperation.xor       -> (io.operand1 ^ io.operand2).resize(17 bits),
-		AluOperation.shift     -> shifter.io.result.resize(17 bits),
-		AluOperation.extend1   -> B(17 bits, default -> io.operand1.msb).asUInt,
-		AluOperation.operand1  -> io.operand1.resize(17 bits),
+	private val result = io.control.operation.mux(
+		AluOperation.and       -> (io.operand1 & io.operand2),
+		AluOperation.or        -> (io.operand1 | io.operand2),
+		AluOperation.xor       -> (io.operand1 ^ io.operand2),
+		AluOperation.shift     -> shifter.io.result,
+		AluOperation.extend1   -> B(16 bits, default -> io.operand1.msb).asUInt,
+		AluOperation.operand1  -> io.operand1,
 		/* add, compare, sub */
-		default                -> addArea.result
+		default                -> subtract.result
 	)
-
-	private val result = carryAndResult(15 downto 0)
 
 	val flags = new Area {
 		private val overflow = (result.msb === io.operand2.msb) && (io.operand1.msb =/= io.operand2.msb)
 		private val negative = result.msb
-		private val carry    = carryAndResult(16)
+		private val carry    = subtract.carry
 		private val zero     = result === U(0)
 
 		io.highByteZero := result(15 downto 8) === U(0)
