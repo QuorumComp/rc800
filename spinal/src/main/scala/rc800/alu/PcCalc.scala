@@ -24,7 +24,7 @@ object PcCondition extends SpinalEnum(defaultEncoding = binarySequential) {
 case class PcCalc() extends Component {
 	val io = new Bundle {
 		val pc           = in UInt(16 bits)
-		val operands     = in Vec(UInt(16 bits), 2)
+		val operand2     = in UInt(16 bits)
 		val memory       = in Bits(8 bits)
 		val conditionMet = in Bool
 		val resultZero   = in Bool
@@ -37,7 +37,7 @@ case class PcCalc() extends Component {
 	private val offsetFromDecoder = io.control.decodedOffset.resize(16 bits)
 
 	private val truePath = io.control.truePath.mux(
-		PcTruePathSource.register2 -> io.operands(1),
+		PcTruePathSource.register2 -> io.operand2,
 		PcTruePathSource.vectorFromDecoder -> (io.control.vector << 3).resize(16 bits),
 		PcTruePathSource.vectorFromMemory -> (io.memory << 3).resize(16 bits).asUInt,
 		PcTruePathSource.offsetFromMemory -> (io.pc + offsetFromMemory),

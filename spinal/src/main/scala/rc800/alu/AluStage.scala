@@ -15,7 +15,6 @@ case class AluStage() extends Component {
 		val memory    = in Bits(8 bits)
 
 		val dataOut      = out UInt(16 bits)
-		val operands     = out Vec(UInt(16 bits), 2)
 		val nextPc       = out (UInt(16 bits))
 	}
 
@@ -26,10 +25,8 @@ case class AluStage() extends Component {
 		selectors(index).io.register  := io.registers(index)
 		selectors(index).io.pc        := io.pc
 		selectors(index).io.memory    := io.memory.asUInt
-
-		io.operands(index) := selectors(index).io.dataOut
 	}
-
+	
 	private val alu = new Alu()
 
 	alu.io.operand1 := selectors(0).io.dataOut
@@ -39,7 +36,7 @@ case class AluStage() extends Component {
 	private val pcCalc = PcCalc()
 	pcCalc.io.control      := io.control.pcControl
 	pcCalc.io.pc           := io.pc
-	pcCalc.io.operands     := io.operands
+	pcCalc.io.operand2     := selectors(1).io.dataOut
 	pcCalc.io.memory       := io.memory
 	pcCalc.io.conditionMet := alu.io.conditionMet
 	pcCalc.io.resultZero   := alu.io.highByteZero
