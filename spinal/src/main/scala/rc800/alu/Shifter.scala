@@ -9,21 +9,25 @@ import spinal.lib._
  * reduced.
  */
 
-object ShiftOperation extends SpinalEnum(defaultEncoding = binarySequential) {
-	val ls, rs, rsa, swap = newElement()
+class lpm_clshift(shiftType: String, width: Int) extends BlackBox {
+    addGeneric("LPM_SHIFTTYPE", shiftType)
+    addGeneric("LPM_WIDTH", width)
+	addGeneric("LPM_WIDTHDIST", log2Up(width))
+	addGeneric("LPM_TYPE", "LPM_CLSHIFT")
+
+	val io = new Bundle {
+		val data = in Bits(width bits)
+		val distance = in UInt(log2Up(width) bits)
+
+		val result = out Bits(width bits)
+	}
+
+	noIoPrefix()
 }
 
 
-case class LeftRotater(width: BitCount) extends Component {
-	val io = new Bundle {
-		val operand = in  Bits(width)
-		val amount  = in  UInt(log2Up(width.value) bits)
-		val result  = out Bits(width)
-		val mask    = out Bits(width)
-	}
-
-	io.result := io.operand.rotateLeft(io.amount)
-	io.mask   := B(width, default -> True) |<< io.amount
+object ShiftOperation extends SpinalEnum(defaultEncoding = binarySequential) {
+	val ls, rs, rsa, swap = newElement()
 }
 
 
@@ -37,10 +41,11 @@ case class Shifter(width: BitCount) extends Component {
 		val result    = out UInt(width)
 	}
 
-	private val rotater = new LeftRotater(width)
+	private val rotater = new lpm_clshift("ROTATE", width.value)
+	private val mask = B(width, default -> True) |<< io.amount
 
-	rotater.io.operand := io.operand.asBits
-	rotater.io.amount  := io.operation.mux(
+	rotater.io.data := io.operand.asBits
+	rotater.io.distance := io.operation.mux(
 		ShiftOperation.ls   -> (io.amount),
 		ShiftOperation.swap -> U(8),
 		default             -> (~io.amount + 1)	// right shift
@@ -50,8 +55,8 @@ case class Shifter(width: BitCount) extends Component {
 	private val fillBits = B(width, default -> fillBit)
 
 	io.result := io.operation.mux (
-		ShiftOperation.ls   -> (rotater.io.result & rotater.io.mask).asUInt,
+		ShiftOperation.ls   -> (rotater.io.result & mask).asUInt,
 		ShiftOperation.swap -> rotater.io.result.asUInt,
-		default             -> ((rotater.io.result & ~rotater.io.mask) | (fillBits & rotater.io.mask)).asUInt	// right shift
+		default             -> ((rotater.io.result & ~mask) | (fillBits & mask)).asUInt	// right shift
 	)
 }
