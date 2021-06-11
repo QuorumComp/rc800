@@ -33,24 +33,24 @@ case class PcCalc() extends Component {
 		val nextPc = out UInt(16 bits)
 	}
 
-	private val offsetFromMemory = io.memory.asSInt.resize(16 bits).asUInt
-	private val offsetFromDecoder = io.control.decodedOffset.resize(16 bits)
-	private val offset = (io.control.truePath === PcTruePathSource.offsetFromMemory) ? offsetFromMemory | offsetFromDecoder
-
-	private val truePath = io.control.truePath.mux(
-		PcTruePathSource.register2 -> io.operand2,
-		PcTruePathSource.vectorFromDecoder -> (io.control.vector << 3).resize(16 bits),
-		PcTruePathSource.vectorFromMemory -> (io.memory << 3).resize(16 bits).asUInt,
-		// offsetFromMemory, offsetFromDecoder
-		default -> (io.pc + offset)
-	)
-	private val falsePath = io.pc + 1
-
 	private val takeTruePath = io.control.condition.mux (
 		PcCondition.always -> True,
 		PcCondition.whenConditionMet -> io.conditionMet,
 		PcCondition.whenResultNotZero -> !io.resultZero,
 	)
 
-	io.nextPc := takeTruePath ? truePath | falsePath
+	private val offsetFromMemory = io.memory.asSInt.resize(16 bits).asUInt
+	private val offsetFromDecoder = io.control.decodedOffset.resize(16 bits)
+	private val truePathOffset = (io.control.truePath === PcTruePathSource.offsetFromMemory) ? offsetFromMemory | offsetFromDecoder
+	private val offset = takeTruePath ? truePathOffset | 1
+
+	io.nextPc := io.pc + offset
+
+	when (takeTruePath) {
+		switch (io.control.truePath) {
+			is (PcTruePathSource.register2)         { io.nextPc := io.operand2 }
+			is (PcTruePathSource.vectorFromDecoder) { io.nextPc := (io.control.vector << 3).resize(16 bits) }
+			is (PcTruePathSource.vectorFromMemory)  { io.nextPc := (io.memory << 3).resize(16 bits).asUInt }
+		}
+	}
 }
