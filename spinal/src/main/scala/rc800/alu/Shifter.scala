@@ -3,35 +3,20 @@ package rc800.alu
 import spinal.core._
 import spinal.lib._
 
+import rc800.lpm
+
 /*
  * While this shifter may seem needlessly complicated, the fact that it's only
  * using one dynamic shift implementation means the area needed is drastically
  * reduced.
  */
 
-class lpm_clshift(shiftType: String, width: Int) extends BlackBox {
-    addGeneric("LPM_SHIFTTYPE", shiftType)
-    addGeneric("LPM_WIDTH", width)
-	addGeneric("LPM_WIDTHDIST", log2Up(width))
-	addGeneric("LPM_TYPE", "LPM_CLSHIFT")
-
-	val io = new Bundle {
-		val data = in Bits(width bits)
-		val distance = in UInt(log2Up(width) bits)
-
-		val result = out Bits(width bits)
-	}
-
-	noIoPrefix()
-}
-
-
 object ShiftOperation extends SpinalEnum(defaultEncoding = binarySequential) {
-	val ls, rs, rsa, swap = newElement()
+	val ls, rs, rsa, swap = newElement()	// must match AluOperation
 }
 
 
-case class Shifter(width: BitCount) extends Component {
+case class Shifter(width: BitCount, lpmComponents: lpm.Components) extends Component {
 	private val amountWidth = log2Up(width.value) bits
 
 	val io = new Bundle {
@@ -41,7 +26,7 @@ case class Shifter(width: BitCount) extends Component {
 		val result    = out UInt(width)
 	}
 
-	private val rotater = new lpm_clshift("ROTATE", width.value)
+	private val rotater = lpmComponents.clShift(lpm.CLShift.ShiftType.rotate, width.value)
 	private val mask = B(width, default -> True) |<< io.amount
 
 	rotater.io.data := io.operand.asBits

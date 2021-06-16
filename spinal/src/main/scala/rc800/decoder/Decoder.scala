@@ -29,7 +29,7 @@ case class Decoder() extends Component {
 		val output = out (RC811Control())
 	}
 
-	private val useLookup = true
+	private val useLookup = false
 
 	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
 	private val opcode = io.strobe ? io.opcodeAsync | opcodeIn
@@ -79,20 +79,18 @@ case class Decoder() extends Component {
 		io.output.stageControl.interrupt(Vectors.ExternalInterrupt)
 		cancel()
 	}.otherwise {
-		switch (opcode) {
-			for (op <- Opcodes.illegals) {
-				is (op) { 
-					io.output.nmiActive := True
-					io.output.stageControl.interrupt(Vectors.IllegalInstruction)
-					cancel()
-				}
+		when (Opcodes.illegals.map(opcode === _).reduce((v1, v2) => v1 || v2)) { 
+			io.output.nmiActive := True
+			io.output.stageControl.interrupt(Vectors.IllegalInstruction)
+			cancel()
+		} otherwise {
+			switch (opcode) {
+				// Opcodes with no fields
+				is (Opcodes.DI)    { io.output.intEnable := False}
+				is (Opcodes.EI)    { io.output.intEnable := True }
+				is (Opcodes.RETI)  { reti() }
+				is (Opcodes.SYS_I) { sys() }
 			}
-
-			// Opcodes with no fields
-			is (Opcodes.DI)    { io.output.intEnable := False}
-			is (Opcodes.EI)    { io.output.intEnable := True }
-			is (Opcodes.RETI)  { reti() }
-			is (Opcodes.SYS_I) { sys() }
 		}
 	}
 

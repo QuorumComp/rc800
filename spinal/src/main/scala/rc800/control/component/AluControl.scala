@@ -10,7 +10,6 @@ import rc800.alu.ShiftOperation
 case class AluControl() extends Bundle {
 	val operation = AluOperation()
 	val condition = Condition()
-	val shiftOperation = ShiftOperation()
 }
 
 

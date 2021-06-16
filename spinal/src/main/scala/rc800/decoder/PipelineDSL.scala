@@ -150,7 +150,6 @@ object Pipeline {
 			pipeline.aluStageControl.selection.foreach(_ := OperandSource.register)
 			pipeline.aluStageControl.aluControl.operation := AluOperation.and
 			pipeline.aluStageControl.aluControl.condition := Condition.t
-			pipeline.aluStageControl.aluControl.shiftOperation := ShiftOperation.ls
 
 			pipeline.writeStageControl.source    := WriteBackValueSource.alu
 			for (i <- 0 to 3) {

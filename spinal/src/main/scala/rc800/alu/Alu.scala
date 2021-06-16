@@ -5,6 +5,18 @@ import spinal.lib._
 
 import rc800.control.component.AluControl
 
+import rc800.lpm
+
+
+class SpinalEnumExtends[T <: SpinalEnum](val base: T) extends SpinalEnum(base.defaultEncoding) {
+	base.elements.foreach(e => newElement(e.position.toString()))
+
+	def asBase(e: C): base.C = e.asBits((base.defaultEncoding.getWidth(base) - 1) downto 0).as(base())
+	def fromBase(e: base.C): this.C = e.asBits.resized.as(this())
+	def fromBase(e: base.E): this.E = elements(e.position)
+}
+
+
 /*
  * This is a 16 bit ALU that supports several operations and possibly a final
  * conditional transformation depending on the operation result.
@@ -13,16 +25,17 @@ import rc800.control.component.AluControl
  * significant bits of the 16 bit operand.
  */
 
-object AluOperation extends SpinalEnum(defaultEncoding = binarySequential) {
+object AluOperation extends SpinalEnumExtends(ShiftOperation) {
 	val add,
 		sub,
 		and,
 		or,
 		xor,
-		shift,
 		extend1,
 		compare,
 		operand1 = newElement()
+
+	val shiftOperationMask = M"00--"
 }
 
 
@@ -32,7 +45,7 @@ object Condition extends SpinalEnum(defaultEncoding = binarySequential) {
 }
 
 
-class Alu extends Component {
+class Alu(lpmComponents: lpm.Components) extends Component {
 	val io = new Bundle {
 		val operand1 = in UInt(16 bits)
 		val operand2 = in UInt(16 bits)
@@ -44,11 +57,11 @@ class Alu extends Component {
 		val highByteZero = out Bool
 	}
 
-	private val shifter = Shifter(16 bits)
+	private val shifter = Shifter(16 bits, lpmComponents)
 
 	shifter.io.operand   <> io.operand1
 	shifter.io.amount    <> io.operand2(11 downto 8)
-	shifter.io.operation <> io.control.shiftOperation
+	shifter.io.operation <> AluOperation.asBase(io.control.operation)
 
 	val condition = new Area {
 		private val overflow = io.operand1(11)
@@ -88,16 +101,18 @@ class Alu extends Component {
 		val carry = subResult(17)
 	}
 
-	private val result = io.control.operation.mux(
-		AluOperation.and       -> (io.operand1 & io.operand2),
-		AluOperation.or        -> (io.operand1 | io.operand2),
-		AluOperation.xor       -> (io.operand1 ^ io.operand2),
-		AluOperation.shift     -> shifter.io.result,
-		AluOperation.extend1   -> B(16 bits, default -> io.operand1.msb).asUInt,
-		AluOperation.operand1  -> io.operand1,
-		/* add, compare, sub */
-		default                -> subtract.result
-	)
+	private val result =
+		(io.control.operation.asBits === AluOperation.shiftOperationMask) ? shifter.io.result |
+		(io.control.operation.mux(
+			AluOperation.and      -> (io.operand1 & io.operand2),
+			AluOperation.or       -> (io.operand1 | io.operand2),
+			AluOperation.xor      -> (io.operand1 ^ io.operand2),
+			AluOperation.extend1  -> B(16 bits, default -> io.operand1.msb).asUInt,
+			AluOperation.operand1 -> io.operand1,
+
+			/* add, compare, sub */
+			default -> subtract.result
+		))
 
 	val flags = new Area {
 		private val overflow = (result.msb === io.operand2.msb) && (io.operand1.msb =/= io.operand2.msb)
