@@ -22,8 +22,8 @@ case class ClockedOpcodeDecoder() extends Component {
 	val opcodeDecoder = OpcodeDecoder()
 	opcodeDecoder.io.opcode := registeredOpcode
 
-	io.controlSignals := opcodeDecoder.io.controlSignals.asBits.asUInt
-	io.width := opcodeDecoder.io.controlSignals.asBits.getWidth
+	io.controlSignals := opcodeDecoder.io.output.asBits.asUInt
+	io.width := opcodeDecoder.io.output.asBits.getWidth
 }
 
 

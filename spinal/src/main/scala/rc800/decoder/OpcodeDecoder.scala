@@ -29,7 +29,9 @@ import Pipeline.PipelineControlPimp
 case class OpcodeDecoder() extends Component {
 	val io = new Bundle {
 		val opcode = in Bits(8 bits)
-		val controlSignals = out (PipelineControl())
+		val output = out (DecoderOutput())
+
+		def controlSignals = output.stageControl
 	}
 
 	private val registerPair2 = io.opcode(1 downto 0).as(RegisterName())
@@ -51,79 +53,85 @@ case class OpcodeDecoder() extends Component {
 		def opcode_r16 = io.controlSignals.destination(operand = Operand.opcode_r16, mask = WriteMask.full)
 	}
 
-	io.controlSignals.setDefaults()
+	io.output.nmi := False
+	io.output.stageControl.setDefaults()
 
-	switch (io.opcode) {
-		// Opcodes with no fields
-		is (Opcodes.AND_T_I)  { operation_T_I(AluOperation.and) }
-		is (Opcodes.DI)       { }
-		is (Opcodes.EI)       { }
-		is (Opcodes.EXT_T)    { ext_T() }
-		is (Opcodes.LD_CR_T)  { ld_CR_T() }
-		is (Opcodes.LD_T_CR)  { ld_T_CR() }
-		is (Opcodes.LS_FT_I)  { shift_FT(AluOperation.fromBase(ShiftOperation.ls), Pipeline.Operand.immediate_byte) }
-		is (Opcodes.NEG_T)    { operation_T(Pipeline.Operand.zero, AluOperation.sub) }
-		is (Opcodes.NEG_FT)   { modifyRegisterPair(Pipeline.Operand.zero, AluOperation.sub) }
-		is (Opcodes.NOP)      { }
-		is (Opcodes.NOT_F)    { not_F() }
-		is (Opcodes.OR_T_I)   { operation_T_I(AluOperation.or) }
-		is (Opcodes.POPA)     { stackAll(_.pop := True) }
-		is (Opcodes.PUSHA)    { stackAll(_.push := True) }
-		is (Opcodes.RETI)     { reti() }
-		is (Opcodes.RS_FT_I)  { shift_FT(AluOperation.fromBase(ShiftOperation.rs), Pipeline.Operand.immediate_byte) }
-		is (Opcodes.RSA_FT_I) { shift_FT(AluOperation.fromBase(ShiftOperation.rsa), Pipeline.Operand.immediate_byte) }
-		is (Opcodes.SWAPA)    { stackAll(_.swap := True) }
-		is (Opcodes.SYS_I)    { sys() }
-		is (Opcodes.XOR_T_I)  { operation_T_I(AluOperation.xor) }
-
-
-		// Opcodes with two-bit field
-		is (Opcodes.ADD_FT_R16) { operation_FT_R16(AluOperation.add) }
-		is (Opcodes.ADD_R16_I)  { add_R16_I() }
-		is (Opcodes.CMP_FT_R16) { cmp_FT_R16() }
-		is (Opcodes.EXG_FT_R16) { exg_FT_R16() }
-		is (Opcodes.JAL_R16)    { jal_R16() }
-		is (Opcodes.J_R16)      { j_R16() }
-		is (Opcodes.LD_FT_R16)  { ld_FT_R16() }
-		is (Opcodes.LD_IO_T)    { ld_IO_T() }
-		is (Opcodes.LD_MEM_T)   { ld_MEM_T() }
-		is (Opcodes.LD_R16_FT)  { ld_R16_FT() }
-		is (Opcodes.LD_T_IO)    { ld_T_IO() }
-		is (Opcodes.LD_T_CODE)  { ld_T_CODE() }
-		is (Opcodes.LD_T_MEM)   { ld_T_MEM() }
-		is (Opcodes.POP)        { stack(_.pop := True) }
-		is (Opcodes.PUSH)       { stack(_.push := True) }
-		is (Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
-		is (Opcodes.SWAP)       { stack(_.swap := True) }
-		is (Opcodes.TST_R16)    { tst_R16() }
+	when (Opcodes.illegals.map(io.opcode === _).reduce((v1, v2) => v1 || v2)) { 
+		io.output.nmi := True
+		io.controlSignals.interrupt(Vectors.IllegalInstruction)
+	} otherwise {
+		switch (io.opcode) {
+			// Opcodes with no fields
+			is (Opcodes.AND_T_I)  { operation_T_I(AluOperation.and) }
+			is (Opcodes.DI)       { }
+			is (Opcodes.EI)       { }
+			is (Opcodes.EXT_T)    { ext_T() }
+			is (Opcodes.LD_CR_T)  { ld_CR_T() }
+			is (Opcodes.LD_T_CR)  { ld_T_CR() }
+			is (Opcodes.LS_FT_I)  { shift_FT(AluOperation.fromBase(ShiftOperation.ls), Pipeline.Operand.immediate_byte) }
+			is (Opcodes.NEG_T)    { operation_T(Pipeline.Operand.zero, AluOperation.sub) }
+			is (Opcodes.NEG_FT)   { modifyRegisterPair(Pipeline.Operand.zero, AluOperation.sub) }
+			is (Opcodes.NOP)      { }
+			is (Opcodes.NOT_F)    { not_F() }
+			is (Opcodes.OR_T_I)   { operation_T_I(AluOperation.or) }
+			is (Opcodes.POPA)     { stackAll(_.pop := True) }
+			is (Opcodes.PUSHA)    { stackAll(_.push := True) }
+			is (Opcodes.RETI)     { reti() }
+			is (Opcodes.RS_FT_I)  { shift_FT(AluOperation.fromBase(ShiftOperation.rs), Pipeline.Operand.immediate_byte) }
+			is (Opcodes.RSA_FT_I) { shift_FT(AluOperation.fromBase(ShiftOperation.rsa), Pipeline.Operand.immediate_byte) }
+			is (Opcodes.SWAPA)    { stackAll(_.swap := True) }
+			is (Opcodes.SYS_I)    { sys() }
+			is (Opcodes.XOR_T_I)  { operation_T_I(AluOperation.xor) }
 
 
-		// Opcodes with three-bit field
-		is (Opcodes.ADD_T_R8)  { operation_T_R8(AluOperation.add) }
-		is (Opcodes.ADD_R8_I)  { add_R8_I() }
-		is (Opcodes.AND_T_R8)  { operation_T_R8(AluOperation.and) }
-		is (Opcodes.CMP_R8_I)  { cmp_R8_I() }
-		is (Opcodes.CMP_T_R8)  { cmp_T_R8() }
-		is (Opcodes.DJ_R8_I)   { dj_R8_I() }
-		is (Opcodes.EXG_T_R8)  { exg_T_R8() }
-		is (Opcodes.LD_MEM_R8) { ld_MEM_R8() }
-		is (Opcodes.LD_R8_I)   { ld_R8_I() }
-		is (Opcodes.LD_R8_MEM) { ld_R8_MEM() }
-		is (Opcodes.LD_R8_T)   { ld_R8_T() }
-		is (Opcodes.LD_T_R8)   { ld_T_R8() }
-		is (Opcodes.LS_FT_R8)  { shift_FT(AluOperation.fromBase(ShiftOperation.ls), Operand.opcode_r8) }
-		is (Opcodes.OR_T_R8)   { operation_T_R8(AluOperation.or) }
-		is (Opcodes.RS_FT_R8)  { shift_FT(AluOperation.fromBase(ShiftOperation.rs), Operand.opcode_r8) }
-		is (Opcodes.RSA_FT_R8) { shift_FT(AluOperation.fromBase(ShiftOperation.rsa), Operand.opcode_r8) }
-		is (Opcodes.SUB_T_R8)  { operation_T_R8(AluOperation.sub) }
-		is (Opcodes.XOR_T_R8)  { operation_T_R8(AluOperation.xor) }
+			// Opcodes with two-bit field
+			is (Opcodes.ADD_FT_R16) { operation_FT_R16(AluOperation.add) }
+			is (Opcodes.ADD_R16_I)  { add_R16_I() }
+			is (Opcodes.CMP_FT_R16) { cmp_FT_R16() }
+			is (Opcodes.EXG_FT_R16) { exg_FT_R16() }
+			is (Opcodes.JAL_R16)    { jal_R16() }
+			is (Opcodes.J_R16)      { j_R16() }
+			is (Opcodes.LD_FT_R16)  { ld_FT_R16() }
+			is (Opcodes.LD_IO_T)    { ld_IO_T() }
+			is (Opcodes.LD_MEM_T)   { ld_MEM_T() }
+			is (Opcodes.LD_R16_FT)  { ld_R16_FT() }
+			is (Opcodes.LD_T_IO)    { ld_T_IO() }
+			is (Opcodes.LD_T_CODE)  { ld_T_CODE() }
+			is (Opcodes.LD_T_MEM)   { ld_T_MEM() }
+			is (Opcodes.POP)        { stack(_.pop := True) }
+			is (Opcodes.PUSH)       { stack(_.push := True) }
+			is (Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
+			is (Opcodes.SWAP)       { stack(_.swap := True) }
+			is (Opcodes.TST_R16)    { tst_R16() }
 
 
-		// Opcodes with four-bit field
-		is (Opcodes.J_CC_I)    {
-			val cc = Condition()
-			cc.assignFromBits(io.opcode(3 downto 0))
-			jumpLong(cc)
+			// Opcodes with three-bit field
+			is (Opcodes.ADD_T_R8)  { operation_T_R8(AluOperation.add) }
+			is (Opcodes.ADD_R8_I)  { add_R8_I() }
+			is (Opcodes.AND_T_R8)  { operation_T_R8(AluOperation.and) }
+			is (Opcodes.CMP_R8_I)  { cmp_R8_I() }
+			is (Opcodes.CMP_T_R8)  { cmp_T_R8() }
+			is (Opcodes.DJ_R8_I)   { dj_R8_I() }
+			is (Opcodes.EXG_T_R8)  { exg_T_R8() }
+			is (Opcodes.LD_MEM_R8) { ld_MEM_R8() }
+			is (Opcodes.LD_R8_I)   { ld_R8_I() }
+			is (Opcodes.LD_R8_MEM) { ld_R8_MEM() }
+			is (Opcodes.LD_R8_T)   { ld_R8_T() }
+			is (Opcodes.LD_T_R8)   { ld_T_R8() }
+			is (Opcodes.LS_FT_R8)  { shift_FT(AluOperation.fromBase(ShiftOperation.ls), Operand.opcode_r8) }
+			is (Opcodes.OR_T_R8)   { operation_T_R8(AluOperation.or) }
+			is (Opcodes.RS_FT_R8)  { shift_FT(AluOperation.fromBase(ShiftOperation.rs), Operand.opcode_r8) }
+			is (Opcodes.RSA_FT_R8) { shift_FT(AluOperation.fromBase(ShiftOperation.rsa), Operand.opcode_r8) }
+			is (Opcodes.SUB_T_R8)  { operation_T_R8(AluOperation.sub) }
+			is (Opcodes.XOR_T_R8)  { operation_T_R8(AluOperation.xor) }
+
+
+			// Opcodes with four-bit field
+			is (Opcodes.J_CC_I)    {
+				val cc = Condition()
+				cc.assignFromBits(io.opcode(3 downto 0))
+				jumpLong(cc)
+			}
 		}
 	}
 

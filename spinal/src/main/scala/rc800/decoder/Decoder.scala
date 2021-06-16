@@ -7,9 +7,16 @@ import rc800.alu.Condition
 import rc800.alu.OperandSource
 import rc800.alu.ShiftOperation
 
+import rc800.control.PipelineControl
 import rc800.control.RC811Control
 
 import rc800.Vectors
+
+
+case class DecoderOutput() extends Bundle {
+	val stageControl = PipelineControl()
+	val nmi = Bool
+}
 
 
 case class Decoder() extends Component {
@@ -29,7 +36,7 @@ case class Decoder() extends Component {
 		val output = out (RC811Control())
 	}
 
-	private val useLookup = false
+	private val useLookup = true
 
 	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
 	private val opcode = io.strobe ? io.opcodeAsync | opcodeIn
@@ -41,6 +48,7 @@ case class Decoder() extends Component {
 		v.io.opcode <> opcodeOut
 		v.io.strobe <> True
 		v.io.controlSignals <> io.output.stageControl
+		v.io.output.nmi <> decoderNmi
 		v
 	}
 
@@ -48,9 +56,11 @@ case class Decoder() extends Component {
 		val v = OpcodeDecoder()
 		v.io.opcode <> opcodeOut
 		v.io.controlSignals <> io.output.stageControl
+		v.io.output.nmi <> decoderNmi
 		v
 	}
 
+	val decoderNmi = Bool()
 	val decoder = if (useLookup) lookupDecoder else opcodeDecoder
 
 	private val anyActive = io.nmiActive || io.intActive || io.sysActive
@@ -59,7 +69,7 @@ case class Decoder() extends Component {
 
 	def setDefaults(): Unit = {
 		io.output.intEnable := io.intEnable
-		io.output.nmiActive := io.nmiActive
+		io.output.nmiActive := io.nmiActive || decoderNmi
 		io.output.intActive := io.intActive
 		io.output.sysActive := io.sysActive
 	}
@@ -79,18 +89,12 @@ case class Decoder() extends Component {
 		io.output.stageControl.interrupt(Vectors.ExternalInterrupt)
 		cancel()
 	}.otherwise {
-		when (Opcodes.illegals.map(opcode === _).reduce((v1, v2) => v1 || v2)) { 
-			io.output.nmiActive := True
-			io.output.stageControl.interrupt(Vectors.IllegalInstruction)
-			cancel()
-		} otherwise {
-			switch (opcode) {
-				// Opcodes with no fields
-				is (Opcodes.DI)    { io.output.intEnable := False}
-				is (Opcodes.EI)    { io.output.intEnable := True }
-				is (Opcodes.RETI)  { reti() }
-				is (Opcodes.SYS_I) { sys() }
-			}
+		switch (opcode) {
+			// Opcodes with no fields
+			is (Opcodes.DI)    { io.output.intEnable := False}
+			is (Opcodes.EI)    { io.output.intEnable := True }
+			is (Opcodes.RETI)  { reti() }
+			is (Opcodes.SYS_I) { sys() }
 		}
 	}
 
