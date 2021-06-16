@@ -7,14 +7,7 @@ import rc800.control.component.AluControl
 
 import rc800.lpm
 
-
-class SpinalEnumExtends[T <: SpinalEnum](val base: T) extends SpinalEnum(base.defaultEncoding) {
-	base.elements.foreach(e => newElement(e.position.toString()))
-
-	def asBase(e: C): base.C = e.asBits((base.defaultEncoding.getWidth(base) - 1) downto 0).as(base())
-	def fromBase(e: base.C): this.C = e.asBits.resized.as(this())
-	def fromBase(e: base.E): this.E = elements(e.position)
-}
+import rc800.utils._
 
 
 /*

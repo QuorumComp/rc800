@@ -1,6 +1,6 @@
 package rc800
 
-object Utils {
+package object utils {
 	def using[T <: AutoCloseable, R](v: T)(f: T => R): R = {
 		try {
 			f(v)
