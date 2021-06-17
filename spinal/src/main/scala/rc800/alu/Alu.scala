@@ -84,15 +84,11 @@ class Alu(lpmComponents: lpm.Components) extends Component {
 		)
 	}
 
-	private val subtract = new Area {
-		private val isAdd = io.control.operation === AluOperation.add
-		private val operand1 = io.operand1 ## False
-		private val operand2 = (isAdd ? ~io.operand2 | io.operand2) ## isAdd
-		private val subResult = operand1.asUInt -^ operand2.asUInt
+	private val subtract = lpmComponents.addSub(16, lpm.AddSub.Representation.signed, lpm.AddSub.Direction.dynamic)
 
-		val result = subResult(16 downto 1)
-		val carry = subResult(17)
-	}
+	subtract.io.add_sub := io.control.operation === AluOperation.add
+	subtract.io.dataa := io.operand1.asBits
+	subtract.io.datab := io.operand2.asBits
 
 	private val result =
 		(io.control.operation.asBits === AluOperation.shiftOperationMask) ? shifter.io.result |
@@ -104,13 +100,13 @@ class Alu(lpmComponents: lpm.Components) extends Component {
 			AluOperation.operand1 -> io.operand1,
 
 			/* add, compare, sub */
-			default -> subtract.result
+			default -> subtract.io.result.asUInt
 		))
 
 	val flags = new Area {
-		private val overflow = (result.msb === io.operand2.msb) && (io.operand1.msb =/= io.operand2.msb)
+		private val overflow = subtract.io.overflow
 		private val negative = result.msb
-		private val carry    = subtract.carry
+		private val carry    = !subtract.io.cout
 		private val zero     = result === U(0)
 
 		io.highByteZero := result(15 downto 8) === U(0)

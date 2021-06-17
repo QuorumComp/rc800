@@ -21,7 +21,7 @@ class AddSub(dataWidth: Int, representation: lpm.AddSub.Representation.Value, op
 	val result = subResult(16 downto 1)
 	val carry = subResult(17)
 
-	io.cout := isAdd ? ~carry | carry
+	io.cout := carry
 	io.overflow := (result.msb === io.datab.msb) && (io.dataa.msb =/= io.datab.msb)
 	io.result := result.asBits
 

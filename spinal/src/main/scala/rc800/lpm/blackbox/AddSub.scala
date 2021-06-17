@@ -15,12 +15,9 @@ class AddSub(dataWidth: Int, representation: lpm.AddSub.Representation.Value, op
 
 	addGeneric("LPM_TYPE", "LPM_ADD_SUB")
     addGeneric("LPM_WIDTH", width)
-	addGeneric("LPM_PIPELINE", 0)
 	addGeneric("LPM_REPRESENTATION", representation.toString())
-	addGeneric("LPM_HINT", "UNUSED")
-
-	if (direction != lpm.AddSub.Direction.dynamic)
-		addGeneric("LPM_DIRECTION", direction.toString())
+	addGeneric("LPM_DIRECTION", direction.toString())
+	addGeneric("LPM_HINT","ONE_INPUT_IS_CONSTANT=NO,CIN_USED=NO")
 
 	setBlackBoxName("LPM_ADD_SUB")
 
