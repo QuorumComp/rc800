@@ -80,13 +80,28 @@ case class Decoder() extends Component {
 		opcodeOut := Opcodes.NOP_opcode
 	}
 
+	val performInterrupt = Bool()
+	val interruptVector = UInt(3 bits)
+	
+	performInterrupt := False
+	interruptVector := 0
+
+	when (performInterrupt) {
+		io.output.stageControl.interrupt(interruptVector)
+	}
+
+	def interrupt(vector: Int) {
+		interruptVector := vector >> 3
+		performInterrupt := True
+	}
+
 	when (io.nmiReq) {
 		io.output.nmiActive := True
-		io.output.stageControl.interrupt(Vectors.NonMaskableInterrupt)
+		interrupt(Vectors.NonMaskableInterrupt)
 		cancel()
 	}.elsewhen (reqExtInt) {
 		io.output.intActive := True
-		io.output.stageControl.interrupt(Vectors.ExternalInterrupt)
+		interrupt(Vectors.ExternalInterrupt)
 		cancel()
 	}.otherwise {
 		switch (opcode) {
@@ -101,7 +116,7 @@ case class Decoder() extends Component {
 	def sys(): Unit = {
 		when (anyActive) {
 			io.output.nmiActive := True
-			io.output.stageControl.interrupt(Vectors.IllegalInterrupt)
+			interrupt(Vectors.IllegalInterrupt)
 			cancel()
 		}.otherwise {
 			io.output.sysActive := True
@@ -119,7 +134,7 @@ case class Decoder() extends Component {
 			}
 		}.otherwise {
 			io.output.nmiActive := True
-			io.output.stageControl.interrupt(Vectors.IllegalInterrupt)
+			interrupt(Vectors.IllegalInterrupt)
 
 			cancel()
 		}

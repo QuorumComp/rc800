@@ -49,14 +49,14 @@ object Pipeline {
 			hl.registerControl.mask := WriteMask.full
 		}
 
-		def interrupt(vector: Int): Unit = {
+		def interrupt(vector: UInt): Unit = {
 			operand1 := Operand.pc
 			operand2 := Operand.ones
 			pipeline.aluStageControl.aluControl.operation := AluOperation.add
 
 			pipeline.memoryStageControl.enable := False
 
-			pipeline.aluStageControl.pcControl.vector := vector >> 3
+			pipeline.aluStageControl.pcControl.vector := vector
 			pipeline.aluStageControl.pcControl.truePath := PcTruePathSource.vectorFromDecoder
 
 			pushValueHL()
