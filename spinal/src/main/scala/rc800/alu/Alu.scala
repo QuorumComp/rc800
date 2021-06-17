@@ -18,17 +18,12 @@ import rc800.utils._
  * significant bits of the 16 bit operand.
  */
 
-object AluOperation extends SpinalEnumExtends(ShiftOperation) {
-	val add,
-		sub,
-		and,
-		or,
-		xor,
-		extend1,
-		compare,
-		operand1 = newElement()
+object AluOperation extends SpinalEnum(defaultEncoding = binarySequential) {
+	val add, sub, compare, extend1,
+	    and, or, xor, operand1 = newElement()
 
-	val shiftOperationMask = M"00--"
+	val ls, rs, rsa, swap = newElement()	// must match AluOperation
+
 }
 
 
@@ -54,7 +49,7 @@ class Alu(lpmComponents: lpm.Components) extends Component {
 
 	shifter.io.operand   <> io.operand1
 	shifter.io.amount    <> io.operand2(11 downto 8)
-	shifter.io.operation <> AluOperation.asBase(io.control.operation)
+	shifter.io.operation <> io.control.operation.asBits.resize(2).as(ShiftOperation())
 
 	val condition = new Area {
 		private val overflow = io.operand1(11)
@@ -90,14 +85,16 @@ class Alu(lpmComponents: lpm.Components) extends Component {
 	subtract.io.dataa := io.operand1.asBits
 	subtract.io.datab := io.operand2.asBits
 
+	private val isShift = io.control.operation.asBits.msb
+
 	private val result =
-		(io.control.operation.asBits === AluOperation.shiftOperationMask) ? shifter.io.result |
-		(io.control.operation.mux(
-			AluOperation.and      -> (io.operand1 & io.operand2),
-			AluOperation.or       -> (io.operand1 | io.operand2),
-			AluOperation.xor      -> (io.operand1 ^ io.operand2),
-			AluOperation.extend1  -> B(16 bits, default -> io.operand1.msb).asUInt,
-			AluOperation.operand1 -> io.operand1,
+		isShift ? shifter.io.result |
+		(io.control.operation.asBits.resize(3).mux(
+			AluOperation.and.asBits.resize(3)      -> (io.operand1 & io.operand2),
+			AluOperation.or.asBits.resize(3)       -> (io.operand1 | io.operand2),
+			AluOperation.xor.asBits.resize(3)      -> (io.operand1 ^ io.operand2),
+			AluOperation.extend1.asBits.resize(3)  -> B(16 bits, default -> io.operand1.msb).asUInt,
+			AluOperation.operand1.asBits.resize(3) -> io.operand1,
 
 			/* add, compare, sub */
 			default -> subtract.io.result.asUInt
