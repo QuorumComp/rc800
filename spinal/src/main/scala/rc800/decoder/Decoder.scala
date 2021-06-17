@@ -15,7 +15,7 @@ import rc800.Vectors
 
 case class DecoderOutput() extends Bundle {
 	val stageControl = PipelineControl()
-	val nmi = Bool
+	val illegal = Bool
 }
 
 
@@ -48,7 +48,7 @@ case class Decoder() extends Component {
 		v.io.opcode <> opcodeOut
 		v.io.strobe <> True
 		v.io.controlSignals <> io.output.stageControl
-		v.io.output.nmi <> decoderNmi
+		v.io.output.illegal <> decoderIllegal
 		v
 	}
 
@@ -56,11 +56,11 @@ case class Decoder() extends Component {
 		val v = OpcodeDecoder()
 		v.io.opcode <> opcodeOut
 		v.io.controlSignals <> io.output.stageControl
-		v.io.output.nmi <> decoderNmi
+		v.io.output.illegal <> decoderIllegal
 		v
 	}
 
-	val decoderNmi = Bool()
+	val decoderIllegal = Bool()
 	val decoder = if (useLookup) lookupDecoder else opcodeDecoder
 
 	private val anyActive = io.nmiActive || io.intActive || io.sysActive
@@ -69,7 +69,7 @@ case class Decoder() extends Component {
 
 	def setDefaults(): Unit = {
 		io.output.intEnable := io.intEnable
-		io.output.nmiActive := io.nmiActive || decoderNmi
+		io.output.nmiActive := io.nmiActive || decoderIllegal
 		io.output.intActive := io.intActive
 		io.output.sysActive := io.sysActive
 	}

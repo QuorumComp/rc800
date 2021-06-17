@@ -53,12 +53,12 @@ case class OpcodeDecoder() extends Component {
 		def opcode_r16 = io.controlSignals.destination(operand = Operand.opcode_r16, mask = WriteMask.full)
 	}
 
-	io.output.nmi := False
+	io.output.illegal := False
 	io.output.stageControl.setDefaults()
 
 	when (Opcodes.illegals.map(io.opcode === _).reduce((v1, v2) => v1 || v2)) { 
-		io.output.nmi := True
-		io.controlSignals.interrupt(Vectors.IllegalInstruction)
+		io.output.illegal := True
+		io.controlSignals.interrupt(U(Vectors.IllegalInstruction >> 3, 3 bits))
 	} otherwise {
 		switch (io.opcode) {
 			// Opcodes with no fields
