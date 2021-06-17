@@ -11,7 +11,7 @@ class CLShift(shiftType: lpm.CLShift.ShiftType.Value, dataWidth: Int, direction:
 
 	override def width = dataWidth
 
-    addGeneric("LPM_SHIFTTYPE", shiftType.stringRepresentation)
+    addGeneric("LPM_SHIFTTYPE", shiftType.toString())
     addGeneric("LPM_WIDTH", width)
 	addGeneric("LPM_WIDTHDIST", log2Up(width))
 	addGeneric("LPM_TYPE", "LPM_CLSHIFT")

@@ -19,14 +19,9 @@ trait CLShift extends Component {
 
 object CLShift {
 	object ShiftType extends Enumeration {
-		protected case class ShiftTypeVal(val stringRepresentation: String) extends super.Val
-
-		import scala.language.implicitConversions
-		implicit def valueToShiftTypeVal(x: Value): ShiftTypeVal = x.asInstanceOf[ShiftTypeVal]
-
-		val rotate = ShiftTypeVal("ROTATE")
-		val logical = ShiftTypeVal("LOGICAL")
-		val arithmetic = ShiftTypeVal("ARITHMETIC")
+		val rotate = Value("ROTATE")
+		val logical = Value("LOGICAL")
+		val arithmetic = Value("ARITHMETIC")
 	}
 
 	object ShiftDirection extends Enumeration {
@@ -35,6 +30,39 @@ object CLShift {
 }
 
 
+trait AddSub extends Component {
+	import AddSub._
+
+	def width: Int = ???
+	def direction: Direction.Value = ???
+
+	val io = new Bundle {
+		val dataa = in Bits(width bits)
+		val datab = in Bits(width bits)
+		val add_sub = direction != Direction.dynamic generate (in Bool);
+		val cin = in Bool;
+
+		val result = out Bits(width bits)
+		val cout = out Bool
+		val overflow = out Bool
+	}
+}
+
+object AddSub {
+	object Representation extends Enumeration {
+		val signed = Value("SIGNED")
+		val unsigned = Value("UNSIGNED")
+	}
+
+	object Direction extends Enumeration {
+		val add = Value("ADD")
+		val sub = Value("SUB")
+		val dynamic = Value("DYNAMIC")
+	}
+}
+
+
 trait Components {
 	def clShift(shiftType: CLShift.ShiftType.Value, width: Int, direction: CLShift.ShiftDirection.Value = CLShift.ShiftDirection.left): CLShift
+	def addSub(dataWidth: Int, representation: AddSub.Representation.Value, direction: AddSub.Direction.Value): AddSub
 } 
