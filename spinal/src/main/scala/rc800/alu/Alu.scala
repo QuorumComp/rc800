@@ -33,7 +33,7 @@ object Condition extends SpinalEnum(defaultEncoding = binarySequential) {
 }
 
 
-class Alu(lpmComponents: lpm.Components) extends Component {
+class Alu()(implicit lpmComponents: lpm.Components) extends Component {
 	val io = new Bundle {
 		val operand1 = in UInt(16 bits)
 		val operand2 = in UInt(16 bits)
@@ -45,7 +45,7 @@ class Alu(lpmComponents: lpm.Components) extends Component {
 		val highByteZero = out Bool
 	}
 
-	private val shifter = Shifter(16 bits, lpmComponents)
+	private val shifter = Shifter(16 bits)
 
 	shifter.io.operand   <> io.operand1
 	shifter.io.amount    <> io.operand2(11 downto 8)
@@ -101,7 +101,7 @@ class Alu(lpmComponents: lpm.Components) extends Component {
 		))
 
 	val flags = new Area {
-		private val overflow = subtract.io.overflow
+		private val overflow = (result.msb === io.operand2.msb) && (io.operand1.msb =/= io.operand2.msb)
 		private val negative = result.msb
 		private val carry    = !subtract.io.cout
 		private val zero     = result === U(0)

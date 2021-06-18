@@ -43,7 +43,6 @@ trait AddSub extends Component {
 
 		val result = out Bits(width bits)
 		val cout = out Bool
-		val overflow = out Bool
 	}
 }
 

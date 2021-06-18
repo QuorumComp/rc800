@@ -67,11 +67,16 @@ case class Decoder() extends Component {
 
 	private val reqExtInt = io.intReq && io.intEnable && !io.intActive && !io.nmiActive
 
+	private val performInterrupt = Bool()
+	private val interruptVector = UInt(3 bits)
+	
 	def setDefaults(): Unit = {
 		io.output.intEnable := io.intEnable
 		io.output.nmiActive := io.nmiActive || decoderIllegal
 		io.output.intActive := io.intActive
 		io.output.sysActive := io.sysActive
+		performInterrupt := False
+		interruptVector := 0
 	}
 
 	setDefaults()
@@ -79,12 +84,6 @@ case class Decoder() extends Component {
 	def cancel(): Unit = {
 		opcodeOut := Opcodes.NOP_opcode
 	}
-
-	val performInterrupt = Bool()
-	val interruptVector = UInt(3 bits)
-	
-	performInterrupt := False
-	interruptVector := 0
 
 	when (performInterrupt) {
 		io.output.stageControl.interrupt(interruptVector)

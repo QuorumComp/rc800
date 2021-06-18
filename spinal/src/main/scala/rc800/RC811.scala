@@ -27,7 +27,7 @@ import registers.RegisterFile
 import registers.WriteMask
 
 
-class RC811(lpmComponents: lpm.Components) extends Component {
+class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	val io = new Bundle {
 		val nmi = in Bool
 		val irq = in Bool
@@ -231,7 +231,7 @@ class RC811(lpmComponents: lpm.Components) extends Component {
 	private val aluArea = new Area {
 		private val memoryIn = RegNextWhen(io.dataIn, stage === 2)
 
-		private val alu = AluStage(lpmComponents)
+		private val alu = AluStage()
 		alu.io.registers := registers.readValues
 		alu.io.pc        := pcPlusOne
 		alu.io.memory    := memoryIn
@@ -287,6 +287,6 @@ class RC811(lpmComponents: lpm.Components) extends Component {
 //Generate the MyTopLevel's Verilog
 object RC811TopLevel {
 	def main(args: Array[String]) {
-		SpinalVerilog(new RC811(lpm.blackbox.Components)).printPruned()
+		SpinalVerilog(new RC811()(lpm.blackbox.Components)).printPruned()
 	}
 }

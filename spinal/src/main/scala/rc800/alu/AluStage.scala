@@ -7,7 +7,7 @@ import rc800.control.AluStageControl
 
 import rc800.lpm
 
-case class AluStage(lpmComponents: lpm.Components) extends Component {
+case class AluStage()(implicit lpmComponents: lpm.Components) extends Component {
 	val io = new Bundle {
 		val control = in (AluStageControl())
 
@@ -28,7 +28,7 @@ case class AluStage(lpmComponents: lpm.Components) extends Component {
 		selectors(index).io.memory    := io.memory.asUInt
 	}
 	
-	private val alu = new Alu(lpmComponents)
+	private val alu = new Alu()
 
 	alu.io.operand1 := selectors(0).io.dataOut
 	alu.io.operand2 := selectors(1).io.dataOut

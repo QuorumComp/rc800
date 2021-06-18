@@ -16,7 +16,7 @@ object ShiftOperation extends SpinalEnum(defaultEncoding = binarySequential) {
 }
 
 
-case class Shifter(width: BitCount, lpmComponents: lpm.Components) extends Component {
+case class Shifter(width: BitCount)(implicit lpmComponents: lpm.Components) extends Component {
 	private val amountWidth = log2Up(width.value) bits
 
 	val io = new Bundle {
@@ -27,17 +27,17 @@ case class Shifter(width: BitCount, lpmComponents: lpm.Components) extends Compo
 	}
 
 	private val rotater = lpmComponents.clShift(lpm.CLShift.ShiftType.rotate, width.value)
-	private val mask = B(width, default -> True) |<< io.amount
 
 	rotater.io.data := io.operand.asBits
 	rotater.io.distance := io.operation.mux(
 		ShiftOperation.ls   -> (io.amount),
 		ShiftOperation.swap -> U(8),
-		default             -> (~io.amount + 1)	// right shift
+		default             -> ((-io.amount.asSInt).asUInt)	// right shift
 	)
 
 	private val fillBit = (io.operation === ShiftOperation.rsa) ? io.operand.msb | False 
 	private val fillBits = B(width, default -> fillBit)
+	private val mask = B(width, default -> True) |<< rotater.io.distance
 
 	io.result := io.operation.mux (
 		ShiftOperation.ls   -> (rotater.io.result & mask).asUInt,

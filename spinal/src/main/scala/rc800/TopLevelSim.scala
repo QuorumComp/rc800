@@ -95,7 +95,7 @@ object TopLevelSim {
 		
 		SimConfig
 		.withWave
-		.compile(new RC811(rc800.lpm.generic.Components))
+		.compile(new RC811()(rc800.lpm.generic.Components))
 		.doSim(1673871647) { dut =>
 			// Fork a process to generate the reset and the clock on the dut
 			dut.clockDomain.forkStimulus(period = 10)
