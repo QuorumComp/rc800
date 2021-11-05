@@ -4,7 +4,7 @@
 | xy rrr \ sss | 000         | 001         | 010         | 011         | 100         | 101         | 110         | 111         |
 |--------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
 | 00_000       | NOP         | LD (BC),T   | LD (DE),T   | LD (HL),T   | LD T,(FT)   | LD T,(BC)   | LD T,(DE)   | LD T,(HL)   |
-| 00_001       |             |             | LCR (L),T   | LCR T,(L)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
+| 00_001       |             |             | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
 | 00_010       | EXG T,F     |             | EXG T,B     | EXG T,C     | EXG T,D     | EXG T,E     | EXG T,H     | EXG T,L     |
 | 00_011       | NOT F       |             | EI          | DI          |             |             |             |             |
 | 00_100       |             |             | LD (FT),B   | LD (FT),C   | LD (FT),D   | LD (FT),E   | LD (FT),H   | LD (FT),L   |

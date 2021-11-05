@@ -11,6 +11,21 @@
 | cc     | Condition code |
 | Rlist  | Register list, such as BC/DE (BC and DE registers), BC-DL (BC, DE and HL), or a combination thereof |
 
+## Condition codes
+| Code | Meaning | Alternative |
+|------|---------|---------|
+| LE   | Signed less than or equal ||
+| GT   | Signed greater than ||
+| LT   | Signed less than ||
+| GE   | Signed greater than or equal ||
+| LEU  | Unsigned less than or equal ||
+| GTU  | Unsigned greater than ||
+| LTU  | Unsigned less than | C (carry) |
+| GEU  | Unsigned greater than or equal | NC (not carry) |
+| EQ   | Equal | Z (zero) |
+| NE   | Not equal | NZ (not zero) |
+
+
 ## Synthesized instructions
 For improved quality of life, the assembler provides several synthesized instructions. This includes instructions such as ```LD FT,Label``` which would be cumbersome to write manually every time the programmer needed to load the address of a label. These instructions are marked as ```(synthesized)``` in the tables below.
 
@@ -85,6 +100,7 @@ For instance ```LD/EQ T,1``` will load T with the value 1 if the flags in F sati
 | LD&nbsp;R8,T    | Load 8 bit register with contents of T ||
 | LD&nbsp;FT,R16  | Load FT register with contents of 16 bit register ||
 | LD&nbsp;R16,FT  | Load 16 bit register with contents of FT ||
+| LD&nbsp;R16,i16 | Load 16 bit register with immediate 16 bit value |(synthesized)|
 | POP&nbsp;R16    | Pop contents of 16 bit register stack ||
 | POP&nbsp;Rlist  | Pop contents of specified 16 bit register stacks | (synthesized) |
 | POPA            | Pop contents of all 16 bit registers stacks ||

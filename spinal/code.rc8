@@ -23,9 +23,9 @@ Main:
 ;		jal	TestStore
 ;		jal	TestLIO
 ;		jal	TestStackPointer
-		jal	TestExchange
+;		jal	TestExchange
 
-		println "Welcome to the RC800 processor"
+		println "\n---\nWelcome to the RC800 processor\n"
 		ld	bc,$F00D
 		jal	PrintHexBC
 
@@ -375,7 +375,7 @@ TestStore:
 
 		ld	bc,StoredData
 		ld	t,$87
-		ld	(bc),t		; $87
+		ld	(bc),t
 
 		ld	de,StoredData
 		ld	t,0
