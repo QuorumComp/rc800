@@ -4,6 +4,7 @@ A function must preserve all registers except registers used for return values.
 A function should prefer FT for return values, but may use other or additional registers.
 
 If a return value is stored in an eight bit register, the register pair's other register may be used as a temporary register, and the caller should assumed it is not preserved.
+
 # Standard Calling Convention
 
 This is the standard calling convention for the RC800 family. Other calling conventions are possible, this is the officially suggested one.
@@ -44,7 +45,7 @@ The convention is generally "callee-saves". All values, including the ones held 
 
 The register `FT` is "caller-saves". `FT` must be assumed to be destroyed by the callee, even if the callee does not return a value.
 
-If a multi-word parameter is passed on the `FT` stack, the callee will consume this value and remove it from the stack.
+If a multi-word parameter is passed on the `FT` stack, the callee will consume this value and remove it from the stack. Note that "consuming" a value means removing one less word than the value actually uses. In the case of a 32 bit value, it takes up one extra word of stack space, thus only one word should be removed by the callee.
 
 # Returning multi-word values
 
