@@ -2,7 +2,7 @@ import scala.sys.process._
 
 lazy val buildMachineCode = taskKey[Unit]("Execute ASMotor")
 
-val spinalVersion = "1.5.0"
+val spinalVersion = "1.6.4"
 
 lazy val r8r = (project in file("."))
 	.settings(
