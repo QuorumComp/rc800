@@ -17,5 +17,5 @@ case class WriteBackStageControl() extends Bundle {
 	val fileControl = Vec(RegisterFileControl(), 4)
 
 	def fileControl(name: RegisterName.C): RegisterFileControl =
-		fileControl(name.as(UInt))
+		fileControl(name.asBits.asUInt)
 }

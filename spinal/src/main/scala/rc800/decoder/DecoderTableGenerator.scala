@@ -13,7 +13,7 @@ import java.io._
 case class ClockedOpcodeDecoder() extends Component {
 	val io = new Bundle {
 		val opcode = in Bits(8 bits)
-		val controlSignals = out UInt
+		val controlSignals = out UInt(71 bits)
 		val width = out UInt(8 bits)
 	}
 

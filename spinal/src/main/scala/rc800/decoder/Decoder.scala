@@ -23,20 +23,20 @@ case class Decoder() extends Component {
 	import Pipeline._
 
 	val io = new Bundle {
-		val strobe = in Bool
+		val strobe = in Bool()
 		val opcodeAsync = in Bits(8 bits)
 
-		val nmiReq    = in Bool
-		val intReq    = in Bool
-		val intEnable = in Bool
-		val nmiActive = in Bool
-		val intActive = in Bool
-		val sysActive = in Bool
+		val nmiReq    = in Bool()
+		val intReq    = in Bool()
+		val intEnable = in Bool()
+		val nmiActive = in Bool()
+		val intActive = in Bool()
+		val sysActive = in Bool()
 
 		val output = out (RC811Control())
 	}
 
-	private val useLookup = true
+	private val useLookup = false
 
 	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
 	private val opcode = io.strobe ? io.opcodeAsync | opcodeIn

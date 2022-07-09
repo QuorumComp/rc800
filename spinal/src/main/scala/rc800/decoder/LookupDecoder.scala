@@ -10,7 +10,7 @@ import rc800.control.AluStageControl
 case class LookupDecoder() extends Component {
 	val io = new Bundle {
 		val opcode = in Bits(8 bits)
-		val strobe = in Bool
+		val strobe = in Bool()
 		val output = out (DecoderOutput())
 
 		def controlSignals = output.stageControl

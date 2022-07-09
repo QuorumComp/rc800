@@ -27,7 +27,7 @@ object TopLevelSim {
 	val outputAdt = false
 	val outputDebug = true
 	val verify = false
-	val outputMemory = true
+	val outputMemory = false
 	val outputIo = true
 
 	def assertOperation(op: Operation): Unit = {
@@ -92,6 +92,7 @@ object TopLevelSim {
 
 	def main(args: Array[String]) {
 		loadFileIntoMemory("rc800/spinal/code.bin", 0)
+		// loadFileIntoMemory("code.bin", 0)
 		
 		SimConfig
 		.withWave

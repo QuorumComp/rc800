@@ -41,8 +41,8 @@ class Alu()(implicit lpmComponents: lpm.Components) extends Component {
 		val control = in (AluControl())
 
 		val dataOut      = out UInt(16 bits)
-		val conditionMet = out Bool
-		val highByteZero = out Bool
+		val conditionMet = out Bool()
+		val highByteZero = out Bool()
 	}
 
 	private val shifter = Shifter(16 bits)

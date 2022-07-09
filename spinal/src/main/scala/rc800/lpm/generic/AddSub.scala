@@ -18,8 +18,8 @@ class AddSub(dataWidth: Int, representation: lpm.AddSub.Representation.Value, op
 	private val operand2 = (isAdd ? ~io.datab | io.datab) ## isAdd
 	private val subResult = operand1.asUInt -^ operand2.asUInt
 
-	val result = subResult(16 downto 1)
-	val carry = subResult(17)
+	val result = subResult(dataWidth downto 1)
+	val carry = subResult(dataWidth + 1)
 
 	io.cout := ~carry
 	io.result := result.asBits

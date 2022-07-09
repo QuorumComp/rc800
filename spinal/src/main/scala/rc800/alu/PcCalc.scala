@@ -26,8 +26,8 @@ case class PcCalc() extends Component {
 		val pc           = in UInt(16 bits)
 		val operand2     = in UInt(16 bits)
 		val memory       = in Bits(8 bits)
-		val conditionMet = in Bool
-		val resultZero   = in Bool
+		val conditionMet = in Bool()
+		val resultZero   = in Bool()
 		val control      = in (PcControl())
 
 		val nextPc = out UInt(16 bits)

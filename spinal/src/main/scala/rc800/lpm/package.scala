@@ -39,10 +39,10 @@ trait AddSub extends Component {
 	val io = new Bundle {
 		val dataa = in Bits(width bits)
 		val datab = in Bits(width bits)
-		val add_sub = (direction == Direction.dynamic) generate (in Bool);
+		val add_sub = (direction == Direction.dynamic) generate (in Bool());
 
 		val result = out Bits(width bits)
-		val cout = out Bool
+		val cout = out Bool()
 	}
 }
 

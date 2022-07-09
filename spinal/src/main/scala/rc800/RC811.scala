@@ -29,18 +29,18 @@ import registers.WriteMask
 
 class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	val io = new Bundle {
-		val nmi = in Bool
-		val irq = in Bool
+		val nmi = in Bool()
+		val irq = in Bool()
 
 		val dataIn  = in  Bits(8 bits)
 		val dataOut = out Bits(8 bits)
 
 		val address   = out UInt(16 bits)
-		val busEnable = out Bool
-		val io        = out Bool
-		val code      = out Bool
-		val write     = out Bool
-		val int       = out Bool
+		val busEnable = out Bool()
+		val io        = out Bool()
+		val code      = out Bool()
+		val write     = out Bool()
+		val int       = out Bool()
 	}
 
 	val stage = Reg(UInt(2 bits)) init(1) simPublic()
@@ -108,10 +108,12 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	}
 
 	private val registers = new Area() {
+		private val readControl = decodeArea.readControl
+
 		val writeControl  = Reg(Vec(RegisterFileControl(),4))
 		val writeData     = Reg(UInt(16 bits))
 		val writeDataExg  = Reg(UInt(16 bits))
-		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFF), 4)
+		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFE), 4)
 
 		for (i <- 0 to 3) {
 			val ctrl = writeControl(i).registerControl
@@ -125,7 +127,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		private val registers = new RegisterFile()
 		private val io = registers.io
 
-		registers.io.readRegisters := decodeArea.readControl.registers
+		registers.io.readRegisters := readControl.registers
 
 		registers.io.registerControl <> writeControl
 		registers.io.dataIn          <> writeData
@@ -137,7 +139,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 		for (index <- 0 to 1) {
 			modifiers(index).io.operand <> registers.io.dataOut(index)
-			modifiers(index).io.part <> decodeArea.readControl.part(index)
+			modifiers(index).io.part <> readControl.part(index)
 			readValues(index) := modifiers(index).io.dataOut
 		}
 	}
@@ -148,6 +150,8 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	 */
 
 	private val memoryArea = new Area {
+		private val control = decodeArea.memoryControl
+
 		val result = Reg(Bits(8 bits)) init(0)
 
 		/*
@@ -167,7 +171,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 				MemoryStageAddressSource.pc -> pcPlusOne
 			)
 
-		private val memAddress = selectSourceAddress(decodeArea.memoryControl.address)
+		private val memAddress = selectSourceAddress(control.address)
 		private val memData    = registers.readValues(1)	// always operand 2
 
 		private val configRegister = memAddress(15 downto 8)
@@ -175,7 +179,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		private val stackPointer = registers.stackPointers(configRegister(1 downto 0))
 
 		when (stage === 2) {
-			when (decodeArea.memoryControl.config && isStackPointerRegister) {
+			when (control.config && isStackPointerRegister) {
 				result := stackPointer.asBits
 			} otherwise {
 				result := io.dataIn
@@ -185,7 +189,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		private def handleConfigRegisterOperation(): Unit = {
 			when (isStackPointerRegister) {
 				// Stack pointer operation
-				when (decodeArea.memoryControl.write) {
+				when (control.write) {
 					stackPointer := memData(15 downto 8)
 				}
 			}
@@ -194,10 +198,10 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		private def handleMemoryAndIoOperation(): Unit = {
 			io.address := memAddress
 			io.dataOut := memData(15 downto 8).asBits
-			io.busEnable := decodeArea.memoryControl.enable
-			io.write := decodeArea.memoryControl.write
-			io.io := decodeArea.memoryControl.io
-			io.code := decodeArea.memoryControl.code
+			io.busEnable := control.enable
+			io.write := control.write
+			io.io := control.io
+			io.code := control.code
 		}
 
 		private def handlePushPop() {
@@ -214,8 +218,8 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		when (stage === 1) {
 			handlePushPop()
 
-			when (decodeArea.memoryControl.enable) {
-				when (decodeArea.memoryControl.config) {
+			when (control.enable) {
+				when (control.config) {
 					handleConfigRegisterOperation()
 				} otherwise {
 					handleMemoryAndIoOperation()
@@ -230,12 +234,13 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 	private val aluArea = new Area {
 		private val memoryIn = RegNextWhen(io.dataIn, stage === 2)
+		private val control = RegNext(decodeArea.aluControl)
 
 		private val alu = AluStage()
-		alu.io.registers := registers.readValues
+		alu.io.registers := RegNext(registers.readValues)
 		alu.io.pc        := pcPlusOne
 		alu.io.memory    := memoryIn
-		alu.io.control   := decodeArea.aluControl
+		alu.io.control   := control
 
 		val result = alu.io.dataOut
 		val pcOut = alu.io.nextPc
