@@ -11,10 +11,10 @@ object OperandPart extends SpinalEnum(defaultEncoding = binarySequential) {
 
 case class OperandPartSelector() extends Component {
 	val io = new Bundle {
-		val operand = in  UInt(16 bits)
+		val operand = in  Bits(16 bits)
 		val part    = in  (OperandPart())
 
-		val dataOut = out UInt(16 bits)
+		val dataOut = out Bits(16 bits)
 	}
 
 	io.dataOut := io.part.mux(

@@ -14,8 +14,5 @@ object WriteBackValueSource extends SpinalEnum(defaultEncoding = binarySequentia
 
 case class WriteBackStageControl() extends Bundle {
 	val source      = WriteBackValueSource()
-	val fileControl = Vec(RegisterFileControl(), 4)
-
-	def fileControl(name: RegisterName.C): RegisterFileControl =
-		fileControl(name.asBits.asUInt)
+	val fileControl = RegisterFileControl()
 }

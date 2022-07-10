@@ -11,11 +11,11 @@ case class AluStage()(implicit lpmComponents: lpm.Components) extends Component 
 	val io = new Bundle {
 		val control = in (AluStageControl())
 
-		val registers = in Vec(UInt(16 bits), 2)
+		val registers = in Vec(Bits(16 bits), 2)
 		val pc        = in UInt(16 bits)
 		val memory    = in Bits(8 bits)
 
-		val dataOut      = out UInt(16 bits)
+		val dataOut      = out Bits(16 bits)
 		val nextPc       = out (UInt(16 bits))
 	}
 
@@ -25,23 +25,23 @@ case class AluStage()(implicit lpmComponents: lpm.Components) extends Component 
 		selectors(index).io.selection := io.control.selection(index)
 		selectors(index).io.register  := io.registers(index)
 		selectors(index).io.pc        := io.pc
-		selectors(index).io.memory    := io.memory.asUInt
+		selectors(index).io.memory    := io.memory
 	}
 	
 	private val alu = new Alu()
 
-	alu.io.operand1 := selectors(0).io.dataOut
-	alu.io.operand2 := selectors(1).io.dataOut
+	alu.io.operand1 := selectors(0).io.dataOut.asUInt
+	alu.io.operand2 := selectors(1).io.dataOut.asUInt
 	alu.io.control  := io.control.aluControl
 
 	private val pcCalc = PcCalc()
 	pcCalc.io.control      := io.control.pcControl
 	pcCalc.io.pc           := io.pc
-	pcCalc.io.operand2     := selectors(1).io.dataOut
+	pcCalc.io.operand2     := selectors(1).io.dataOut.asUInt
 	pcCalc.io.memory       := io.memory
 	pcCalc.io.conditionMet := alu.io.conditionMet
 	pcCalc.io.resultZero   := alu.io.highByteZero
 
-	io.dataOut := alu.io.dataOut
+	io.dataOut := alu.io.dataOut.asBits
 	io.nextPc  := pcCalc.io.nextPc
 }

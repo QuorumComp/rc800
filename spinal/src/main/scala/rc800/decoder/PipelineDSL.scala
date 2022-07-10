@@ -15,7 +15,6 @@ import rc800.control.WriteBackValueSource
 
 import rc800.registers.OperandPart
 import rc800.registers.RegisterName
-import rc800.registers.WriteMask
 
 
 object Pipeline {
@@ -43,10 +42,9 @@ object Pipeline {
 
 		def pushValueHL(): Unit = {
 			pipeline.writeStageControl.source := WriteBackValueSource.alu
-			val hl = pipeline.writeStageControl.fileControl(RegisterName.hl)
-			hl.registerControl.push := True
-			hl.registerControl.write := True
-			hl.registerControl.mask := WriteMask.full
+			val hl = pipeline.writeStageControl.fileControl.registerControl(RegisterName.hl)
+			hl.push := True
+			hl.write := True
 		}
 
 		def interrupt(vector: UInt): Unit = {
@@ -80,7 +78,7 @@ object Pipeline {
 			Destination(operand, mask)
 
 		case class Destination(val operand: Operand, val mask: WriteMask.C) {
-			private val control = pipeline.writeStageControl.fileControl(operand.register)
+			private val control = pipeline.writeStageControl.fileControl.registerControl(operand.register)
 			def := (source: WriteBackValueSource.E): Unit = {
 				pipeline.writeStageControl.source := source
 

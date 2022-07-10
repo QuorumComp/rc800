@@ -12,20 +12,20 @@ object OperandSource extends SpinalEnum(defaultEncoding = binarySequential) {
 case class OperandSelector() extends Component {
 	val io = new Bundle {
 		val selection = in (OperandSource())
-		val register  = in UInt(16 bits)
+		val register  = in Bits(16 bits)
 		val pc        = in UInt(16 bits)
-		val memory    = in UInt(8 bits) 
+		val memory    = in Bits(8 bits) 
 
-		val dataOut   = out UInt(16 bits)
+		val dataOut   = out Bits(16 bits)
 	}
 
 	io.dataOut := io.selection.mux(
-		OperandSource.zero          -> U(0, 16 bits),
-		OperandSource.ones          -> U(0xFFFF, 16 bits),
+		OperandSource.zero          -> B(0, 16 bits),
+		OperandSource.ones          -> B(0xFFFF, 16 bits),
 		OperandSource.register      -> io.register,
-		OperandSource.pc            -> io.pc,
+		OperandSource.pc            -> io.pc.asBits,
 		OperandSource.memory        -> (io.memory << 8),
-		OperandSource.signed_memory -> io.memory.asSInt.resize(16 bits).asUInt
+		OperandSource.signed_memory -> io.memory.asSInt.resize(16 bits).asBits
 	)
 }
 

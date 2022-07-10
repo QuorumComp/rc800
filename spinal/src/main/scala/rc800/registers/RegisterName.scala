@@ -4,5 +4,6 @@ import spinal.core._
 
 
 object RegisterName extends SpinalEnum(defaultEncoding = binarySequential) {
-	val ft, bc, de, hl = newElement()
+	val f, t, b, c, d, e, h, l,
+		ft, bc, de, hl = newElement()
 }

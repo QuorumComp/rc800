@@ -24,7 +24,6 @@ import decoder.Decoder
 import registers.OperandPartSelector
 import registers.Register
 import registers.RegisterFile
-import registers.WriteMask
 
 
 class RC811()(implicit lpmComponents: lpm.Components) extends Component {
@@ -110,18 +109,18 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	private val registers = new Area() {
 		private val readControl = decodeArea.readControl
 
-		val writeControl  = Reg(Vec(RegisterFileControl(),4))
-		val writeData     = Reg(UInt(16 bits))
-		val writeDataExg  = Reg(UInt(16 bits))
+		val writeControl  = Reg(RegisterFileControl())
+		val writeData     = Reg(Bits(16 bits))
+		val writeDataExg  = Reg(Bits(16 bits))
 		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFE), 4)
 
+		writeControl.writeExg init(False)
 		for (i <- 0 to 3) {
-			val ctrl = writeControl(i).registerControl
+			val ctrl = writeControl.registerControl(i)
 			ctrl.write init(False)
 			ctrl.push init(False)
 			ctrl.pop init(False)
 			ctrl.swap init(False)
-			ctrl.mask init(WriteMask.none)
 		}
 
 		private val registers = new RegisterFile()
@@ -129,13 +128,13 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 		registers.io.readRegisters := readControl.registers
 
-		registers.io.registerControl <> writeControl
-		registers.io.dataIn          <> writeData
-		registers.io.dataInExg       <> writeDataExg
-		registers.io.pointers        <> stackPointers
+		registers.io.control   <> writeControl
+		registers.io.dataIn    <> writeData
+		registers.io.dataInExg <> writeDataExg
+		registers.io.pointers  <> stackPointers
 
 		private val modifiers = Array.fill(2)(OperandPartSelector())
-		val readValues = Vec(UInt(16 bits), 2)
+		val readValues = Vec(Bits(16 bits), 2)
 
 		for (index <- 0 to 1) {
 			modifiers(index).io.operand <> registers.io.dataOut(index)
@@ -167,7 +166,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 		private def selectSourceAddress(source: MemoryStageAddressSource.C): UInt =
 			source.mux(
-				MemoryStageAddressSource.register1 -> registers.readValues(0),
+				MemoryStageAddressSource.register1 -> registers.readValues(0).asUInt,
 				MemoryStageAddressSource.pc -> pcPlusOne
 			)
 
@@ -190,7 +189,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			when (isStackPointerRegister) {
 				// Stack pointer operation
 				when (control.write) {
-					stackPointer := memData(15 downto 8)
+					stackPointer := memData(15 downto 8).asUInt
 				}
 			}
 		}
@@ -207,14 +206,13 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		private def handlePushPop() {
 			for (i <- 0 to 3) {
 				val sp = registers.stackPointers(i)
-				when (decodeArea.writeControl.fileControl(i).registerControl.push) {
+				when (decodeArea.writeControl.fileControl.registerControl(i).push) {
 					sp := sp - 1
-				} elsewhen (decodeArea.writeControl.fileControl(i).registerControl.pop) {
+				} elsewhen (decodeArea.writeControl.fileControl.registerControl(i).pop) {
 					sp := sp + 1
 				}
 			}
 		}
-
 		when (stage === 1) {
 			handlePushPop()
 
@@ -268,7 +266,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			registers.writeControl := control.fileControl
 			registers.writeData := control.source.mux (
 				WriteBackValueSource.alu -> aluArea.result,
-				WriteBackValueSource.memory -> (memoryArea.result << 8).asUInt
+				WriteBackValueSource.memory -> (memoryArea.result << 8)
 			)
 			registers.writeDataExg := registers.readValues(1) // T or FT
 
@@ -277,12 +275,11 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			fetchInstruction()
 		}.otherwise {
 			for (i <- 0 to 3) {
-				val ctrl = registers.writeControl(i).registerControl
+				val ctrl = registers.writeControl.registerControl(i)
 				ctrl.write := False
 				ctrl.push  := False
 				ctrl.pop   := False
 				ctrl.swap  := False
-				ctrl.mask  := WriteMask.none
 			}
 		}
 	}

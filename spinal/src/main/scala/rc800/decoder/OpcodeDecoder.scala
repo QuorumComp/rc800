@@ -19,7 +19,6 @@ import rc800.control.component.RegisterControl
 
 import rc800.registers.OperandPart
 import rc800.registers.RegisterName
-import rc800.registers.WriteMask
 
 import rc800.Vectors
 
@@ -38,9 +37,6 @@ case class OpcodeDecoder() extends Component {
 	private val registerPair3 = io.opcode(2 downto 1).as(RegisterName())
 	private val registerPair3Low = io.opcode(0)
 	private val registerPair3Part = registerPair3Low ? OperandPart.low | OperandPart.high
-
-	private val registerPair3WritePart = WriteMask()
-	registerPair3WritePart := registerPair3Low ? WriteMask.low | WriteMask.high
 
 	private object Operand {
 		def opcode_r8 = Pipeline.Operand(register = registerPair3, part = registerPair3Part, selection = OperandSource.register)
@@ -292,7 +288,7 @@ case class OpcodeDecoder() extends Component {
 
 		io.controlSignals.writeStageControl.source := WriteBackValueSource.alu
 
-		val fileControl = io.controlSignals.writeStageControl.fileControl(registerPair2)
+		val fileControl = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair2)
 		setter(fileControl.registerControl)
 	}
 

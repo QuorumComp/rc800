@@ -9,7 +9,6 @@ import rc800.alu.PcTruePathSource
 
 import rc800.registers.OperandPart
 import rc800.registers.RegisterName
-import rc800.registers.WriteMask
 
 
 case class PipelineControl() extends Bundle {
