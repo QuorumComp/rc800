@@ -18,26 +18,39 @@ class RegisterFile extends Component {
 	}
 
 	private val nopControl = RegisterControl()
-	nopControl.write := False
-	nopControl.push  := False
-	nopControl.pop   := False
-	nopControl.swap  := False
+	nopControl.push     := False
+	nopControl.pop      := False
+	nopControl.swap     := False
 
 	val registers = Array.fill(8)(Register())
 
-	def wireStack(nameHi: RegisterName.C, nameLo: RegisterName.C, index: RegisterName.E): Unit = {
-		val pointer = io.pointers(index.asBits(1 downto 0).asUInt)
-		val control = io.control.registerControl(index.position)
-		val registerHi = registers(index.position)
-		val registerLo = registers(index.position)
+	def wireStack(nameHi: RegisterName.E, nameLo: RegisterName.E, name: RegisterName.E): Unit = {
+		val registerIndex = name.asBits(1 downto 0).asUInt
+		val pointer = io.pointers(registerIndex)
+		val control = io.control.registerControl(registerIndex)
+		val is16bit = RegisterName.is16bit(io.control.writeRegister)
 
-		registerHi.io.control := (nameHi === io.control.writeRegister || index() === io.control.writeRegister) ? control | nopControl
+		val registerHi = registers(nameHi.position)
+		val writeHi = (nameHi === io.control.writeRegister || name() === io.control.writeRegister)
+		val writeExgHi = (nameHi === io.control.writeExgRegister || name() === io.control.writeExgRegister)
+
+		registerHi.io.control := control
 		registerHi.io.pointer := pointer
-		registerHi.io.dataIn := (nameHi === io.control.writeRegister) ? io.dataIn(15 downto 8) | io.dataIn
+		registerHi.io.dataIn := io.dataIn(15 downto 8)
+		registerHi.io.dataInExg := io.dataInExg(15 downto 8)
+		registerHi.io.write := writeHi
+		registerHi.io.writeExg := writeExgHi
 
-		registerLo.io.control := (nameLo === io.control.writeRegister || index() === io.control.writeRegister) ? control | nopControl
+		val registerLo = registers(nameLo.position)
+		val writeLo = (nameLo === io.control.writeRegister || name() === io.control.writeRegister)
+		val writeExgLo = (nameLo === io.control.writeExgRegister || name() === io.control.writeExgRegister)
+
+		registerLo.io.control := control
 		registerLo.io.pointer := pointer
-		registerLo.io.dataIn := (nameLo === io.control.writeRegister) ? io.dataIn(15 downto 8) | io.dataIn
+		registerLo.io.dataIn := is16bit ? io.dataIn(7 downto 0) | io.dataIn(15 downto 8)
+		registerLo.io.dataInExg := is16bit ? io.dataInExg(7 downto 0) | io.dataInExg(15 downto 8)
+		registerLo.io.write := writeLo
+		registerLo.io.writeExg := writeExgLo
 	}
 
 	wireStack(RegisterName.f, RegisterName.t, RegisterName.ft)

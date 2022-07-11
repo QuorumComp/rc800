@@ -8,11 +8,15 @@ import rc800.control.component.RegisterControl
 
 case class Register() extends Component {
 	val io = new Bundle {
-		val dataIn  = in Bits(8 bits)
-		val control = in (RegisterControl())
-		val pointer = in UInt(8 bits)
+		val dataIn    = in (Bits(8 bits))
+		val dataInExg = in (Bits(8 bits))
+		val control   = in (RegisterControl())
+		val write     = in (Bool())
+		val writeExg  = in (Bool())
 
-		val dataOut = out Bits(8 bits)
+		val pointer   = in (UInt(8 bits))
+
+		val dataOut   = out (Bits(8 bits))
 	}
 
 	val memory = Mem(Bits(8 bits), 256)
@@ -30,8 +34,10 @@ case class Register() extends Component {
 
 	memory.write(memWriteAddress, memWriteData, memWriteEnable)
 
-	when (io.control.write) {
+	when (io.write) {
 		top := io.dataIn
+	} elsewhen (io.writeExg) {
+		top := io.dataInExg
 	}
 
 	when (io.control.push) {

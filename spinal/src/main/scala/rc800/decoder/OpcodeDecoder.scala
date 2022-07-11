@@ -17,7 +17,6 @@ import rc800.control.WriteBackValueSource
 
 import rc800.control.component.RegisterControl
 
-import rc800.registers.OperandPart
 import rc800.registers.RegisterName
 
 import rc800.Vectors
@@ -33,20 +32,18 @@ case class OpcodeDecoder() extends Component {
 		def controlSignals = output.stageControl
 	}
 
-	private val registerPair2 = io.opcode(1 downto 0).as(RegisterName())
-	private val registerPair3 = io.opcode(2 downto 1).as(RegisterName())
-	private val registerPair3Low = io.opcode(0)
-	private val registerPair3Part = registerPair3Low ? OperandPart.low | OperandPart.high
+	private val registerPair = (B"10" ## io.opcode(1 downto 0)).as(RegisterName())
+	private val register = (B"0" ## io.opcode(2 downto 0)).as(RegisterName())
 
 	private object Operand {
-		def opcode_r8 = Pipeline.Operand(register = registerPair3, part = registerPair3Part, selection = OperandSource.register)
-		def opcode_r16 = Pipeline.Operand(register = registerPair2, part = OperandPart.full, selection = OperandSource.register)
+		def opcode_r8 = Pipeline.Operand(register = register, selection = OperandSource.register)
+		def opcode_r16 = Pipeline.Operand(register = registerPair, selection = OperandSource.register)
 	}
 
 
 	private object Destination {
-		def opcode_r8 = io.controlSignals.destination(operand = Operand.opcode_r8, mask = registerPair3WritePart)
-		def opcode_r16 = io.controlSignals.destination(operand = Operand.opcode_r16, mask = WriteMask.full)
+		def opcode_r8 = io.controlSignals.destination(register)
+		def opcode_r16 = io.controlSignals.destination(registerPair)
 	}
 
 	io.output.illegal := False
@@ -288,14 +285,14 @@ case class OpcodeDecoder() extends Component {
 
 		io.controlSignals.writeStageControl.source := WriteBackValueSource.alu
 
-		val fileControl = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair2)
-		setter(fileControl.registerControl)
+		val control = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair)
+		setter(control)
 	}
 
 	def stackAll(setter: RegisterControl => Unit): Unit = {
 		for (i <- 0 to 3) {
-			val fileControl = io.controlSignals.writeStageControl.fileControl(i)
-			setter(fileControl.registerControl)
+			val control = io.controlSignals.writeStageControl.fileControl.registerControl(i)
+			setter(control)
 		}
 	}
 
@@ -408,7 +405,7 @@ case class OpcodeDecoder() extends Component {
 		io.controlSignals.operand2 := Pipeline.Operand.hl
 		io.controlSignals.aluStageControl.pcControl.truePath := PcTruePathSource.register2
 
-		io.controlSignals.writeStageControl.fileControl(RegisterName.hl).registerControl.pop := True
+		io.controlSignals.writeStageControl.fileControl.registerControl(RegisterName.hl).pop := True
 	}
 }
 

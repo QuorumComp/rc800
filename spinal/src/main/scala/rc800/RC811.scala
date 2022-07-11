@@ -114,10 +114,10 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		val writeDataExg  = Reg(Bits(16 bits))
 		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFE), 4)
 
+		writeControl.write init(False)
 		writeControl.writeExg init(False)
 		for (i <- 0 to 3) {
 			val ctrl = writeControl.registerControl(i)
-			ctrl.write init(False)
 			ctrl.push init(False)
 			ctrl.pop init(False)
 			ctrl.swap init(False)
@@ -133,14 +133,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		registers.io.dataInExg <> writeDataExg
 		registers.io.pointers  <> stackPointers
 
-		private val modifiers = Array.fill(2)(OperandPartSelector())
-		val readValues = Vec(Bits(16 bits), 2)
-
-		for (index <- 0 to 1) {
-			modifiers(index).io.operand <> registers.io.dataOut(index)
-			modifiers(index).io.part <> readControl.part(index)
-			readValues(index) := modifiers(index).io.dataOut
-		}
+		val readValues = registers.io.dataOut
 	}
 
 
@@ -274,9 +267,10 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 			fetchInstruction()
 		}.otherwise {
+			registers.writeControl.write := False
+			registers.writeControl.writeExg := False
 			for (i <- 0 to 3) {
 				val ctrl = registers.writeControl.registerControl(i)
-				ctrl.write := False
 				ctrl.push  := False
 				ctrl.pop   := False
 				ctrl.swap  := False
