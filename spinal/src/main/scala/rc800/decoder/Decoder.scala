@@ -36,7 +36,7 @@ case class Decoder() extends Component {
 		val output = out (RC811Control())
 	}
 
-	private val useLookup = false
+	private val useLookup = true
 
 	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
 	private val opcode = io.strobe ? io.opcodeAsync | opcodeIn
