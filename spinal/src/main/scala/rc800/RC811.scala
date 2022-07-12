@@ -42,7 +42,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		val int       = out Bool()
 	}
 
-	val stage = Reg(UInt(2 bits)) init(1) simPublic()
+	val stage = Reg(UInt(2 bits)) init(0) simPublic()
 	stage := stage + 1
 
 	val pc = Reg(UInt(16 bits)) init(0xFFFF) simPublic()
