@@ -112,7 +112,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		val writeControl  = Reg(RegisterFileControl())
 		val writeData     = Reg(Bits(16 bits))
 		val writeDataExg  = Reg(Bits(16 bits))
-		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFE), 4)
+		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFF), 4)
 
 		writeControl.write init(False)
 		writeControl.writeExg init(False)

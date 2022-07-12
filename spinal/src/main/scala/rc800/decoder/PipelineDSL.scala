@@ -67,6 +67,9 @@ object Pipeline {
 					loadImmediateByte()
 				}
 			}
+			def := (operand: RegisterName.C): Unit = {
+				this := Operand(operand, OperandSource.register)
+			}
 		}
 
 		val operand1 = OperandWriter(0)
@@ -83,9 +86,6 @@ object Pipeline {
 
 				control.write := True
 				control.writeRegister := register
-
-				control.writeExg := False
-				control.writeExgRegister := RegisterName.ft
 			}
 
 			def := (source: Operand): Unit = {
@@ -94,29 +94,17 @@ object Pipeline {
 				this := WriteBackValueSource.alu
 			}
 
+			def := (source: RegisterName.C): Unit = {
+				this := Operand(source, OperandSource.register)
+			}
+
 			def exchange(opcodeRegister: PipelineControlPimp#Destination): Unit = {
-				/*
-				when (opcodeRegister.register === RegisterName.f) {
-					operand1 := Operand.ft
-					pipeline.aluStageControl.aluControl.operation := AluOperation.operand1
+				this := opcodeRegister.register
+				operand2 := register
 
-					pipeline.writeStageControl.source := WriteBackValueSource.alu
-
-					control.rot8 := True
-					control.sourceExg := False
-					control.registerControl.write := True
-					control.registerControl.mask := WriteMask.full
-				} otherwise {
-					this := opcodeRegister.operand
-					operand2 := operand
-
-					val opcodeControl = pipeline.writeStageControl.fileControl(opcodeRegister.operand.register)
-					opcodeControl.rot8 := opcodeRegister.mask === WriteMask.low
-					opcodeControl.sourceExg := True
-					opcodeControl.registerControl.write := True
-					opcodeControl.registerControl.mask := opcodeRegister.mask
-				}
-				*/
+				val opcodeControl = pipeline.writeStageControl.fileControl
+				opcodeControl.writeExg := True
+				opcodeControl.writeExgRegister := opcodeRegister.register
 			}
 		}
 
@@ -179,14 +167,14 @@ object Pipeline {
 	}
 
 	object Operand {
-		def f = Operand(register = RegisterName.ft, selection = OperandSource.register)
-		def t = Operand(register = RegisterName.ft, selection = OperandSource.register)
-		def b = Operand(register = RegisterName.bc, selection = OperandSource.register)
-		def c = Operand(register = RegisterName.bc, selection = OperandSource.register)
-		def d = Operand(register = RegisterName.de, selection = OperandSource.register)
-		def e = Operand(register = RegisterName.de, selection = OperandSource.register)
-		def h = Operand(register = RegisterName.hl, selection = OperandSource.register)
-		def l = Operand(register = RegisterName.hl, selection = OperandSource.register)
+		def f = Operand(register = RegisterName.f, selection = OperandSource.register)
+		def t = Operand(register = RegisterName.t, selection = OperandSource.register)
+		def b = Operand(register = RegisterName.b, selection = OperandSource.register)
+		def c = Operand(register = RegisterName.c, selection = OperandSource.register)
+		def d = Operand(register = RegisterName.d, selection = OperandSource.register)
+		def e = Operand(register = RegisterName.e, selection = OperandSource.register)
+		def h = Operand(register = RegisterName.h, selection = OperandSource.register)
+		def l = Operand(register = RegisterName.l, selection = OperandSource.register)
 
 		def ft = Operand(register = RegisterName.ft, selection = OperandSource.register)
 		def bc = Operand(register = RegisterName.bc, selection = OperandSource.register)

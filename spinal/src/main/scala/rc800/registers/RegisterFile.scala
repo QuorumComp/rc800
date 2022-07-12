@@ -31,8 +31,8 @@ class RegisterFile extends Component {
 		val is16bit = RegisterName.is16bit(io.control.writeRegister)
 
 		val registerHi = registers(nameHi.position)
-		val writeHi = (nameHi === io.control.writeRegister || name() === io.control.writeRegister)
-		val writeExgHi = (nameHi === io.control.writeExgRegister || name() === io.control.writeExgRegister)
+		val writeHi = io.control.write && (nameHi === io.control.writeRegister || name() === io.control.writeRegister)
+		val writeExgHi = io.control.writeExg && (nameHi === io.control.writeExgRegister || name() === io.control.writeExgRegister)
 
 		registerHi.io.control := control
 		registerHi.io.pointer := pointer
@@ -42,8 +42,8 @@ class RegisterFile extends Component {
 		registerHi.io.writeExg := writeExgHi
 
 		val registerLo = registers(nameLo.position)
-		val writeLo = (nameLo === io.control.writeRegister || name() === io.control.writeRegister)
-		val writeExgLo = (nameLo === io.control.writeExgRegister || name() === io.control.writeExgRegister)
+		val writeLo = io.control.write && (nameLo === io.control.writeRegister || name() === io.control.writeRegister)
+		val writeExgLo = io.control.writeExg && (nameLo === io.control.writeExgRegister || name() === io.control.writeExgRegister)
 
 		registerLo.io.control := control
 		registerLo.io.pointer := pointer
