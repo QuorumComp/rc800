@@ -41,6 +41,7 @@ object Pipeline {
 
 		def pushValueHL(): Unit = {
 			pipeline.writeStageControl.source := WriteBackValueSource.alu
+			pipeline.writeStageControl.fileControl.write := True
 			pipeline.writeStageControl.fileControl.writeRegister := RegisterName.hl
 			val hl = pipeline.writeStageControl.fileControl.registerControl(RegisterName.hl)
 			hl.push := True
