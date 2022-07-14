@@ -22,7 +22,7 @@ Main:
 ;		jal	TestUnary
 ;		jal	TestStore
 ;		jal	TestLIO
-;		jal	TestStackPointer
+		jal	TestStackPointer
 ;		jal	TestExchange
 
 		println "\n---\nWelcome to the RC800 processor\n"
@@ -456,6 +456,14 @@ TestStackPointer:
 		lio	(bc),t		; FE
 
 		pop	ft
+
+		ld	ft,$1234
+		push	ft
+		ld	ft,$5678
+		push	ft
+		ld	t,2
+		pick	ft
+		lio	(bc),t		; 34
 
 		ld	c,0
 		ld	t,$5a

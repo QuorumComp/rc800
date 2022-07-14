@@ -14,6 +14,7 @@ case class Register() extends Component {
 		val write     = in (Bool())
 		val writeExg  = in (Bool())
 
+		val pick      = in (UInt(8 bits))
 		val pointer   = in (UInt(8 bits))
 
 		val dataOut   = out (Bits(8 bits))
@@ -23,7 +24,7 @@ case class Register() extends Component {
 
 	val top = Reg(Bits(8 bits))
 	val top1 = Reg(Bits(8 bits))
-	val popTop2 = memory.readSync(io.pointer + 1)
+	val popTop2 = memory.readSync(io.pointer + (io.control.pick ? io.pick | 1))
 
 	io.dataOut := top
 
@@ -46,15 +47,17 @@ case class Register() extends Component {
 		memWriteAddress := io.pointer + 2
 		memWriteData := top1
 		memWriteEnable := True
-	}
-
-	when (io.control.pop) {
+	} elsewhen (io.control.pop) {
 		top := top1
 		top1 := popTop2
-	}
-
-	when (io.control.swap) {
+	} elsewhen (io.control.swap) {
 		top := top1
 		top1 := top
+	} elsewhen (io.control.pick) {
+		top := io.pick.mux(
+			0 -> top,
+			1 -> top1,
+			default -> popTop2)
 	}
+
 }

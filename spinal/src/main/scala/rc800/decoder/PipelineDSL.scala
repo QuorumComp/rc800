@@ -150,6 +150,7 @@ object Pipeline {
 				registerControl.push  := False
 				registerControl.pop   := False
 				registerControl.swap  := False
+				registerControl.pick  := False
 			}
 
 			pipeline.aluStageControl.pcControl.truePath      := PcTruePathSource.offsetFromDecoder

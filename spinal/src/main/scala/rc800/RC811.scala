@@ -21,7 +21,6 @@ import control.component.RegisterFileControl
 
 import decoder.Decoder
 
-import registers.OperandPartSelector
 import registers.Register
 import registers.RegisterFile
 
@@ -255,7 +254,22 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			intPin := decodeArea.anyIntActive
 		}
 
-		when (stage === 3) {
+		registers.writeControl.write := False
+		registers.writeControl.writeExg := False
+		for (i <- 0 to 3) {
+			val ctrl = registers.writeControl.registerControl(i)
+			ctrl.push  := False
+			ctrl.pop   := False
+			ctrl.swap  := False
+			ctrl.pick  := False
+		}
+
+		when (stage === 2) {
+			for (i <- 0 to 3) {
+				val ctrl = registers.writeControl.registerControl(i)
+				ctrl.pick  := control.fileControl.registerControl(i).pick
+			}
+		} elsewhen (stage === 3) {
 			registers.writeControl := control.fileControl
 			registers.writeData := control.source.mux (
 				WriteBackValueSource.alu -> aluArea.result,
@@ -266,15 +280,6 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			pc := aluArea.pcOut
 
 			fetchInstruction()
-		}.otherwise {
-			registers.writeControl.write := False
-			registers.writeControl.writeExg := False
-			for (i <- 0 to 3) {
-				val ctrl = registers.writeControl.registerControl(i)
-				ctrl.push  := False
-				ctrl.pop   := False
-				ctrl.swap  := False
-			}
 		}
 	}
 }

@@ -7,7 +7,6 @@ object Opcodes {
 		M"0000100-",
 		M"00010001",
 		M"00011001",
-		M"000111--",
 		M"0010000-",
 		M"00101001",
 		M"00110000",
@@ -33,9 +32,7 @@ object Opcodes {
 	def EI         = M"00011010"
 	def EXT_T      = M"01001001"
 	def LD_CR_T    = M"00001010"
-	def LD_IO_T    = M"001100--"		// Load I/O with T
 	def LD_T_CR    = M"00001011"
-	def LD_T_IO    = M"001101--"		// Load T with I/O
 	def LS_FT_I    = M"10111000"
 	def NEG_T      = M"01010001"
 	def NEG_FT     = M"11110000"
@@ -58,10 +55,13 @@ object Opcodes {
 	def JAL_R16    = M"001110--"
 	def J_R16      = M"001111--"
 	def LD_FT_R16  = M"110110--"		// Load FT with register pair
+	def LD_IO_T    = M"001100--"		// Load I/O with T
 	def LD_MEM_T   = M"000000--"		// Store T in memory
 	def LD_R16_FT  = M"110100--"		// Load register pair with FT
 	def LD_T_CODE  = M"000011--"
+	def LD_T_IO    = M"001101--"		// Load T with I/O
 	def LD_T_MEM   = M"000001--"		// Load T from memory
+	def PICK       = M"000111--"
 	def POP        = M"110001--"
 	def PUSH       = M"110000--"
 	def SUB_FT_R16 = M"111100--"

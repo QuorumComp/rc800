@@ -17,11 +17,6 @@ class RegisterFile extends Component {
 		val dataInExg = in (Bits(16 bits))
 	}
 
-	private val nopControl = RegisterControl()
-	nopControl.push     := False
-	nopControl.pop      := False
-	nopControl.swap     := False
-
 	val registers = Array.fill(8)(Register())
 
 	def wireStack(nameHi: RegisterName.E, nameLo: RegisterName.E, name: RegisterName.E): Unit = {
@@ -31,22 +26,25 @@ class RegisterFile extends Component {
 		val is16bit = RegisterName.is16bit(io.control.writeRegister)
 
 		val registerHi = registers(nameHi.position)
+		val registerLo = registers(nameLo.position)
+
 		val writeHi = io.control.write && (nameHi === io.control.writeRegister || name() === io.control.writeRegister)
 		val writeExgHi = io.control.writeExg && (nameHi === io.control.writeExgRegister || name() === io.control.writeExgRegister)
 
 		registerHi.io.control := control
 		registerHi.io.pointer := pointer
+		registerHi.io.pick := registerLo.io.dataOut.asUInt
 		registerHi.io.dataIn := io.dataIn(15 downto 8)
 		registerHi.io.dataInExg := io.dataInExg(15 downto 8)
 		registerHi.io.write := writeHi
 		registerHi.io.writeExg := writeExgHi
 
-		val registerLo = registers(nameLo.position)
 		val writeLo = io.control.write && (nameLo === io.control.writeRegister || name() === io.control.writeRegister)
 		val writeExgLo = io.control.writeExg && (nameLo === io.control.writeExgRegister || name() === io.control.writeExgRegister)
 
 		registerLo.io.control := control
 		registerLo.io.pointer := pointer
+		registerLo.io.pick := registerLo.io.dataOut.asUInt
 		registerLo.io.dataIn := is16bit ? io.dataIn(7 downto 0) | io.dataIn(15 downto 8)
 		registerLo.io.dataInExg := is16bit ? io.dataInExg(7 downto 0) | io.dataInExg(15 downto 8)
 		registerLo.io.write := writeLo
