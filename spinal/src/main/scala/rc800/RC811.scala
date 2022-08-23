@@ -141,7 +141,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	 */
 
 	private val memoryArea = new Area {
-		private val control = decodeArea.memoryControl
+		private val control = RegNext(decodeArea.memoryControl)
 
 		val result = Reg(Bits(8 bits)) init(0)
 
@@ -241,10 +241,11 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	 */
 
 	val stage3 = new Area {
-		private val control = decodeArea.writeControl
+		private val pcOut = aluArea.pcOut
+		private val control = RegNext(decodeArea.writeControl)
 
 		private def fetchInstruction() {
-			io.address := aluArea.pcOut
+			io.address := pcOut
 			io.busEnable := True
 			io.write := False
 			io.io := False
@@ -277,7 +278,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			)
 			registers.writeDataExg := registers.readValues(1) // T or FT
 
-			pc := aluArea.pcOut
+			pc := pcOut
 
 			fetchInstruction()
 		}
