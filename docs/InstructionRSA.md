@@ -18,7 +18,7 @@ RSA C
 ```
 
 ---
-# RS (16 bit, right shift register arithmetic)
+# RSA (16 bit, right shift register arithmetic)
 
 ## Opcode
 | 76543210 |
