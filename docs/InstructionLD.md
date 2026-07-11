@@ -55,6 +55,46 @@ LD T,(BC)
 ```
 
 ---
+# LD (8 bit store to Data via FT)
+
+## Opcode
+| 76543 | 210 | Notes |
+|-------|-----|-------|
+| 00100 | r   | Not valid when r = 0 or r = 1 |
+
+## Operation
+```
+Data[FT] <- Reg8[r]
+PC <- PC + 1
+```
+
+## Assembler syntax examples
+```
+LD (FT),B
+LD (FT),L
+```
+
+---
+# LD (8 bit load from Data via FT)
+
+## Opcode
+| 76543 | 210 | Notes |
+|-------|-----|-------|
+| 00101 | r   | Not valid when r = 1 |
+
+## Operation
+```
+Reg8[r] <- Data[FT]
+PC <- PC + 1
+```
+
+## Assembler syntax examples
+```
+LD F,(FT)
+LD L,(FT)
+```
+
+---
 # LD (8 bit, register to register)
 
 ## Opcode

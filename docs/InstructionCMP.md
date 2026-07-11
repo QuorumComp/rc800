@@ -28,7 +28,7 @@ CMP C
 ## Operation
 ```
 PC <- PC + 1
-Reg8[r] <- Flags[Reg8[r] - Code[PC]]
+F <- Flags[Reg8[r] - Code[PC]]
 PC <- PC + 1
 ```
 

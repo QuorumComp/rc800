@@ -29,12 +29,12 @@ XOR H
 ## Operation
 ```
 PC <- PC + 1
-T <- T | Code[PC]
+T <- T ^ Code[PC]
 PC <- PC + 1
 ```
 
 ## Assembler syntax examples
 ```
-OR T,$C0
-OR $04
+XOR T,$C0
+XOR $04
 ```

@@ -1,6 +1,6 @@
 # TST (16 bit, compare register pair with zero)
 
-The SYS instruction performs a software interrupt and sets the PC to the location specified by the following byte times 8. The handle interrupt flag is set.
+TST sets the flags in F to reflect the result of subtracting zero from the specified 16-bit register pair, without storing the result.
 
 ## Opcode
 | 765432 | 10 |
