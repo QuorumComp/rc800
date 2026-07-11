@@ -1,0 +1,72 @@
+docs/InstructionLD.md
+  s_53ac98dc04fcd8::t_f6f54fa53d9fc1 57-96
+docs/InstructionCMP.md
+  s_8fd072075789b1::t_5c853e61a4c232 31
+docs/OpcodeMatrix.md
+  s_53ac98dc04fcd8::t_981f55c312b223 30
+  s_53ac98dc04fcd8::t_68d3ee43caff40 11
+  s_53ac98dc04fcd8::t_79623a11c66fd6 12
+  s_53ac98dc04fcd8::t_bc4b26e508c437 37
+  s_53ac98dc04fcd8::t_8f49142974d9e4 34
+  s_53ac98dc04fcd8::t_9fd7312a20ace3 18
+  s_53ac98dc04fcd8::t_cb95083d36a979 27
+  s_53ac98dc04fcd8::t_b972a7d2e4ac39 35
+  s_53ac98dc04fcd8::t_a1ed687668707b 28
+  s_53ac98dc04fcd8::t_1b7c5168fc1e3a 9
+  s_53ac98dc04fcd8::t_74be7dbf6fe6e9 19
+  s_53ac98dc04fcd8::t_365606b993a7c1 6
+  s_53ac98dc04fcd8::t_df13db6037f439 10
+  s_53ac98dc04fcd8::t_8f44169e62c06c 22
+  s_53ac98dc04fcd8::t_4867176169ad6f 13
+  s_53ac98dc04fcd8::t_0c008d42d50c0d 26
+  s_53ac98dc04fcd8::t_148575e55070fd 32
+  s_53ac98dc04fcd8::t_5a170ccaff50bf 15
+  s_53ac98dc04fcd8::t_dc3373a6df8872 21
+  s_53ac98dc04fcd8::t_c496196d17899f 7
+  s_53ac98dc04fcd8::t_bc583c28982ae6 14
+  s_53ac98dc04fcd8::t_4bc9621da77ac1 31
+  s_53ac98dc04fcd8::t_acc7eb0c9364bc 33
+  s_53ac98dc04fcd8::t_afaa0cdfb8b08a 29
+  s_53ac98dc04fcd8::t_8d52977d3dcba8 8
+  s_53ac98dc04fcd8::t_ca0507d68dd16c 24
+  s_53ac98dc04fcd8::t_eee29b159a161d 20
+  s_53ac98dc04fcd8::t_1b4be8a962b202 36
+  s_53ac98dc04fcd8::t_760781f3c3f3fd 23
+  h_3a90fbf9715846 4
+  s_53ac98dc04fcd8::t_1258b13f791ef6 16
+  s_53ac98dc04fcd8::t_c426745b9f6cd6 25
+  s_53ac98dc04fcd8::t_b2ab5f53b975d1 17
+docs/InstructionTST.md
+  s_53ac98dc04fcd8::t_7438c379da5260 3
+docs/InstructionXOR.md
+  s_8fd072075789b1::t_d12b22a3f5d15d 32,38-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "793cc9cd82b27e577969276eede4006b9a0eeea8",
+  "prompts": {},
+  "humans": {
+    "h_3a90fbf9715846": {
+      "author": "Carsten Elton Sørensen <cso@rift.dk>"
+    }
+  },
+  "sessions": {
+    "s_53ac98dc04fcd8": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0acf2f9cdffeELuYXalvWPZ7Ds",
+        "model": "qwen36"
+      },
+      "human_author": "Carsten Elton Sørensen <cso@rift.dk>"
+    },
+    "s_8fd072075789b1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_0ad435ffcffeK2PXez81Swo52n",
+        "model": "qwen36"
+      },
+      "human_author": "Carsten Elton Sørensen <cso@rift.dk>"
+    }
+  }
+}
