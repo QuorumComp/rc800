@@ -1,0 +1,16 @@
+docs/ConfigurationRegisters.md
+  h_3a90fbf9715846 6
+docs/SynthesizedInstructions.md
+  h_3a90fbf9715846 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "cc42cba69c7de75943ef37a33d0a7bdb676ff6ce",
+  "prompts": {},
+  "humans": {
+    "h_3a90fbf9715846": {
+      "author": "Carsten Elton Sørensen <cso@rift.dk>"
+    }
+  }
+}
