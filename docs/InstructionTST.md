@@ -1,6 +1,6 @@
 # TST (16 bit, compare register pair with zero)
 
-TST sets the flags in F to reflect the result of subtracting zero from the specified 16-bit register pair, without storing the result.
+TST sets F to flags reflecting the result of a 16-bit register minus zero.
 
 ## Opcode
 | 765432 | 10 |

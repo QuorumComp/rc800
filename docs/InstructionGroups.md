@@ -33,6 +33,8 @@ All mnemonics may be followed by a condition code. The assembler will synthesize
 
 For instance ```LD/EQ T,1``` will load T with the value 1 if the flags in F satisfy the EQ condition.
 
+The `!CC` is the inverse condition (for example, `EQ` → `NE`, `LT` → `GE`). `J/CC` itself is native — it is the primitive used to synthesize these forms. Any instruction can be made conditional, including `RETI/CC`.
+
 
 ## Arithmetic
 | Mnemonic         | Operation | Remarks |
@@ -101,6 +103,10 @@ For instance ```LD/EQ T,1``` will load T with the value 1 if the flags in F sati
 | LD&nbsp;FT,R16  | Load FT register with contents of 16 bit register ||
 | LD&nbsp;R16,FT  | Load 16 bit register with contents of FT ||
 | LD&nbsp;R16,i16 | Load 16 bit register with immediate 16 bit value |(synthesized)|
+| LD&nbsp;T,(R16+) | Load T from data at R16, then increment R16 | (synthesized) |
+| LD&nbsp;(R16+),T | Store T to data at R16, then increment R16 | (synthesized) |
+| LD&nbsp;T,(-R16) | Decrement R16, then load T from data at R16 | (synthesized) |
+| LD&nbsp;(-R16),T | Decrement R16, then store T to data at R16 | (synthesized) |
 | POP&nbsp;R16    | Pop contents of 16 bit register stack ||
 | POP&nbsp;Rlist  | Pop contents of specified 16 bit register stacks | (synthesized) |
 | POPA            | Pop contents of all 16 bit registers stacks ||
@@ -110,6 +116,8 @@ For instance ```LD/EQ T,1``` will load T with the value 1 if the flags in F sati
 | SWAP&nbsp;R16   | Swap two topmost register stack entries ||
 | SWAP&nbsp;Rlist | Swap two topmost stack entries for specified registers | (synthesized) |
 | SWAPA           | Swap two topmost stack entries for all registers ||
+| PICK&nbsp;R16   | Replace register with stack entry at index (index = register value & 0xFF) ||
+| PICK&nbsp;R16,i8 | Replace register with stack entry at immediate index | (synthesized) |
 
 # External Memory and I/O
 | Mnemonic          | Operation | Remarks |

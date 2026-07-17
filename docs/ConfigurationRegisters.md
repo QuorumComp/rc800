@@ -3,7 +3,7 @@ The CPU contains a set of configuration registers that control some aspects of t
 
 | Index | Content |
 |-------|---------|
-| $00   | AF stack pointer |
+| $00   | FT stack pointer |
 | $01   | BC stack pointer |
 | $02   | DE stack pointer |
 | $03   | HL stack pointer |
