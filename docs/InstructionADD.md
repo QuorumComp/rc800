@@ -52,7 +52,7 @@ PC <- PC + 1
 
 ## Assembler syntax examples
 ```
-ADD FT,FT
+ADD FT,BC
 ADD HL
 ```
 ---

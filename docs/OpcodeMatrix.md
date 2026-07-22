@@ -33,7 +33,7 @@
 | 11011xxx       |             | LD FT,BC    | LD FT,DE    | LD FT,HL    | SWAP FT     | SWAP BC     | SWAP DE     | SWAP HL     |
 | 11100xxx       |             |             | LS FT,B     | LS FT,C     | LS FT,D     | LS FT,E     | LS FT,H     | LS FT,L     |
 | 11101xxx       |             |             | RS FT,B     | RS FT,C     | RS FT,D     | RS FT,E     | RS FT,H     | RS FT,L     |
-| 11110xxx       | NEG FT      | SUB FT,BC   | SUB FT,DE   | SUB FT,HL   | ADD FT,FT   | ADD FT,BC   | ADD FT,DE   | ADD FT,HL   |
+| 11110xxx       | NEG FT      | SUB FT,BC   | SUB FT,DE   | SUB FT,HL   |             | ADD FT,BC   | ADD FT,DE   | ADD FT,HL   |
 | 11111xxx       | PUSHA       | POPA        | RSA FT,B    | RSA FT,C    | RSA FT,D    | RSA FT,E    | RSA FT,H    | RSA FT,L    |
 </div>
 

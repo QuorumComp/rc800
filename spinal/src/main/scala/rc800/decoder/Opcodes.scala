@@ -23,6 +23,7 @@ object Opcodes {
 		M"11011000",
 		M"1110000-",
 		M"1110100-",
+		M"11110100",
 	)
 
 	def NOP_opcode = 0x00
