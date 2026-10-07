@@ -141,13 +141,13 @@ Load-only subset of the `LD` pattern. The `CODE` access-type signal is asserted 
 
 | Assembler syntax | Instruction generated |
 |------------------|------------------------|
-| `PUSH BC-HL` | `PUSHA` / `POP FT` (push all except FT) |
-| `POP BC-HL` | `POPA` / `PUSH FT` (pop all except FT) |
+| `PUSH BC/DE/HL` | `PUSHA` / `POP FT` (push all except FT) |
+| `POP BC/DE/HL` | `POPA` / `PUSH FT` (pop all except FT) |
 | `PUSH R16/R16` | Individual `PUSH` per listed register |
 | `POP R16/R16` | Individual `POP` per listed register |
 | `SWAP R16/R16` | Individual `SWAP` per listed register |
 
-Register range syntax uses `-` for ranges and `/` for individual registers. Any combination is accepted, e.g., `PUSH FT/HL`, `PUSH BC-HL`, `PUSH BC-DE`.
+Register lists use `/` to separate registers, e.g., `PUSH FT/HL`, `PUSH BC/DE/HL`.
 
 ## EXG Register-to-Register (not involving T/FT)
 
