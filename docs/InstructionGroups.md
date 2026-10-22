@@ -20,8 +20,8 @@
 | GE   | Signed greater than or equal ||
 | LEU  | Unsigned less than or equal ||
 | GTU  | Unsigned greater than ||
-| LTU  | Unsigned less than | C (carry) |
-| GEU  | Unsigned greater than or equal | NC (not carry) |
+| LTU  | Unsigned less than | C (carry set) |
+| GEU  | Unsigned greater than or equal | not C (carry clear) |
 | EQ   | Equal | Z (zero) |
 | NE   | Not equal | NZ (not zero) |
 
