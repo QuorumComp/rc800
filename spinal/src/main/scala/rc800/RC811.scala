@@ -105,6 +105,12 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		val anyIntActive  = decoderUnit.io.output.anyActive
 	}
 
+	// Stack pointer write: reload the register from the new cell in the
+	// writeback stage.
+	private val stackReload = Vec(Bool(), 4)
+	// Memory read control for the stage whose registered data is used next.
+	private val memReadControl = Vec(RegisterControl(), 4)
+
 	private val registers = new Area() {
 		private val readControl = decodeArea.readControl
 
@@ -131,6 +137,9 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		registers.io.dataIn    <> writeData
 		registers.io.dataInExg <> writeDataExg
 		registers.io.pointers  <> stackPointers
+
+		registers.io.stackReload := stackReload
+		registers.io.memReadControl := memReadControl
 
 		val readValues = registers.io.dataOut
 	}
@@ -168,6 +177,16 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		private val configRegister = memAddress(15 downto 8)
 		private val isStackPointerRegister = configRegister === M"000000--"
 		private val stackPointer = registers.stackPointers(configRegister(1 downto 0))
+
+		// A write to an SP register happens in stage 1; the reload has to line
+		// up with the writeback stage, two stages later.
+		private val spWrite =
+			stage === 1 && control.enable && control.config && control.write && isStackPointerRegister
+		val spWriteAtWriteback = Delay(spWrite, 2)
+		val spWritePair = Reg(UInt(2 bits)) init(0)
+		when (spWrite) {
+			spWritePair := configRegister(1 downto 0)
+		}
 
 		when (stage === 2) {
 			when (control.config && isStackPointerRegister) {
@@ -263,6 +282,13 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			ctrl.pop   := False
 			ctrl.swap  := False
 			ctrl.pick  := False
+		}
+
+		// The banks read their address a stage before the value is used, so the
+		// control that selects it is needed one stage early.
+		for (i <- 0 to 3) {
+			memReadControl(i) := control.fileControl.registerControl(i)
+			stackReload(i) := memoryArea.spWriteAtWriteback && (memoryArea.spWritePair === i)
 		}
 
 		when (stage === 2) {

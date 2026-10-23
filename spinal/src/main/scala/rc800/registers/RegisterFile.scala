@@ -15,6 +15,9 @@ class RegisterFile extends Component {
 		val control   = in (RegisterFileControl())
 		val dataIn    = in (Bits(16 bits))
 		val dataInExg = in (Bits(16 bits))
+
+		val memReadControl = in (Vec(RegisterControl(), 4))
+		val stackReload = in (Vec(Bool(), 4))
 	}
 
 	val registers = Array.fill(8)(Register())
@@ -37,6 +40,8 @@ class RegisterFile extends Component {
 		registerHi.io.control := control
 		registerHi.io.pointer := pointer
 		registerHi.io.pick := pickIndex
+		registerHi.io.memReadControl := io.memReadControl(registerIndex)
+		registerHi.io.stackReload := io.stackReload(registerIndex)
 		registerHi.io.dataIn := io.dataIn(15 downto 8)
 		registerHi.io.dataInExg := io.dataInExg(15 downto 8)
 		registerHi.io.write := writeHi
@@ -48,6 +53,8 @@ class RegisterFile extends Component {
 		registerLo.io.control := control
 		registerLo.io.pointer := pointer
 		registerLo.io.pick := pickIndex
+		registerLo.io.memReadControl := io.memReadControl(registerIndex)
+		registerLo.io.stackReload := io.stackReload(registerIndex)
 		registerLo.io.dataIn := is16bit ? io.dataIn(7 downto 0) | io.dataIn(15 downto 8)
 		registerLo.io.dataInExg := is16bit ? io.dataInExg(7 downto 0) | io.dataInExg(15 downto 8)
 		registerLo.io.write := writeLo
