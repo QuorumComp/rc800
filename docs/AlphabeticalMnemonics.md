@@ -19,6 +19,7 @@
 * [NOP](InstructionNOP.md) - No operation
 * [NOT](InstructionNOT.md) - Complement
 * [OR](InstructionOR.md) - Bitwise OR
+* [PICK](InstructionPICK.md) - Replace register with stack entry at index
 * [POP](InstructionPOP.md) - Pop register pair
 * [POPA](InstructionPOPA.md) - Pop all register pairs
 * [PUSH](InstructionPUSH.md) - Push register pair

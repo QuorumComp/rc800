@@ -465,6 +465,51 @@ TestStackPointer:
 		pick	ft
 		lio	(bc),t		; 34
 
+; -- PICK reads its index from T, whatever the target register stack is.
+; -- BC stack from here on: entry 0 = $7788, 1 = $5566, 2 = $3344, 3 = $1122
+		ld	b,$11
+		ld	c,$22
+		push	bc
+		ld	b,$33
+		ld	c,$44
+		push	bc
+		ld	b,$55
+		ld	c,$66
+		push	bc
+		ld	b,$77
+		ld	c,$88
+
+		ld	t,1
+		ld	c,$99		; C is no longer the index
+		pick	bc
+		ld	t,c
+		ld	bc,IO_PRINT
+		lio	(bc),t		; 66
+
+		ld	t,2
+		pick	bc
+		ld	t,c
+		ld	bc,IO_PRINT
+		lio	(bc),t		; 44
+
+		ld	t,3
+		pick	bc
+		ld	t,c
+		ld	bc,IO_PRINT
+		lio	(bc),t		; 22
+
+		ld	b,$77
+		ld	c,$88
+		ld	t,0
+		pick	bc
+		ld	t,c
+		ld	bc,IO_PRINT
+		lio	(bc),t		; 88
+
+		ld	c,1		; BC stack pointer
+		ld	t,255
+		lcr	(c),t
+
 		ld	c,0
 		ld	t,$5a
 		lcr	(c),t

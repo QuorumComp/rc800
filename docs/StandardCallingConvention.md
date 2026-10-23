@@ -86,16 +86,20 @@ There are two strategies for accessing stack parameters. The callee should emplo
 
 #### Strategy 1 — `PICK` (params stay on stack)
 
-`PUSH HL` duplicates the return address on the HL stack, shifting params to higher indices. `PICK HL,$nn` reads a parameter at a fixed index without disturbing the return address. Parameters remain on the stack and can be re-read at any time — useful when a param is accessed multiple times or conditionally.
+`PUSH HL` duplicates the return address on the HL stack, shifting params to higher indices. `LD T,$nn` followed by `PICK HL` reads a parameter at a fixed index without disturbing the return address. Parameters remain on the stack and can be re-read at any time — useful when a param is accessed multiple times or conditionally.
 
 ```
         push    hl             ; dup ret; params shift to index 2+
-        pick    hl,2           ; HL=arg1 (first stack param)
+        ld      t,2            ; index
+        pick    hl             ; HL=arg1 (first stack param)
         ld      t,l            ; T=arg1 low byte
-        pick    hl,3           ; HL=arg2
+        ld      t,3            ; index
+        pick    hl             ; HL=arg2
         ld      t,l
         ; ... params remain on stack for later access ...
 ```
+
+The index lives in `T`, so the `LD T,$nn` clobbers FT — and the FT stack top, which is the same storage. That costs nothing here: FT is caller-saved and the parameter is read out of HL immediately. Park FT around the index load when a live FT-stack value (a 32-bit `FT:FT'` pair) has to survive.
 
 #### Strategy 2 — swap-pop (params consumed as accessed)
 
@@ -194,8 +198,9 @@ f:
         push    hl             ; save ret on HL stack
         push    bc/de          ; callee-saved
 
-        ; PICK each stack param at fixed index
-        pick    hl,2           ; HL=arg1
+        ; PICK each stack param at fixed index (index in T, clobbers FT)
+        ld      t,2            ; index
+        pick    hl             ; HL=arg1
         ; ... body: compute result in FT ...
 
         push    ft             ; save result

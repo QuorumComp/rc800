@@ -160,9 +160,16 @@ Register lists use `/` to separate registers, e.g., `PUSH FT/HL`, `PUSH BC/DE/HL
 
 | Assembler syntax | Instruction generated |
 |------------------|------------------------|
-| `PICK R16,i8` | `LD low_reg,i8` / `PICK R16`, where `low_reg` is the low byte of `R16` |
+| `PICK FT,i8` | `LD T,i8` / `PICK FT` |
 
-The immediate form loads the low byte of the register pair with the index value, then executes `PICK`. This is a shorthand that avoids manually setting the register to the index value first.
+`PICK` reads its index from `T`, so only FT can take an immediate index without disturbing another register pair. The other pairs need the two instructions written out:
+
+```
+        ld      t,4           ; index
+        pick    bc            ; BC = entry 4 of the BC stack
+```
+
+An immediate on BC, DE or HL is rejected by the assembler: the implicit `LD T,i8` would clobber FT.
 
 ## Conditional Execution — INST/CC
 

@@ -19,6 +19,9 @@ class RegisterFile extends Component {
 
 	val registers = Array.fill(8)(Register())
 
+	// PICK reads its stack index from T, whatever the target register stack is.
+	private val pickIndex = registers(RegisterName.t.position).io.dataOut.asUInt
+
 	def wireStack(nameHi: RegisterName.E, nameLo: RegisterName.E, name: RegisterName.E): Unit = {
 		val registerIndex = name.asBits(1 downto 0).asUInt
 		val pointer = io.pointers(registerIndex)
@@ -33,7 +36,7 @@ class RegisterFile extends Component {
 
 		registerHi.io.control := control
 		registerHi.io.pointer := pointer
-		registerHi.io.pick := registerLo.io.dataOut.asUInt
+		registerHi.io.pick := pickIndex
 		registerHi.io.dataIn := io.dataIn(15 downto 8)
 		registerHi.io.dataInExg := io.dataInExg(15 downto 8)
 		registerHi.io.write := writeHi
@@ -44,7 +47,7 @@ class RegisterFile extends Component {
 
 		registerLo.io.control := control
 		registerLo.io.pointer := pointer
-		registerLo.io.pick := registerLo.io.dataOut.asUInt
+		registerLo.io.pick := pickIndex
 		registerLo.io.dataIn := is16bit ? io.dataIn(7 downto 0) | io.dataIn(15 downto 8)
 		registerLo.io.dataInExg := is16bit ? io.dataInExg(7 downto 0) | io.dataInExg(15 downto 8)
 		registerLo.io.write := writeLo
