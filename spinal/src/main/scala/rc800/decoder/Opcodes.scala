@@ -4,12 +4,10 @@ import spinal.core._
 
 object Opcodes {
 	def illegals = List(
-		M"0000100-",
 		M"00010001",
-		M"00011001",
+		M"000110--",		// Vacated by NOT F/EI/DI; reserved for the STOW quad (STOW.md)
 		M"0010000-",
 		M"00101001",
-		M"00110000",
 		M"01100001",
 		M"01101001",
 		M"01110001",
@@ -29,8 +27,8 @@ object Opcodes {
 	def NOP_opcode = 0x00
 
 	def AND_T_I    = M"10110001"
-	def DI         = M"00011011"
-	def EI         = M"00011010"
+	def DI         = M"00001001"
+	def EI         = M"00001000"
 	def EXT_T      = M"01001001"
 	def LD_CR_T    = M"00001010"
 	def LD_T_CR    = M"00001011"
@@ -38,7 +36,7 @@ object Opcodes {
 	def NEG_T      = M"01010001"
 	def NEG_FT     = M"11110000"
 	def NOP        = M"00000000"
-	def NOT_F      = M"00011000"
+	def NOT_F      = M"00110000"
 	def OR_T_I     = M"10110000"
 	def POPA       = M"11111001"
 	def PUSHA      = M"11111000"

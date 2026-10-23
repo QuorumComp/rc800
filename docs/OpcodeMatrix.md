@@ -4,12 +4,12 @@
 | | 000         | 001         | 010         | 011         | 100         | 101         | 110         | 111         |
 |--------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
 | 00000xxx       | NOP         | LD (BC),T   | LD (DE),T   | LD (HL),T   | LD T,(FT)   | LD T,(BC)   | LD T,(DE)   | LD T,(HL)   |
-| 00001xxx       |             |             | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
+| 00001xxx       | EI          | DI          | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
 | 00010xxx       | EXG T,F     |             | EXG T,B     | EXG T,C     | EXG T,D     | EXG T,E     | EXG T,H     | EXG T,L     |
-| 00011xxx       | NOT F       |             | EI          | DI          | PICK FT     | PICK BC     | PICK DE     | PICK HL     |
+| 00011xxx       |             |             |             |             | PICK FT     | PICK BC     | PICK DE     | PICK HL     |
 | 00100xxx       |             |             | LD (FT),B   | LD (FT),C   | LD (FT),D   | LD (FT),E   | LD (FT),H   | LD (FT),L   |
 | 00101xxx       | LD F,(FT)   |             | LD B,(FT)   | LD C,(FT)   | LD D,(FT)   | LD E,(FT)   | LD H,(FT)   | LD L,(FT)   |
-| 00110xxx       |             | LIO (BC),T  | LIO (DE),T  | LIO (HL),T  | LIO T,(FT)  | LIO T,(BC)  | LIO T,(DE)  | LIO T,(HL)  |
+| 00110xxx       | NOT F       | LIO (BC),T  | LIO (DE),T  | LIO (HL),T  | LIO T,(FT)  | LIO T,(BC)  | LIO T,(DE)  | LIO T,(HL)  |
 | 00111xxx       | JAL (FT)    | JAL (BC)    | JAL (DE)    | JAL (HL)    | J (FT)      | J (BC)      | J (DE)      | J (HL)      |
 | 01000xxx       | ADD T,F     | ADD T,T     | ADD T,B     | ADD T,C     | ADD T,D     | ADD T,E     | ADD T,H     | ADD T,L     |
 | 01001xxx       | CMP T,F     | EXT         | CMP T,B     | CMP T,C     | CMP T,D     | CMP T,E     | CMP T,H     | CMP T,L     |
