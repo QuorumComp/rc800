@@ -5,7 +5,7 @@ import spinal.core._
 object Opcodes {
 	def illegals = List(
 		M"00010001",
-		M"000110--",		// Vacated by NOT F/EI/DI; reserved for the STOW quad (STOW.md)
+		M"00011000",		// STOW r=0; STOW BC/DE/HL occupy $19-$1B
 		M"0010000-",
 		M"00101001",
 		M"01100001",
@@ -63,6 +63,7 @@ object Opcodes {
 	def PICK       = M"000111--"
 	def POP        = M"110001--"
 	def PUSH       = M"110000--"
+	def STOW       = M"000110--"		// Store 16 bit register at stack index T
 	def SUB_FT_R16 = M"111100--"
 	def SWAP       = M"110111--"
 	def TST_R16    = M"110101--"

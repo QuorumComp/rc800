@@ -54,7 +54,7 @@ case class OpcodeDecoder() extends Component {
 		io.controlSignals.interrupt(U(Vectors.IllegalInstruction >> 3, 3 bits))
 	} otherwise {
 			// Opcodes with no fields
-			when     (io.opcode === Opcodes.AND_T_I)  { operation_T_I(AluOperation.and) }
+			when      (io.opcode === Opcodes.AND_T_I)  { operation_T_I(AluOperation.and) }
 			.elsewhen (io.opcode === Opcodes.DI)       { }
 			.elsewhen (io.opcode === Opcodes.EI)       { }
 			.elsewhen (io.opcode === Opcodes.EXT_T)    { ext_T() }
@@ -92,6 +92,7 @@ case class OpcodeDecoder() extends Component {
 			.elsewhen (io.opcode === Opcodes.PICK)       { pick() }
 			.elsewhen (io.opcode === Opcodes.POP)        { stack(_.pop := True) }
 			.elsewhen (io.opcode === Opcodes.PUSH)       { stack(_.push := True) }
+			.elsewhen (io.opcode === Opcodes.STOW)       { stow() }
 			.elsewhen (io.opcode === Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
 			.elsewhen (io.opcode === Opcodes.SWAP)       { stack(_.swap := True) }
 			.elsewhen (io.opcode === Opcodes.TST_R16)    { tst_R16() }
@@ -286,6 +287,15 @@ case class OpcodeDecoder() extends Component {
 
 		val control = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair)
 		control.pick := True
+	}
+
+	def stow(): Unit = {
+		/*
+		* Store the named register at stack index T. The value is taken from the
+		* register file itself, so no ALU operand or writeback destination is set.
+		*/
+		val control = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair)
+		control.stow := True
 	}
 
 	def stack(setter: RegisterControl => Unit): Unit = {

@@ -27,6 +27,10 @@ import rc800.control.component.RegisterControl
  * Adjacent entries live in different banks, so SWAP writes the top and the
  * entry below in the same cycle, one write per bank.
  *
+ * STOW writes the register value into the entry at pointer + T, which may be
+ * in either bank. It does not move the pointer and does not change the
+ * register, so the top cell needs no repair write.
+ *
  * The RAM is not initialised: the ISA does not define the power-up contents,
  * so software must write every entry it reads. The register's init is only a
  * power-on value; a pointer move loads whatever the RAM holds.
@@ -39,7 +43,8 @@ case class Register() extends Component {
 		val write     = in (Bool())
 		val writeExg  = in (Bool())
 
-		val pick      = in (UInt(8 bits))
+		// Stack index for PICK and STOW, taken from T.
+		val pickStow  = in (UInt(8 bits))
 		val pointer   = in (UInt(8 bits))
 
 		// Read address for the cycle whose data is used by the writeback
@@ -49,27 +54,27 @@ case class Register() extends Component {
 		// A stack pointer write in the previous stage: reload the top.
 		val stackReload = in (Bool())
 
-		val dataOut   = out (Bits(8 bits))
+		val dataOut = out (Bits(8 bits))
 	}
 
 	private val depth = 128
 	private val even = Mem(Bits(8 bits), depth)
 	private val odd  = Mem(Bits(8 bits), depth)
 	
-	private val pointerNext = io.pointer + 1
-	private val pointerPick = io.pointer + io.pick
-	private val topBank    = io.pointer(0)
-	private val topIndex   = io.pointer(7 downto 1)
-	private val belowIndex = pointerNext(7 downto 1)
+	private val pointerNext     = io.pointer + 1
+	private val pointerPickStow = io.pointer + io.pickStow
+	private val topBank         = io.pointer(0)
+	private val topIndex        = io.pointer(7 downto 1)
+	private val belowIndex      = pointerNext(7 downto 1)
 
 	// ----------------------------------------------------------------------
 	// The entry the writeback stage needs: the new top after a pointer move,
-	// the entry below for a swap, the picked entry for a pick. PICK counts
-	// from the pointer, so the index is added to it.
+	// the entry below for a swap, the picked entry for a pick. PICK and STOW
+	// count from the pointer, so the index is added to it.
 
 	private val readAddress = Select(
 		io.memReadControl.swap -> pointerNext,
-		io.memReadControl.pick -> pointerPick,
+		io.memReadControl.pick -> pointerPickStow,
 		default                -> io.pointer
 	)
 
@@ -98,7 +103,7 @@ case class Register() extends Component {
 	private val writeValue = io.write ? io.dataIn | io.dataInExg
 
 	// PICK 0 leaves the register alone, so there is nothing to load.
-	private val pickLoad = io.control.pick && (io.pick =/= 0)
+	private val pickLoad = io.control.pick && (io.pickStow =/= 0)
 	private val loadTop  = io.control.pop || io.control.swap || io.stackReload || pickLoad
 
 	// A write wins over a reload: when an instruction both moves the pointer
@@ -117,15 +122,22 @@ case class Register() extends Component {
 	                io.control.swap || pickLoad
 	val swapWrite = io.control.swap
 
+	// STOW writes the register into the cell selected by the pointer plus T.
+	// The register's top cell already holds its value, so only the memory
+	// write is needed. STOW never coincides with any other write.
+	private val stowWrite = io.control.stow
+	private val stowBank  = pointerPickStow(0)
+	private val stowIndex = pointerPickStow(7 downto 1)
+
 	// A top write targets the bank selected by the pointer; SWAP's second
 	// write targets the other bank and carries the old top.
 
 	even.write(
-		address = topBank ? belowIndex | topIndex,
-		data    = topBank ? top        | topNext,
-		enable  = topBank ? swapWrite  | topWrite)
+		address = stowWrite ? stowIndex | (topBank ? belowIndex | topIndex),
+		data    = stowWrite ? top       | (topBank ? top        | topNext),
+		enable  = stowWrite ? !stowBank | (topBank ? swapWrite  | topWrite))
 	odd.write(
-		address = topBank ? topIndex   | belowIndex,
-		data    = topBank ? topNext    | top,
-		enable  = topBank ? topWrite   | swapWrite)
+		address = stowWrite ? stowIndex | (topBank ? topIndex   | belowIndex),
+		data    = stowWrite ? top       | (topBank ? topNext    | top),
+		enable  = stowWrite ? stowBank  | (topBank ? topWrite   | swapWrite))
 }

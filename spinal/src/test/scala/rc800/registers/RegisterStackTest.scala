@@ -22,7 +22,7 @@ class RegisterStackTest extends munit.FunSuite {
 		dut.clockDomain.forkStimulus(period = 10)
 		idle()
 		dut.io.pointer #= sp
-		dut.io.pick #= 0
+		dut.io.pickStow #= 0
 		dut.clockDomain.waitSampling(2)
 
 		def idle(): Unit = {
@@ -30,6 +30,7 @@ class RegisterStackTest extends munit.FunSuite {
 			dut.io.control.pop #= false
 			dut.io.control.swap #= false
 			dut.io.control.pick #= false
+			dut.io.control.stow #= false
 			dut.io.memReadControl.push #= false
 			dut.io.memReadControl.pop #= false
 			dut.io.memReadControl.swap #= false
@@ -108,10 +109,20 @@ class RegisterStackTest extends munit.FunSuite {
 
 		def pick(depth: Int): Unit = {
 			idle()
-			dut.io.pick #= depth
+			dut.io.pickStow #= depth
 			readThenApply(dut.io.memReadControl.pick #= true, dut.io.control.pick #= true)
 			idle()
-			dut.io.pick #= 0
+			dut.io.pickStow #= 0
+		}
+
+		/** STOW writes the current top into Stack[sp + depth], pointer unchanged. */
+		def stow(depth: Int): Unit = {
+			idle()
+			dut.io.pickStow #= depth
+			dut.io.control.stow #= true
+			dut.clockDomain.waitSampling()
+			idle()
+			dut.io.pickStow #= 0
 		}
 	}
 
@@ -281,6 +292,58 @@ class RegisterStackTest extends munit.FunSuite {
 
 		h.pop()
 		assertEquals(h.top, 0x33)
+	}
+
+	run("stow writes an entry below the top without changing the register") { h =>
+		h.writeTop(0xAA)                      // Stack[$FF] = $AA
+		h.push()                              // sp = $FE, Stack[$FE] = $AA
+		h.writeTop(0x55)                      // Stack[$FE] = $55
+
+		h.stow(1)                             // Stack[$FF] = $55
+		assertEquals(h.top, 0x55)             // the register is not written
+
+		h.pop()                               // sp = $FF
+		assertEquals(h.top, 0x55)
+	}
+
+	run("stow at depth 0 leaves the top unchanged") { h =>
+		h.writeTop(0xAA)
+		h.stow(0)
+		assertEquals(h.top, 0xAA)
+
+		h.push()
+		assertEquals(h.top, 0xAA)
+		h.pop()
+		assertEquals(h.top, 0xAA)
+	}
+
+	run("stow writes across both banks") { h =>
+		h.setSp(0x21)
+		h.writeTop(0x11)                      // Stack[$21] = $11
+		h.setSp(0x20)
+		h.writeTop(0x22)                      // Stack[$20] = $22
+
+		h.stow(1)                             // Stack[$21] = $22, the other bank
+		h.pick(1)
+		assertEquals(h.top, 0x22)
+	}
+
+	run("stow wraps around the stack") { h =>
+		h.setSp(0x00)
+		h.writeTop(0x77)
+		h.stow(0xFF)                          // Stack[$FF] = $77
+
+		h.setSp(0xFF)
+		assertEquals(h.top, 0x77)
+	}
+
+	run("stow then rewinding to the target exposes the stored value") { h =>
+		h.setSp(0x10)
+		h.writeTop(0x11)
+		h.stow(2)                             // Stack[$12] = $11
+
+		h.setSp(0x12)
+		assertEquals(h.top, 0x11)
 	}
 }
 

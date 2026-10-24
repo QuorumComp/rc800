@@ -7,4 +7,5 @@ case class RegisterControl() extends Bundle {
 	val pop      = Bool
 	val swap     = Bool
 	val pick     = Bool
+	val stow     = Bool
 }

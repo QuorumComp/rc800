@@ -64,6 +64,7 @@ object OpcodeMap {
 		DecodeEntry("PICK",       Opcodes.PICK),
 		DecodeEntry("POP",        Opcodes.POP),
 		DecodeEntry("PUSH",       Opcodes.PUSH),
+		DecodeEntry("STOW",       Opcodes.STOW),
 		DecodeEntry("SUB_FT_R16", Opcodes.SUB_FT_R16),
 		DecodeEntry("SWAP",       Opcodes.SWAP),
 		DecodeEntry("TST_R16",    Opcodes.TST_R16),

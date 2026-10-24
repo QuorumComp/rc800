@@ -126,6 +126,8 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			ctrl.push init(False)
 			ctrl.pop init(False)
 			ctrl.swap init(False)
+			ctrl.pick init(False)
+			ctrl.stow init(False)
 		}
 
 		private val registers = new RegisterFile()
@@ -282,6 +284,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			ctrl.pop   := False
 			ctrl.swap  := False
 			ctrl.pick  := False
+			ctrl.stow  := False
 		}
 
 		// The banks read their address a stage before the value is used, so the

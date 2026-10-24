@@ -118,6 +118,7 @@ The `!CC` is the inverse condition (for example, `EQ` → `NE`, `LT` → `GE`). 
 | SWAPA           | Swap two topmost stack entries for all registers ||
 | PICK&nbsp;R16   | Replace register with stack entry at index (index = T) ||
 | PICK&nbsp;FT,i8 | Replace FT with stack entry at immediate index | (synthesized) |
+| STOW&nbsp;R16   | Store register into its stack at index (index = T, R16 = BC/DE/HL) ||
 
 # External Memory and I/O
 | Mnemonic          | Operation | Remarks |

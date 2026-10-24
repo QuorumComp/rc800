@@ -27,6 +27,7 @@
 * [RETI](InstructionRETI.md) - Return from interrupt
 * [RS](InstructionRS.md) - Right shift
 * [RSA](InstructionRSA.md) - Right shift arithmetic
+* [STOW](InstructionSTOW.md) - Store register at stack entry index
 * [SUB](InstructionSUB.md) - Subtraction
 * [SWAP](InstructionSWAP.md) - Swap two topmost register stack entries
 * [SWAPA](InstructionSWAPA.md) - Swap two topmost stack entries for all registers
