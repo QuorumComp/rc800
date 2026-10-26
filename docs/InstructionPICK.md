@@ -34,3 +34,5 @@ PICK FT,4            (synthesized: LD T,4 / PICK FT)
 ```
 
 `PICK FT,i8` is the only synthesized immediate form. For BC, DE and HL the assembler rejects an immediate index, because the implicit `LD T,i8` would clobber FT.
+
+`PICK` and `STOW` together form a register-stack local frame; see [STOW](InstructionSTOW.md) and [Local Variables](StandardCallingConvention.md#local-variables).

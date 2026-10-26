@@ -31,9 +31,9 @@
 16 EXG T,R8         h t 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 1 t 1 h 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 17 EXG T,R8         l t 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 1 t 1 l 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 18 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1
-19 STOW             ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0
-1A STOW             ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0
-1B STOW             ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
+19 STOW             bc ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0
+1A STOW             de ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0
+1B STOW             hl ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
 1C PICK             ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 0 ft 0 ft 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 1D PICK             bc ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
 1E PICK             de ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0

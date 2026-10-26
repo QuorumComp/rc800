@@ -283,17 +283,15 @@ case class OpcodeDecoder() extends Component {
 	def pick(): Unit = {
 		io.controlSignals.operand1 := Operand.opcode_r16
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
-		io.controlSignals.writeStageControl.source := WriteBackValueSource.alu
 
 		val control = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair)
 		control.pick := True
 	}
 
 	def stow(): Unit = {
-		/*
-		* Store the named register at stack index T. The value is taken from the
-		* register file itself, so no ALU operand or writeback destination is set.
-		*/
+		io.controlSignals.operand1 := Operand.opcode_r16
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
+
 		val control = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair)
 		control.stow := True
 	}
@@ -302,8 +300,6 @@ case class OpcodeDecoder() extends Component {
 		io.controlSignals.operand1 := Operand.opcode_r16
 		io.controlSignals.operand2 := Pipeline.Operand.zero
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.or
-
-		io.controlSignals.writeStageControl.source := WriteBackValueSource.alu
 
 		val control = io.controlSignals.writeStageControl.fileControl.registerControl(registerPair)
 		setter(control)

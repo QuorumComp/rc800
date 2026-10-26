@@ -140,6 +140,40 @@ After accessing parameters, any remaining entries on the HL stack must be discar
         ; HL = Stack[new_SP] = return address (if aligned correctly)
 ```
 
+### Local Variables
+
+A callee can keep locals on a register stack and update them in place with `PICK` and `STOW`; the stack pointer does not move. Use BC or DE for the frame — HL carries the return address, and there is no `STOW FT`. The register is the scratch slot at depth 0, the locals are at depths 1..N, and the caller's saved pair is at depth N+1.
+
+```
+        ; two 16-bit locals on the DE stack
+        push    de              ; save caller DE
+        ld      de,0            ; clear the duplicate: depth 0 = scratch
+        push    de              ; allocate a zero local
+        push    de              ; allocate a zero local
+        ; depth 0 = scratch, 1 = local 1, 2 = local 2, 3 = caller DE
+
+        ld      t,2
+        pick    de
+        add     de,4
+        stow    de              ; local 2 += 4
+
+        ld      t,1
+        pick    de
+        exg     ft,de           ; FT = local, DE = FT before the exchange
+        ls      ft,1
+        add     ft,bc
+        exg     ft,de           ; FT restored, T = 1, DE = result
+        stow    de              ; local 1 = (local 1 << 1) + BC
+
+        pop     de              ; discard scratch
+        pop     de              ; discard local 1
+        pop     de              ; discard local 2, DE = caller DE
+```
+
+`PICK` and `STOW` leave T unchanged, and the native `ADD R16,s8` (or the synthesized `ADD R16,i16`) on the frame pair does not write T, so one index load covers a simple update. The double `EXG` restores FT — including T, so the `STOW` targets the same depth — and leaves the result in DE. It does not undo the FT clobber from `LD T,n`; park FT around the index load when its value must survive, and keep the work between the exchanges register-only. The other pair holds the pre-exchange FT, so leave it untouched until the second exchange; a `PUSH`/`POP FT` there also changes the FT stack pointer.
+
+For N locals the frame uses N+2 entries. For a large frame, restore SP with `LCR`; park the return value in FT first because the index load clobbers it. The pop-based epilogue takes N+1 pops: the scratch slot and the N locals, then the saved pair.
+
 ### Epilogue — Saving the Return Value
 
 The callee computes its result in FT. The epilogue saves the result on the FT stack, puts the return address into FT for HL restoration, cleans up the HL stack, then recovers the result:

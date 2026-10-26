@@ -179,4 +179,61 @@ class CpuStackPointerTest extends munit.FunSuite {
 			assertEquals(mem(0x102), 0x5A, "program ran to completion")
 		}
 	}
+
+	test("pick reads an entry by depth through the decoder") {
+		run(Seq(
+			0x82, 0xAA,		// ld  b,$AA
+			0x83, 0xBB,		// ld  c,$BB
+			0xC1,			// push bc      Stack[$FE] <- $AABB
+			0x82, 0x11,		// ld  b,$11
+			0x83, 0x22,		// ld  c,$22    Stack[$FE] <- $1122
+			0xC1,			// push bc      Stack[$FD] <- $1122
+			0x82, 0x33,		// ld  b,$33
+			0x83, 0x44,		// ld  c,$44    Stack[$FD] <- $3344
+			0x81, 0x02,		// ld  t,$02
+			0x1D,			// pick bc      BC <- Stack[$FF] = $AABB
+			0x86, 0x01,		// ld  h,$01
+			0x87, 0x00,		// ld  l,$00
+			0x5B,			// ld  t,c
+			0x03,			// ld  (hl),t   $0100 <- $BB
+			0xBF, 0x01,		// add hl,1
+			0x5A,			// ld  t,b
+			0x03,			// ld  (hl),t   $0101 <- $AA
+			0xBF, 0x01,		// add hl,1
+			0x81, 0x5A,		// ld  t,$5A
+			0x03			// ld  (hl),t   $0102 <- $5A
+		)) { mem =>
+			assertEquals(mem(0x100), 0xBB, "low half of the picked pair")
+			assertEquals(mem(0x101), 0xAA, "high half of the picked pair")
+			assertEquals(mem(0x102), 0x5A, "program ran to completion")
+		}
+	}
+
+	test("swap exchanges the top with the entry below through the decoder") {
+		run(Seq(
+			0x82, 0xAA,		// ld  b,$AA
+			0x83, 0xBB,		// ld  c,$BB
+			0xC1,			// push bc      Stack[$FE] <- $AABB
+			0x82, 0x11,		// ld  b,$11
+			0x83, 0x22,		// ld  c,$22    Stack[$FE] <- $1122
+			0xC1,			// push bc      Stack[$FD] <- $1122
+			0x82, 0x33,		// ld  b,$33
+			0x83, 0x44,		// ld  c,$44    Stack[$FD] <- $3344
+			0xDD,			// swap bc      BC <-> Stack[$FE] = $1122
+			0x86, 0x01,		// ld  h,$01
+			0x87, 0x00,		// ld  l,$00
+			0x5B,			// ld  t,c
+			0x03,			// ld  (hl),t   $0100 <- $22
+			0xBF, 0x01,		// add hl,1
+			0x5A,			// ld  t,b
+			0x03,			// ld  (hl),t   $0101 <- $11
+			0xBF, 0x01,		// add hl,1
+			0x81, 0x5A,		// ld  t,$5A
+			0x03			// ld  (hl),t   $0102 <- $5A
+		)) { mem =>
+			assertEquals(mem(0x100), 0x22, "low half after the swap")
+			assertEquals(mem(0x101), 0x11, "high half after the swap")
+			assertEquals(mem(0x102), 0x5A, "program ran to completion")
+		}
+	}
 }

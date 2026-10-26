@@ -25,3 +25,17 @@ STOW BC              ; BC = entry 4 of the BC stack
 LD T,1
 STOW DE              ; DE = entry 1 of the DE stack
 ```
+
+## Local variables
+
+`STOW` is the write half of a register-stack local frame: `PICK` reads the local at depth T, the body modifies the register, and `STOW` writes it back without moving SP. For FT-only operations, exchange the local into FT and back; the second exchange restores FT and T, so the `STOW` targets the same depth:
+
+```
+        ld      t,1
+        pick    de              ; DE = local 1
+        exg     ft,de           ; FT = local, DE = FT before the exchange
+        ls      ft,1
+        add     ft,bc
+        exg     ft,de           ; FT restored, T = 1, DE = result
+        stow    de              ; local 1 = result
+```
