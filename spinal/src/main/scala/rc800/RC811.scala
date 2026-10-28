@@ -146,6 +146,8 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		val readValues = registers.io.dataOut
 	}
 
+	decodeArea.decoderUnit.io.stackPointers := registers.stackPointers
+
 
 	/*
 	 * Memory, configuration registers, I/O stage

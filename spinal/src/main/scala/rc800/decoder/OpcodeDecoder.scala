@@ -27,6 +27,8 @@ import Pipeline.PipelineControlPimp
 case class OpcodeDecoder() extends Component {
 	val io = new Bundle {
 		val opcode = in Bits(8 bits)
+		val nmiActive = in Bool()
+		val stackPointers = in Vec(UInt(8 bits), 4)
 		val output = out (DecoderOutput())
 
 		def controlSignals = output.stageControl
@@ -47,9 +49,10 @@ case class OpcodeDecoder() extends Component {
 	}
 
 	io.output.illegal := False
+	io.output.overflow := False
 	io.output.stageControl.setDefaults()
 
-	when (Opcodes.illegals.map(io.opcode === _).reduce((v1, v2) => v1 || v2)) { 
+	when (!io.nmiActive && Opcodes.illegals.map(io.opcode === _).reduce((v1, v2) => v1 || v2)) { 
 		io.output.illegal := True
 		io.controlSignals.interrupt(U(Vectors.IllegalInstruction >> 3, 3 bits))
 	} otherwise {
@@ -67,7 +70,14 @@ case class OpcodeDecoder() extends Component {
 			.elsewhen (io.opcode === Opcodes.NOT_F)    { not_F() }
 			.elsewhen (io.opcode === Opcodes.OR_T_I)   { operation_T_I(AluOperation.or) }
 			.elsewhen (io.opcode === Opcodes.POPA)     { stackAll(_.pop := True) }
-			.elsewhen (io.opcode === Opcodes.PUSHA)    { stackAll(_.push := True) }
+			.elsewhen (io.opcode === Opcodes.PUSHA)    {
+				when(!io.nmiActive && (0 to 3).map(i => io.stackPointers(i) === 0).reduce(_ || _)) {
+					io.output.overflow := True
+					io.controlSignals.interrupt(U(Vectors.StackOverflow >> 3, 3 bits))
+				} otherwise {
+					stackAll(_.push := True)
+				}
+			}
 			.elsewhen (io.opcode === Opcodes.RETI)     { reti() }
 			.elsewhen (io.opcode === Opcodes.RS_FT_I)  { shift_FT(AluOperation.rs, Pipeline.Operand.immediate_byte) }
 			.elsewhen (io.opcode === Opcodes.RSA_FT_I) { shift_FT(AluOperation.rsa, Pipeline.Operand.immediate_byte) }
@@ -91,7 +101,14 @@ case class OpcodeDecoder() extends Component {
 			.elsewhen (io.opcode === Opcodes.LD_T_MEM)   { ld_T_MEM() }
 			.elsewhen (io.opcode === Opcodes.PICK)       { pick() }
 			.elsewhen (io.opcode === Opcodes.POP)        { stack(_.pop := True) }
-			.elsewhen (io.opcode === Opcodes.PUSH)       { stack(_.push := True) }
+			.elsewhen (io.opcode === Opcodes.PUSH)       {
+				when(!io.nmiActive && io.stackPointers(registerPair.asBits(1 downto 0).asUInt) === 0) {
+					io.output.overflow := True
+					io.controlSignals.interrupt(U(Vectors.StackOverflow >> 3, 3 bits))
+				} otherwise {
+					stack(_.push := True)
+				}
+			}
 			.elsewhen (io.opcode === Opcodes.STOW)       { stow() }
 			.elsewhen (io.opcode === Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
 			.elsewhen (io.opcode === Opcodes.SWAP)       { stack(_.swap := True) }

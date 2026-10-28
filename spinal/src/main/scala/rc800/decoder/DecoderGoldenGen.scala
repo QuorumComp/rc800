@@ -24,6 +24,10 @@ class OpcodeSimTop extends Component {
 
 	private val opcodeDecoder = OpcodeDecoder()
 	opcodeDecoder.io.opcode := io.opcode
+	opcodeDecoder.io.nmiActive := False
+	// Golden captures decode as a pure opcode->control map: keep every
+	// stack pointer away from $00 so the overflow fault never fires.
+	opcodeDecoder.io.stackPointers.foreach(_ := U(0xFF, 8 bits))
 	io.word := RegNext(opcodeDecoder.io.output.asBits.asUInt)
 
 	// Captured at elaboration: named, flattened leaves of the decoder output,
@@ -42,10 +46,13 @@ class PairSimTop extends Component {
 
 	private val opcodeDecoder = OpcodeDecoder()
 	opcodeDecoder.io.opcode := io.opcode
+	opcodeDecoder.io.nmiActive := False
+	opcodeDecoder.io.stackPointers.foreach(_ := U(0xFF, 8 bits))
 	io.combWord := opcodeDecoder.io.output.asBits.asUInt
 
 	private val lookupDecoder = LookupDecoder()
 	lookupDecoder.io.opcode := io.opcode
+	lookupDecoder.io.nmiActive := False
 	lookupDecoder.io.strobe := True
 	io.lookupWord := lookupDecoder.io.output.asBits.asUInt
 }

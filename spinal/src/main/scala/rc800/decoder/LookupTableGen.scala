@@ -54,6 +54,7 @@ object LookupTableGen {
 				|\tval io = new Bundle {
 				|\t\tval opcode = in Bits(8 bits)
 				|\t\tval strobe = in Bool()
+				|\t\tval nmiActive = in Bool()
 				|\t\tval output = out (DecoderOutput())
 				|
 				|\t\tdef controlSignals = output.stageControl
@@ -64,6 +65,13 @@ object LookupTableGen {
 				|\t))
 				|
 				|\tio.output := signalMem.readSync(io.opcode.asUInt, io.strobe).as(DecoderOutput())
+				|	// NMI must not interrupt NMI: the fault flags drop while
+				|	// NMI mode is active.  ROM words are captured with the
+				|	// faults inactive, so only the flags need masking.
+				|\twhen (io.nmiActive) {
+				|\t\tio.output.illegal := False
+				|\t\tio.output.overflow := False
+				|\t}
 				|}
 				|""".stripMargin
 
