@@ -15,6 +15,14 @@ When an interrupt is handled, the CPU will first perform a register HL push and 
 
 The RETI instruction will load the PC from HL, pop the stack and drop to the previously active interrupt mode.
 
+## Faults
+
+The illegal instruction ($0018) and stack overflow ($0020) vectors are *faults*: they enter NMI mode, like the non-maskable interrupt itself. Their entry follows the universal cancel-and-restart semantics: HL receives the cancelled instruction's own address, and RETI re-executes it. The overflowing push is discarded, not executed, so a stack-overflow handler must free stack cells before returning - otherwise the retry faults again.
+
+Faults never nest. While the NMI service runs - including a handler entered through $0018 or $0020 - both faults are suppressed: an illegal opcode is not reported and its effect is undefined, and a push against a full stack (pointer $00) is not reported and wraps the pointer silently to $FF. A fault raised inside the NMI service is undefined; the NMI service itself must be fault-free.
+
+Stack underflow has no fault at all, at any level: POP, POPA, SWAP, SWAPA, PICK and STOW perform no bounds check. A pop against the empty stack (pointer $FF) wraps the pointer to $00 and loads entry $00 - the deepest cell, undefined after power-up - leaving a stack that looks empty but faults on its next push. An overflow fault on a pair that should be nowhere near full is therefore usually a pop-accounting bug, not a depth problem.
+
 ## Vectors
 
 The CPU will set the PC to these addresses when certain conditions arise. These are not jump vectors — the CPU sets PC directly to the address, and the code placed there decides what to do (typically jumping to the actual handler).

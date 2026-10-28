@@ -17,6 +17,13 @@ Stack[r][T] <- Reg16[r]
 PC <- PC + 1
 ```
 
+## Notes
+
+No bounds check is performed: the target is `SP + T` computed modulo 256, so a
+large index wraps around the ring of cells and a deep `STOW` can overwrite the
+caller's saved pair or the entries above the current pointer. `STOW` never
+faults.
+
 ## Assembler syntax examples
 ```
 LD T,4

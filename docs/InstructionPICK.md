@@ -23,7 +23,7 @@ PC <- PC + 1
 PUSH FT / LD T,E / PICK BC / POP FT
 ```
 
-An index past the current stack depth reads an entry that has not been written since the stack pointer passed it; it does not trap.
+An index past the current stack depth reads an entry that has not been written since the stack pointer passed it; it does not trap. The address is `SP + T` computed modulo 256, so a large index wraps around the ring of cells: `PICK` never faults, at any depth.
 
 ## Assembler syntax examples
 ```
