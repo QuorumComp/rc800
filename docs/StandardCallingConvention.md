@@ -47,21 +47,21 @@ Parameters that do not fit in registers are passed on the HL stack. Each paramet
 
 ### Caller Responsibilities
 
-1. Push stack parameters onto the HL stack in declaration order (first stack param pushed first).
+1. Push stack parameters onto the HL stack in **reverse declaration order** (first stack param pushed last), so the first param ends up nearest the sacrificial slot.
 2. Push a sacrificial slot after the last parameter — `jal` overwrites the HL stack top with the return address.
 3. Load register parameters into their assigned registers.
 
 ```
         ; call f(u8 a, u16 b, u16 c, s8 d, u8 e)
         ; registers: T=a, BC=b, DE=c  |  stack: d(s8), e(u8)
-        ld      t,arg_d
-        ext                    ; sign-extend (s8)
-        ld      hl,ft
-        push    hl             ; d on HL stack
         ld      t,arg_e
         ld      f,0            ; zero-extend (u8)
         ld      hl,ft
-        push    hl             ; e on HL stack
+        push    hl             ; e on HL stack (last param pushed first)
+        ld      t,arg_d
+        ext                    ; sign-extend (s8)
+        ld      hl,ft
+        push    hl             ; d on HL stack (first param pushed last)
         push    hl             ; sacrificial slot for jal
         ld      t,arg_a
         ld      bc,arg_b
@@ -74,11 +74,11 @@ Parameters that do not fit in registers are passed on the HL stack. Each paramet
 
 ```
   HL (index 0, SP)   = return address
-  index 1             = e (last stack param pushed)
-  index 2             = d (first stack param pushed)
+  index 1             = d (first stack param, pushed last)
+  index 2             = e (last stack param, pushed first)
 ```
 
-The last stack parameter pushed is closest to the return address (index 1).
+The first stack parameter is closest to the return address (index 1); later parameters sit at ever-higher indices, so a callee consumes them in declaration order.
 
 ### Callee Responsibilities
 
