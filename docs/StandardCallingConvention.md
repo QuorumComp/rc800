@@ -261,12 +261,34 @@ f:
 
 ## Returning Values
 
-- Returned in FT (or on FT stack for multi-word).
+- Returned in FT (or on FT stack for multi-word: the same word ladder, MSW left in the register, remaining words pushed LSW-first; the caller pops W-1 cells).
 - **8-bit returns:** When returning an 8-bit value in T, there is no need to clear F. The caller reads only T for an 8-bit result, so the contents of F are irrelevant. Only clear F when the return value is genuinely 16-bit and the high byte must be zero.
 
 ## Passing Multi-word Values
 
 Parameters 32 bits or larger can be passed on one register stack. In the case of 32-bit integers, `R` and `R'` hold the two 16-bit words, the most significant word in `R`.
+
+The general form is a **word ladder**: a value of `W` words occupies the register and the `W-1` cells below it, most-significant word in the register, next word at `R'`, and so on down to the least-significant word at `R^(W-1)`. The caller builds the ladder by pushing the words least-significant first and leaving the most-significant word in the register:
+
+```
+        ; call f(64-bit v): caller side
+        ld      ft, v+6        ; LSW
+        push    ft
+        ld      ft, v+4
+        push    ft
+        ld      ft, v+2
+        push    ft
+        ld      ft, v          ; MSW stays in the register
+        ld      h,#>_f
+        ld      l,#<_f
+        jal     (hl)
+```
+
+The callee reads word `k` with `ld t,#k` / `pick R` (index 0 is the register itself) and **consumes the ladder by popping `W-1` cells** — one less word than the value uses, because the register word is not a cell. This keeps the stack balanced whatever the value's width: the cell under the ladder belongs to the caller.
+
+Multi-word **return values** use the same ladder, MSW topmost: the callee pushes the words below the most-significant one least-significant first and leaves the MSW in the register; the caller copies the words out and pops `W-1` cells.
+
+The standard route for multi-word parameters is the `FT` stack (`jal` clobbers HL, and BC/DE have no `PICK`, so a second multi-word parameter has no ladder reader; ports pass it on the HL stack as plain cells instead).
 
 ## Preserved Registers
 
@@ -279,7 +301,7 @@ The convention is generally "callee-saves".
   - **Swap-pop variant:** prologue pushes only `bc/de` (not HL). Params are consumed via `swap hl` / `pop hl`, which naturally preserves HL=ret between each pair. Epilogue `pop hl` discards the sacrificial slot.
   - **PICK variant:** prologue `push hl` duplicates ret (shifting params to higher indices). Epilogue discards all remaining HL stack entries (ret dup, ret, and all params) via individual `pop hl` or `LCR` advance.
 
-If a multi-word parameter is passed on the `FT` stack, the callee will consume this value and remove it from the stack. Note that "consuming" a value means removing one less word than the value actually uses. In the case of a 32-bit value, it takes up one extra word of stack space, thus only one word should be removed by the callee.
+Consuming a multi-word parameter passed on the `FT` stack follows the rule in [Passing Multi-word Values](#passing-multi-word-values): pop one less word than the value uses.
 
 ## Subroutines
 
