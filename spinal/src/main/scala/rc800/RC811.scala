@@ -116,7 +116,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 		val writeControl  = Reg(RegisterFileControl())
 		val writeData     = Reg(Bits(16 bits))
-		val writeDataExg  = Reg(Bits(16 bits))
+		val writeDataAux  = Reg(Bits(16 bits))
 		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFF), 4)
 
 		writeControl.write init(False)
@@ -137,7 +137,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 		registers.io.control   <> writeControl
 		registers.io.dataIn    <> writeData
-		registers.io.dataInExg <> writeDataExg
+		registers.io.dataInAux <> writeDataAux
 		registers.io.pointers  <> stackPointers
 
 		registers.io.stackReload := stackReload
@@ -296,7 +296,22 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 			stackReload(i) := memoryArea.spWriteAtWriteback && (memoryArea.spWritePair === i)
 		}
 
+		// Auxiliary data bus (writeDataAux): the EXG value - operand 2,
+		// stable since the register read - or, for PICK/STOW, the operand
+		// byte arriving on the bus, riding the high byte lane like every
+		// other 8-bit value.  Captured at the end of stage 2 so the stack
+		// index is in place for the bank-read address window (stage 3) as
+		// well as the writeback window (the next stage 0); nothing reads
+		// the bus before writeback, so capturing EXG one stage early is
+		// value-identical.
+		private val anyPickStow = Bool()
+		anyPickStow := Seq.tabulate(4) { i =>
+			val ctrl = control.fileControl.registerControl(i)
+			ctrl.pick || ctrl.stow
+		}.reduce(_ || _)
+
 		when (stage === 2) {
+			registers.writeDataAux := anyPickStow ? (io.dataIn ## io.dataIn) | registers.readValues(1)
 			for (i <- 0 to 3) {
 				val ctrl = registers.writeControl.registerControl(i)
 				ctrl.pick  := control.fileControl.registerControl(i).pick
@@ -307,7 +322,6 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 				WriteBackValueSource.alu -> aluArea.result,
 				WriteBackValueSource.memory -> (memoryArea.result << 8)
 			)
-			registers.writeDataExg := registers.readValues(1) // T or FT
 
 			pc := pcOut
 

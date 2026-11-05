@@ -22,8 +22,8 @@ case class DecodeEntry(name: String, mask: MaskedLiteral) {
 object OpcodeMap {
 	/**
 	 * In the order the when/elsewhen chain tests them.  J_CC_I (1001----)
-	 * deliberately overlaps SYS_I and the illegal 100111-- opcodes; the chain
-	 * order and the leading illegal check resolve the overlap.
+	 * deliberately overlaps SYS_I and ADD_R16_I (100111--); the chain order
+	 * resolves both overlaps (the more specific form is tested first).
 	 */
 	val entries: Seq[DecodeEntry] = Seq(
 		// Opcodes with no fields
@@ -61,10 +61,10 @@ object OpcodeMap {
 		DecodeEntry("LD_T_IO",    Opcodes.LD_T_IO),
 		DecodeEntry("LD_T_CODE",  Opcodes.LD_T_CODE),
 		DecodeEntry("LD_T_MEM",   Opcodes.LD_T_MEM),
-		DecodeEntry("PICK",       Opcodes.PICK),
+		DecodeEntry("PICK_I",     Opcodes.PICK_I),
 		DecodeEntry("POP",        Opcodes.POP),
 		DecodeEntry("PUSH",       Opcodes.PUSH),
-		DecodeEntry("STOW",       Opcodes.STOW),
+		DecodeEntry("STOW_I",     Opcodes.STOW_I),
 		DecodeEntry("SUB_FT_R16", Opcodes.SUB_FT_R16),
 		DecodeEntry("SWAP",       Opcodes.SWAP),
 		DecodeEntry("TST_R16",    Opcodes.TST_R16),

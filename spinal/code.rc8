@@ -461,11 +461,10 @@ TestStackPointer:
 		push	ft
 		ld	ft,$5678
 		push	ft
-		ld	t,2
-		pick	ft
+		pick	ft,2
 		lio	(bc),t		; 34
 
-; -- PICK reads its index from T, whatever the target register stack is.
+; -- PICK takes its index as an immediate operand; only the named pair moves.
 ; -- BC stack from here on: entry 0 = $7788, 1 = $5566, 2 = $3344, 3 = $1122
 		ld	b,$11
 		ld	c,$22
@@ -479,29 +478,25 @@ TestStackPointer:
 		ld	b,$77
 		ld	c,$88
 
-		ld	t,1
-		ld	c,$99		; C is no longer the index
-		pick	bc
+		ld	c,$99		; the index is the operand, C is irrelevant
+		pick	bc,1
 		ld	t,c
 		ld	bc,IO_PRINT
 		lio	(bc),t		; 66
 
-		ld	t,2
-		pick	bc
+		pick	bc,2
 		ld	t,c
 		ld	bc,IO_PRINT
 		lio	(bc),t		; 44
 
-		ld	t,3
-		pick	bc
+		pick	bc,3
 		ld	t,c
 		ld	bc,IO_PRINT
 		lio	(bc),t		; 22
 
 		ld	b,$77
 		ld	c,$88
-		ld	t,0
-		pick	bc
+		pick	bc,0		; index 0 is the register itself
 		ld	t,c
 		ld	bc,IO_PRINT
 		lio	(bc),t		; 88

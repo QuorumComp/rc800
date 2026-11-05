@@ -89,19 +89,25 @@ class OpcodeAuditTest extends munit.FunSuite {
 			"the when/elsewhen chain and OpcodeMap.entries drifted apart")
 	}
 
-	test("ambiguous opcode matches are only exact opcodes shadowing field forms") {
-		// Encoding technique: no-field instructions (exact 8-bit masks) live in
-		// the don't-care holes of wider field forms tested later in the chain
-		// (e.g. NOP 0x00 inside LD MEM,T "000000--", J_CC_I under SYS_I).  Any
-		// other overlap shape would be an encoding accident.
+	test("ambiguous opcode matches are only winners shadowing the other forms") {
+		// Encoding technique: a form wins over another form matching the same
+		// opcode only by being strictly more specific - an exact mask inside a
+		// field form (NOP 0x00 inside LD MEM,T "000000--", SYS_I under J_CC_I),
+		// or a narrower field inside a wider one (ADD_R16_I "100111--" under
+		// J_CC_I "1001----").  Any overlap the chain resolves without the
+		// winner's care bits including the loser's would be an encoding
+		// accident.
 		for (op <- 0 until 256) {
 			val matches = OpcodeMap.allMatches(op)
 			if (matches.size > 1) {
 				assertEquals(OpcodeMap.resolve(op), matches.head,
 					f"opcode $op%02X should resolve to the earliest chain match")
 				val winner = OpcodeMap.entries.find(_.name == matches.head).get
-				assertEquals(winner.mask.careAbout, BigInt(0xFF),
-					f"opcode $op%02X is ambiguous between $matches but the winner is not an exact mask")
+				for (loser <- matches.tail) {
+					val loserMask = OpcodeMap.entries.find(_.name == loser).get.mask.careAbout
+					assertEquals((winner.mask.careAbout & loserMask), loserMask,
+						f"opcode $op%02X is ambiguous between $matches but the winner does not shadow $loser")
+				}
 			}
 		}
 	}

@@ -5,16 +5,14 @@ import spinal.core._
 object Opcodes {
 	def illegals = List(
 		M"00010001",
-		M"00011000",		// STOW r=0; STOW BC/DE/HL occupy $19-$1B
+		M"00011---",		// T-indexed PICK/STOW removed; the immediate forms live at $B4-$B7/$BC-$BF
 		M"0010000-",
 		M"00101001",
 		M"01100001",
 		M"01101001",
 		M"01110001",
 		M"01111001",
-		M"100111--",
 		M"10110011",
-		M"101101--",
 		M"10111010",
 		M"11001000",
 		M"11010000",
@@ -48,7 +46,7 @@ object Opcodes {
 	def XOR_T_I    = M"10110010"
 
 	def ADD_FT_R16 = M"111101--"
-	def ADD_R16_I  = M"101111--"
+	def ADD_R16_I  = M"100111--"		// Add signed immediate to register pair
 	def CMP_FT_R16 = M"110011--"
 	def EXG_FT_R16 = M"110010--"
 	def JAL_R16    = M"001110--"
@@ -60,10 +58,10 @@ object Opcodes {
 	def LD_T_CODE  = M"000011--"
 	def LD_T_IO    = M"001101--"		// Load T with I/O
 	def LD_T_MEM   = M"000001--"		// Load T from memory
-	def PICK       = M"000111--"
+	def PICK_I     = M"101111--"		// Pick stack entry at immediate index
 	def POP        = M"110001--"
 	def PUSH       = M"110000--"
-	def STOW       = M"000110--"		// Store 16 bit register at stack index T
+	def STOW_I     = M"101101--"		// Store register pair at immediate index
 	def SUB_FT_R16 = M"111100--"
 	def SWAP       = M"110111--"
 	def TST_R16    = M"110101--"

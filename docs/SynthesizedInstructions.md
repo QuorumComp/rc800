@@ -156,21 +156,6 @@ Register lists use `/` to separate registers, e.g., `PUSH FT/HL`, `PUSH BC/DE/HL
 | `EXG R8,R8` | `EXG T,src` / `EXG T,dest` / `EXG T,src` (3-exchange via T) |
 | `EXG R16,R16` | `EXG FT,src` / `EXG FT,dest` / `EXG FT,src` (3-exchange via FT) |
 
-## PICK with Immediate
-
-| Assembler syntax | Instruction generated |
-|------------------|------------------------|
-| `PICK FT,i8` | `LD T,i8` / `PICK FT` |
-
-`PICK` reads its index from `T`, so only FT can take an immediate index without disturbing another register pair. The other pairs need the two instructions written out:
-
-```
-        ld      t,4           ; index
-        pick    bc            ; BC = entry 4 of the BC stack
-```
-
-An immediate on BC, DE or HL is rejected by the assembler: the implicit `LD T,i8` would clobber FT.
-
 ## Conditional Execution — INST/CC
 
 Any instruction can be made conditional by appending `/CC`. The assembler emits a native `J/!CC` (inverted condition) that skips the instruction if the condition is not met. For example, `LD/EQ T,1` becomes `J/NE,@+2` / `LD T,1`.

@@ -19,7 +19,7 @@
 * [NOP](InstructionNOP.md) - No operation
 * [NOT](InstructionNOT.md) - Complement
 * [OR](InstructionOR.md) - Bitwise OR
-* [PICK](InstructionPICK.md) - Replace register with stack entry at index
+* [PICK](InstructionPICK.md) - Replace register with stack entry at immediate index
 * [POP](InstructionPOP.md) - Pop register pair
 * [POPA](InstructionPOPA.md) - Pop all register pairs
 * [PUSH](InstructionPUSH.md) - Push register pair
@@ -27,7 +27,7 @@
 * [RETI](InstructionRETI.md) - Return from interrupt
 * [RS](InstructionRS.md) - Right shift
 * [RSA](InstructionRSA.md) - Right shift arithmetic
-* [STOW](InstructionSTOW.md) - Store register at stack entry index
+* [STOW](InstructionSTOW.md) - Store register at stack entry immediate index
 * [SUB](InstructionSUB.md) - Subtraction
 * [SWAP](InstructionSWAP.md) - Swap two topmost register stack entries
 * [SWAPA](InstructionSWAPA.md) - Swap two topmost stack entries for all registers

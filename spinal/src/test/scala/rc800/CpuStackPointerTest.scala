@@ -11,7 +11,11 @@ import spinal.core.sim._
  */
 class CpuStackPointerTest extends munit.FunSuite {
 
-	private val compiled = SimConfig.compile(new RC811()(lpm.generic.Components))
+	// Verilator >=5.046 warns (fatally) about simPublic signals blocking
+	// optimization; the lint targets the debug-visible stage/pc registers.
+	private val compiled = SimConfig
+		.addSimulatorFlag("--Wno-UNOPTPUBLIC")
+		.compile(new RC811()(lpm.generic.Components))
 
 	private def run(program: Seq[Int])(check: Array[Int] => Unit): Unit = {
 		compiled.doSim { dut =>
@@ -59,10 +63,10 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x03,			// ld  (hl),t  $0100 <- $55
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x58,			// ld  t,f
 			0x03,			// ld  (hl),t  $0101 <- $22
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x03			// ld  (hl),t  $0102 <- $5A (program reached the end)
 		)) { mem =>
@@ -83,10 +87,10 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x03,			// ld  (hl),t   $0100 <- $55
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0xC4,			// pop ft       T <- Stack[$FF] = $AA
 			0x03,			// ld  (hl),t   $0101 <- $AA
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x03			// ld  (hl),t   $0102 <- $5A
 		)) { mem =>
@@ -96,24 +100,22 @@ class CpuStackPointerTest extends munit.FunSuite {
 		}
 	}
 
-	test("stow writes the register at the depth in T") {
+	test("stow writes the register at the immediate depth") {
 		run(Seq(
 			0x82, 0xAA,		// ld  b,$AA
 			0x83, 0xBB,		// ld  c,$BB
-			0x81, 0x03,		// ld  t,$03
-			0x19,			// stow bc      Stack[BC][$FF+3] <- $AABB
+			0xB5, 0x03,		// stow bc,#3 Stack[BC][$FF+3] <- $AABB
 			0x82, 0x11,		// ld  b,$11    the top changes, not the stored entry
 			0x83, 0x22,		// ld  c,$22
-			0x81, 0x03,		// ld  t,$03
-			0x1D,			// pick bc      BC <- $AABB
+			0xBD, 0x03,		// pick bc,#3 BC <- $AABB
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x5B,			// ld  t,c
 			0x03,			// ld  (hl),t   $0100 <- $BB
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
 			0x03,			// ld  (hl),t   $0101 <- $AA
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x03			// ld  (hl),t   $0102 <- $5A
 		)) { mem =>
@@ -130,20 +132,18 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0xC2,			// push de      SP_DE := $FE, Stack[$FE] <- $1234
 			0x84, 0x56,		// ld  d,$56
 			0x85, 0x78,		// ld  e,$78    Stack[$FE] <- $5678
-			0x81, 0x02,		// ld  t,$02
-			0x1A,			// stow de      Stack[$00] <- $5678, SP unchanged
+			0xB6, 0x02,		// stow de,#2 Stack[$00] <- $5678, SP unchanged
 			0x84, 0x99,		// ld  d,$99
 			0x85, 0xAA,		// ld  e,$AA
-			0x81, 0x02,		// ld  t,$02
-			0x1E,			// pick de      DE <- $5678
+			0xBE, 0x02,		// pick de,#2 DE <- $5678
 			0x82, 0x01,		// ld  b,$01
 			0x83, 0x00,		// ld  c,$00
 			0x5D,			// ld  t,e
 			0x01,			// ld  (bc),t   $0100 <- $78
-			0xBD, 0x01,		// add bc,1
+			0x9D, 0x01,		// add bc,#1
 			0x5C,			// ld  t,d
 			0x01,			// ld  (bc),t   $0101 <- $56
-			0xBD, 0x01,		// add bc,1
+			0x9D, 0x01,		// add bc,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x01			// ld  (bc),t   $0102 <- $5A
 		)) { mem =>
@@ -157,20 +157,18 @@ class CpuStackPointerTest extends munit.FunSuite {
 		run(Seq(
 			0x86, 0x9A,		// ld  h,$9A
 			0x87, 0xBC,		// ld  l,$BC
-			0x81, 0x03,		// ld  t,$03
-			0x1B,			// stow hl      Stack[HL][$FF+3] <- $9ABC
+			0xB7, 0x03,		// stow hl,#3 Stack[HL][$FF+3] <- $9ABC
 			0x86, 0x77,		// ld  h,$77
 			0x87, 0x88,		// ld  l,$88
-			0x81, 0x03,		// ld  t,$03
-			0x1F,			// pick hl      HL <- $9ABC
+			0xBF, 0x03,		// pick hl,#3 HL <- $9ABC
 			0x82, 0x01,		// ld  b,$01
 			0x83, 0x00,		// ld  c,$00
 			0x5F,			// ld  t,l
 			0x01,			// ld  (bc),t   $0100 <- $BC
-			0xBD, 0x01,		// add bc,1
+			0x9D, 0x01,		// add bc,#1
 			0x5E,			// ld  t,h
 			0x01,			// ld  (bc),t   $0101 <- $9A
-			0xBD, 0x01,		// add bc,1
+			0x9D, 0x01,		// add bc,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x01			// ld  (bc),t   $0102 <- $5A
 		)) { mem =>
@@ -190,16 +188,15 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0xC1,			// push bc      Stack[$FD] <- $1122
 			0x82, 0x33,		// ld  b,$33
 			0x83, 0x44,		// ld  c,$44    Stack[$FD] <- $3344
-			0x81, 0x02,		// ld  t,$02
-			0x1D,			// pick bc      BC <- Stack[$FF] = $AABB
+			0xBD, 0x02,		// pick bc,#2 BC <- Stack[$FF] = $AABB
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x5B,			// ld  t,c
 			0x03,			// ld  (hl),t   $0100 <- $BB
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
 			0x03,			// ld  (hl),t   $0101 <- $AA
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x03			// ld  (hl),t   $0102 <- $5A
 		)) { mem =>
@@ -224,10 +221,10 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x87, 0x00,		// ld  l,$00
 			0x5B,			// ld  t,c
 			0x03,			// ld  (hl),t   $0100 <- $22
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
 			0x03,			// ld  (hl),t   $0101 <- $11
-			0xBF, 0x01,		// add hl,1
+			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
 			0x03			// ld  (hl),t   $0102 <- $5A
 		)) { mem =>

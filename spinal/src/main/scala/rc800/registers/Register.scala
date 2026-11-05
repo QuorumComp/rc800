@@ -27,8 +27,8 @@ import rc800.control.component.RegisterControl
  * Adjacent entries live in different banks, so SWAP writes the top and the
  * entry below in the same cycle, one write per bank.
  *
- * STOW writes the register value into the entry at pointer + T, which may be
- * in either bank. It does not move the pointer and does not change the
+ * STOW writes the register value into the entry at pointer + index, which
+ * may be in either bank. It does not move the pointer and does not change the
  * register, so the top cell needs no repair write.
  *
  * The RAM is not initialised: the ISA does not define the power-up contents,
@@ -38,12 +38,15 @@ import rc800.control.component.RegisterControl
 case class Register() extends Component {
 	val io = new Bundle {
 		val dataIn    = in (Bits(8 bits))
-		val dataInExg = in (Bits(8 bits))
+		// Auxiliary operand bus: the EXG partner value at writeback, or
+		// the PICK/STOW immediate index in the read/write windows.
+		val dataInAux = in (Bits(8 bits))
 		val control   = in (RegisterControl())
 		val write     = in (Bool())
 		val writeExg  = in (Bool())
 
-		// Stack index for PICK and STOW, taken from T.
+		// Stack index for PICK and STOW: the instruction's immediate
+		// operand byte.
 		val pickStow  = in (UInt(8 bits))
 		val pointer   = in (UInt(8 bits))
 
@@ -99,8 +102,8 @@ case class Register() extends Component {
 	// ----------------------------------------------------------------------
 
 	// One shared write port: a plain write takes dataIn; EXG writes the same
-	// value to both exchanged registers, so it takes dataInExg.
-	private val writeValue = io.write ? io.dataIn | io.dataInExg
+	// value to both exchanged registers, so it takes dataInAux.
+	private val writeValue = io.write ? io.dataIn | io.dataInAux
 
 	// PICK 0 leaves the register alone, so there is nothing to load.
 	private val pickLoad = io.control.pick && (io.pickStow =/= 0)
@@ -122,7 +125,8 @@ case class Register() extends Component {
 	                io.control.swap || pickLoad
 	val swapWrite = io.control.swap
 
-	// STOW writes the register into the cell selected by the pointer plus T.
+	// STOW writes the register into the cell selected by the pointer plus
+	// the immediate index.
 	// The register's top cell already holds its value, so only the memory
 	// write is needed. STOW never coincides with any other write.
 	private val stowWrite = io.control.stow

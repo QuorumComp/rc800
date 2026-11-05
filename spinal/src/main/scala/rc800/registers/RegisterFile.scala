@@ -14,7 +14,9 @@ class RegisterFile extends Component {
 		val pointers  = in (Vec(UInt(8 bits), 4))
 		val control   = in (RegisterFileControl())
 		val dataIn    = in (Bits(16 bits))
-		val dataInExg = in (Bits(16 bits))
+		// Auxiliary operand bus (writeDataAux): EXG partner value, or the
+		// PICK/STOW immediate index in its high byte lane.
+		val dataInAux = in (Bits(16 bits))
 
 		val memReadControl = in (Vec(RegisterControl(), 4))
 		val stackReload = in (Vec(Bool(), 4))
@@ -22,9 +24,10 @@ class RegisterFile extends Component {
 
 	val registers = Array.fill(8)(Register())
 
-	// PICK and STOW take their stack index from T, whatever the target
-	// register stack is.
-	private val pickIndex = registers(RegisterName.t.position).io.dataOut.asUInt
+	// PICK and STOW take their stack index from the immediate operand
+	// byte, which rides the auxiliary data bus (dataInAux) in its high
+	// byte lane - the same lane 8-bit writes use.
+	private val pickIndex = io.dataInAux(15 downto 8).asUInt
 
 	def wireStack(nameHi: RegisterName.E, nameLo: RegisterName.E, name: RegisterName.E): Unit = {
 		val registerIndex = name.asBits(1 downto 0).asUInt
@@ -44,7 +47,7 @@ class RegisterFile extends Component {
 		registerHi.io.memReadControl := io.memReadControl(registerIndex)
 		registerHi.io.stackReload := io.stackReload(registerIndex)
 		registerHi.io.dataIn := io.dataIn(15 downto 8)
-		registerHi.io.dataInExg := io.dataInExg(15 downto 8)
+		registerHi.io.dataInAux := io.dataInAux(15 downto 8)
 		registerHi.io.write := writeHi
 		registerHi.io.writeExg := writeExgHi
 
@@ -57,7 +60,7 @@ class RegisterFile extends Component {
 		registerLo.io.memReadControl := io.memReadControl(registerIndex)
 		registerLo.io.stackReload := io.stackReload(registerIndex)
 		registerLo.io.dataIn := is16bit ? io.dataIn(7 downto 0) | io.dataIn(15 downto 8)
-		registerLo.io.dataInExg := is16bit ? io.dataInExg(7 downto 0) | io.dataInExg(15 downto 8)
+		registerLo.io.dataInAux := is16bit ? io.dataInAux(7 downto 0) | io.dataInAux(15 downto 8)
 		registerLo.io.write := writeLo
 		registerLo.io.writeExg := writeExgLo
 	}

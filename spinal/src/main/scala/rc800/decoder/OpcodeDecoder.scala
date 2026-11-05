@@ -99,7 +99,7 @@ case class OpcodeDecoder() extends Component {
 			.elsewhen (io.opcode === Opcodes.LD_T_IO)    { ld_T_IO() }
 			.elsewhen (io.opcode === Opcodes.LD_T_CODE)  { ld_T_CODE() }
 			.elsewhen (io.opcode === Opcodes.LD_T_MEM)   { ld_T_MEM() }
-			.elsewhen (io.opcode === Opcodes.PICK)       { pick() }
+			.elsewhen (io.opcode === Opcodes.PICK_I)     { pickImm() }
 			.elsewhen (io.opcode === Opcodes.POP)        { stack(_.pop := True) }
 			.elsewhen (io.opcode === Opcodes.PUSH)       {
 				when(!io.nmiActive && io.stackPointers(registerPair.asBits(1 downto 0).asUInt) === 0) {
@@ -109,7 +109,7 @@ case class OpcodeDecoder() extends Component {
 					stack(_.push := True)
 				}
 			}
-			.elsewhen (io.opcode === Opcodes.STOW)       { stow() }
+			.elsewhen (io.opcode === Opcodes.STOW_I)     { stowImm() }
 			.elsewhen (io.opcode === Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
 			.elsewhen (io.opcode === Opcodes.SWAP)       { stack(_.swap := True) }
 			.elsewhen (io.opcode === Opcodes.TST_R16)    { tst_R16() }
@@ -297,7 +297,12 @@ case class OpcodeDecoder() extends Component {
 		Destination.opcode_r8 := WriteBackValueSource.alu
 	}
 
-	def pick(): Unit = {
+	// PICK/STOW take their stack index from the immediate operand byte,
+	// fetched on the existing immediate plumbing.  T - and the whole hub -
+	// survive the access.
+	def pickImm(): Unit = {
+		io.controlSignals.loadImmediateByte()
+
 		io.controlSignals.operand1 := Operand.opcode_r16
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
 
@@ -305,7 +310,9 @@ case class OpcodeDecoder() extends Component {
 		control.pick := True
 	}
 
-	def stow(): Unit = {
+	def stowImm(): Unit = {
+		io.controlSignals.loadImmediateByte()
+
 		io.controlSignals.operand1 := Operand.opcode_r16
 		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.operand1
 

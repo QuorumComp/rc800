@@ -86,20 +86,18 @@ There are two strategies for accessing stack parameters. The callee should emplo
 
 #### Strategy 1 — `PICK` (params stay on stack)
 
-`PUSH HL` duplicates the return address on the HL stack, shifting params to higher indices. `LD T,$nn` followed by `PICK HL` reads a parameter at a fixed index without disturbing the return address. Parameters remain on the stack and can be re-read at any time — useful when a param is accessed multiple times or conditionally.
+`PUSH HL` duplicates the return address on the HL stack, shifting params to higher indices. `PICK HL,nn` reads a parameter at a fixed index without disturbing the return address. Parameters remain on the stack and can be re-read at any time — useful when a param is accessed multiple times or conditionally.
 
 ```
         push    hl             ; dup ret; params shift to index 2+
-        ld      t,2            ; index
-        pick    hl             ; HL=arg1 (first stack param)
+        pick    hl,2          ; HL=arg1 (first stack param)
         ld      t,l            ; T=arg1 low byte
-        ld      t,3            ; index
-        pick    hl             ; HL=arg2
+        pick    hl,3          ; HL=arg2
         ld      t,l
         ; ... params remain on stack for later access ...
 ```
 
-The index lives in `T`, so the `LD T,$nn` clobbers FT — and the FT stack top, which is the same storage. That costs nothing here: FT is caller-saved and the parameter is read out of HL immediately. Park FT around the index load when a live FT-stack value (a 32-bit `FT:FT'` pair) has to survive.
+The index is an immediate, so `PICK` clobbers nothing but its target pair: FT and the FT stack top survive the read, and a live 32-bit `FT:FT'` pair needs no parking around it.
 
 #### Strategy 2 — swap-pop (params consumed as accessed)
 
@@ -142,7 +140,7 @@ After accessing parameters, any remaining entries on the HL stack must be discar
 
 ### Local Variables
 
-A callee can keep locals on a register stack and update them in place with `PICK` and `STOW`; the stack pointer does not move. Use BC or DE for the frame — HL carries the return address, and there is no `STOW FT`. The register is the scratch slot at depth 0, the locals are at depths 1..N, and the caller's saved pair is at depth N+1.
+A callee can keep locals on a register stack and update them in place with `PICK` and `STOW`; the stack pointer does not move. Use BC or DE for the frame — HL carries the return address. The register is the scratch slot at depth 0, the locals are at depths 1..N, and the caller's saved pair is at depth N+1.
 
 ```
         ; two 16-bit locals on the DE stack
@@ -152,27 +150,25 @@ A callee can keep locals on a register stack and update them in place with `PICK
         push    de              ; allocate a zero local
         ; depth 0 = scratch, 1 = local 1, 2 = local 2, 3 = caller DE
 
-        ld      t,2
-        pick    de
+        pick    de,2
         add     de,4
-        stow    de              ; local 2 += 4
+        stow    de,2           ; local 2 += 4
 
-        ld      t,1
-        pick    de
+        pick    de,1
         exg     ft,de           ; FT = local, DE = FT before the exchange
         ls      ft,1
         add     ft,bc
-        exg     ft,de           ; FT restored, T = 1, DE = result
-        stow    de              ; local 1 = (local 1 << 1) + BC
+        exg     ft,de           ; FT restored, DE = result
+        stow    de,1           ; local 1 = (local 1 << 1) + BC
 
         pop     de              ; discard scratch
         pop     de              ; discard local 1
         pop     de              ; discard local 2, DE = caller DE
 ```
 
-`PICK` and `STOW` leave T unchanged, and the native `ADD R16,s8` (or the synthesized `ADD R16,i16`) on the frame pair does not write T, so one index load covers a simple update. The double `EXG` restores FT — including T, so the `STOW` targets the same depth — and leaves the result in DE. It does not undo the FT clobber from `LD T,n`; park FT around the index load when its value must survive, and keep the work between the exchanges register-only. The other pair holds the pre-exchange FT, so leave it untouched until the second exchange; a `PUSH`/`POP FT` there also changes the FT stack pointer.
+The index is an immediate, so `PICK` and `STOW` need no setup and clobber nothing outside their target pair — one instruction per fixed-slot access. The double `EXG` above is only there because the shift and add are FT-centric operations; it restores FT and leaves the result in DE. An FT-local frame works the same way and is read directly with `PICK FT,k` — `STOW FT,i` is legal.
 
-For N locals the frame uses N+2 entries. For a large frame, restore SP with `LCR`; park the return value in FT first because the index load clobbers it. The pop-based epilogue takes N+1 pops: the scratch slot and the N locals, then the saved pair.
+For N locals the frame uses N+2 entries. For a large frame, restore SP with `LCR`; park the return value in FT first if the LCR write would land in a live slot. The pop-based epilogue takes N+1 pops: the scratch slot and the N locals, then the saved pair.
 
 ### Epilogue — Saving the Return Value
 
@@ -232,9 +228,8 @@ f:
         push    hl             ; save ret on HL stack
         push    bc/de          ; callee-saved
 
-        ; PICK each stack param at fixed index (index in T, clobbers FT)
-        ld      t,2            ; index
-        pick    hl             ; HL=arg1
+        ; PICK each stack param at fixed index (immediate, clobbers nothing else)
+        pick    hl,2          ; HL=arg1
         ; ... body: compute result in FT ...
 
         push    ft             ; save result
@@ -284,11 +279,11 @@ The general form is a **word ladder**: a value of `W` words occupies the registe
         jal     (hl)
 ```
 
-The callee reads word `k` with `ld t,#k` / `pick R` (index 0 is the register itself) and **consumes the ladder by popping `W-1` cells** — one less word than the value uses, because the register word is not a cell. This keeps the stack balanced whatever the value's width: the cell under the ladder belongs to the caller.
+The callee reads word `k` with `pick R,k` (index 0 is the register itself) and **consumes the ladder by popping `W-1` cells** — one less word than the value uses, because the register word is not a cell. This keeps the stack balanced whatever the value's width: the cell under the ladder belongs to the caller.
 
 Multi-word **return values** use the same ladder, MSW topmost: the callee pushes the words below the most-significant one least-significant first and leaves the MSW in the register; the caller copies the words out and pops `W-1` cells.
 
-The standard route for multi-word parameters is the `FT` stack (`jal` clobbers HL, and BC/DE have no `PICK`, so a second multi-word parameter has no ladder reader; ports pass it on the HL stack as plain cells instead).
+The standard route for multi-word parameters is the `FT` stack: `jal` clobbers the HL stack top (the return address overwrites it) and BC/DE belong to the callee's save/restore set, so ports pass a second multi-word parameter on the HL stack as plain cells instead.
 
 ## Preserved Registers
 

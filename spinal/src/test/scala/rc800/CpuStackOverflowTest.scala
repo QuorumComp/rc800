@@ -18,7 +18,11 @@ import spinal.core.sim._
  */
 class CpuStackOverflowTest extends munit.FunSuite {
 
-	private val compiled = SimConfig.compile(new RC811()(lpm.generic.Components))
+	// Verilator >=5.046 warns (fatally) about simPublic signals blocking
+	// optimization; the lint targets the debug-visible stage/pc registers.
+	private val compiled = SimConfig
+		.addSimulatorFlag("--Wno-UNOPTPUBLIC")
+		.compile(new RC811()(lpm.generic.Components))
 
 	private def run(program: Seq[Int], handler: Seq[Int])(check: Array[Int] => Unit): Unit = {
 		compiled.doSim { dut =>
