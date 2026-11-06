@@ -26,15 +26,15 @@
 | 10100xxx | ADD F,i8    | ADD T,i8    | ADD B,i8    | ADD C,i8    | ADD D,i8    | ADD E,i8    | ADD H,i8    | ADD L,i8    |
 | 10101xxx | CMP F,i8    | CMP T,i8    | CMP B,i8    | CMP C,i8    | CMP D,i8    | CMP E,i8    | CMP H,i8    | CMP L,i8    |
 | 10110xxx | OR T,i8     | AND T,i8    | XOR T,i8    |             | STOW FT,i8 | STOW BC,i8 | STOW DE,i8 | STOW HL,i8 |
-| 10111xxx | LS FT,i8    | RS FT,i8    |             | RSA FT,i8   | PICK FT,i8 | PICK BC,i8 | PICK DE,i8 | PICK HL,i8 |
+| 10111xxx | RS FT,i8    | RSA FT,i8   | LS FT,i8    |             | PICK FT,i8  | PICK BC,i8  | PICK DE,i8  | PICK HL,i8  |
 | 11000xxx | PUSH FT     | PUSH BC     | PUSH DE     | PUSH HL     | POP FT      | POP BC      | POP DE      | POP HL      |
 | 11001xxx |             | EXG FT,BC   | EXG FT,DE   | EXG FT,HL   | SWAPA       | CMP FT,BC   | CMP FT,DE   | CMP FT,HL   |
 | 11010xxx |             | LD BC,FT    | LD DE,FT    | LD HL,FT    | TST FT      | TST BC      | TST DE      | TST HL      |
 | 11011xxx |             | LD FT,BC    | LD FT,DE    | LD FT,HL    | SWAP FT     | SWAP BC     | SWAP DE     | SWAP HL     |
-| 11100xxx |             |             | LS FT,B     | LS FT,C     | LS FT,D     | LS FT,E     | LS FT,H     | LS FT,L     |
-| 11101xxx |             |             | RS FT,B     | RS FT,C     | RS FT,D     | RS FT,E     | RS FT,H     | RS FT,L     |
-| 11110xxx | NEG FT      | SUB FT,BC   | SUB FT,DE   | SUB FT,HL   |             | ADD FT,BC   | ADD FT,DE   | ADD FT,HL   |
-| 11111xxx | PUSHA       | POPA        | RSA FT,B    | RSA FT,C    | RSA FT,D    | RSA FT,E    | RSA FT,H    | RSA FT,L    |
+| 11100xxx |             |             | RS FT,B     | RS FT,C     | RS FT,D     | RS FT,E     | RS FT,H     | RS FT,L     |
+| 11101xxx | PUSHA       | POPA        | RSA FT,B    | RSA FT,C    | RSA FT,D    | RSA FT,E    | RSA FT,H    | RSA FT,L    |
+| 11110xxx |             |             | LS FT,B     | LS FT,C     | LS FT,D     | LS FT,E     | LS FT,H     | LS FT,L     |
+| 11111xxx | NEG FT      | SUB FT,BC   | SUB FT,DE   | SUB FT,HL   |             | ADD FT,BC   | ADD FT,DE   | ADD FT,HL   |
 </div>
 
 # Continue reading

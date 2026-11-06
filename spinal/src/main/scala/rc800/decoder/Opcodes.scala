@@ -16,13 +16,13 @@ object Opcodes {
 		M"01110001",
 		M"01111001",
 		M"10110011",
-		M"10111010",
+		M"10111011",		// $BB: hole since the shift shuffle; RSA FT,i8 lives at $B9
 		M"11001000",
 		M"11010000",
 		M"11011000",
-		M"1110000-",
-		M"1110100-",
-		M"11110100",
+		M"1110000-",		// $E0 $E1: RS FT,F / RS FT,T — shifts never take the hub bytes
+		M"1111000-",		// $F0 $F1: LS FT,F / LS FT,T
+		M"11111100",		// $FC: ADD FT,FT was removed; NEG FT owns $F8
 	)
 
 	def NOP_opcode = 0x00
@@ -33,22 +33,22 @@ object Opcodes {
 	def EXT_T      = M"01001001"
 	def LD_CR_T    = M"00001010"
 	def LD_T_CR    = M"00001011"
-	def LS_FT_I    = M"10111000"
+	def LS_FT_I    = M"10111010"
 	def NEG_T      = M"01010001"
-	def NEG_FT     = M"11110000"
+	def NEG_FT     = M"11111000"
 	def NOP        = M"00000000"
 	def NOT_F      = M"00110000"
 	def OR_T_I     = M"10110000"
-	def POPA       = M"11111001"
-	def PUSHA      = M"11111000"
+	def POPA       = M"11101001"
+	def PUSHA      = M"11101000"
 	def RETI       = M"01011001"
-	def RS_FT_I    = M"10111001"
-	def RSA_FT_I   = M"10111011"
+	def RS_FT_I    = M"10111000"
+	def RSA_FT_I   = M"10111001"
 	def SWAPA      = M"11001100"
 	def SYS_I      = M"10011011"
 	def XOR_T_I    = M"10110010"
 
-	def ADD_FT_R16 = M"111101--"
+	def ADD_FT_R16 = M"111111--"
 	def ADD_R16_I  = M"100111--"		// Add signed immediate to register pair
 	def CMP_FT_R16 = M"110011--"
 	def EXG_FT_R16 = M"110010--"
@@ -65,7 +65,7 @@ object Opcodes {
 	def POP        = M"110001--"
 	def PUSH       = M"110000--"
 	def STOW_I     = M"101101--"		// Store register pair at immediate index
-	def SUB_FT_R16 = M"111100--"
+	def SUB_FT_R16 = M"111110--"
 	def SWAP       = M"110111--"
 	def TST_R16    = M"110101--"
 
@@ -81,10 +81,10 @@ object Opcodes {
 	def LD_R8_MEM  = M"00101---"
 	def LD_R8_T    = M"01111---"		// Load register with T
 	def LD_T_R8    = M"01011---"		// Load T with register
-	def LS_FT_R8   = M"11100---"
+	def LS_FT_R8   = M"11110---"
 	def OR_T_R8    = M"01100---"
-	def RS_FT_R8   = M"11101---"
-	def RSA_FT_R8  = M"11111---"
+	def RS_FT_R8   = M"11100---"
+	def RSA_FT_R8  = M"11101---"
 	def SUB_T_R8   = M"01010---"
 	def XOR_T_R8   = M"01110---"
 

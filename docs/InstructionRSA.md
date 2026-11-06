@@ -3,7 +3,7 @@
 ## Opcode
 | 76543 | 210 | Notes |
 |-------|-----|-------|
-| 11111 | r   | Not valid when r = 0 or r = 1 |
+| 11101 | r   | Not valid when r = 0 or r = 1 |
 
 ## Operation
 ```
@@ -23,7 +23,7 @@ RSA C
 ## Opcode
 | 76543210 |
 |----------|
-| 10111011 |
+| 10111001 |
 
 ## Operation
 ```

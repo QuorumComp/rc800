@@ -3,7 +3,7 @@
 ## Opcode
 | 76543 | 210 | Notes |
 |-------|-----|-------|
-| 11100 | r   | Not valid when r = 0 or r = 1 |
+| 11110 | r   | Not valid when r = 0 or r = 1 |
 
 ## Operation
 ```
@@ -23,7 +23,7 @@ LS C
 ## Opcode
 | 76543210 |
 |----------|
-| 10111000 |
+| 10111010 |
 
 ## Operation
 ```

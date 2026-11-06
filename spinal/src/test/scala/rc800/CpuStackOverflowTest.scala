@@ -115,7 +115,7 @@ class CpuStackOverflowTest extends munit.FunSuite {
 				0x83, 0x02,		// ld  c,$02
 				0x81, 0x00,		// ld  t,$00
 				0x0A,			// lcr (c),t   SP_DE := $00
-				0xF8			// pusha       overflow -> $20
+				0xE8			// pusha       overflow -> $20
 			) ++ resume, handler) { mem =>
 			assertEquals(mem(0x100), 0xEE, "handler ran")
 			assertEquals(mem(0x102), 0xCD, "RETI resumed the mainline")

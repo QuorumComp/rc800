@@ -190,10 +190,10 @@ B4 STOW I           ft ft 1 0 0 1 0 pc register register always offsetFromDecode
 B5 STOW I           bc ft 1 0 0 1 0 pc register register always offsetFromDecoder 1 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0
 B6 STOW I           de ft 1 0 0 1 0 pc register register always offsetFromDecoder 1 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0
 B7 STOW I           hl ft 1 0 0 1 0 pc register register always offsetFromDecoder 1 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0
-B8 LS FT,I          ft ft 1 0 0 1 0 pc register memory always offsetFromDecoder 1 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-B9 RS FT,I          ft ft 1 0 0 1 0 pc register memory always offsetFromDecoder 1 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-BA ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-BB RSA FT,I         ft ft 1 0 0 1 0 pc register memory always offsetFromDecoder 1 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+B8 RS FT,I          ft ft 1 0 0 1 0 pc register memory always offsetFromDecoder 1 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+B9 RSA FT,I         ft ft 1 0 0 1 0 pc register memory always offsetFromDecoder 1 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+BA LS FT,I          ft ft 1 0 0 1 0 pc register memory always offsetFromDecoder 1 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+BB ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
 BC PICK I           ft ft 1 0 0 1 0 pc register register always offsetFromDecoder 1 0 operand1 t alu 0 ft 0 ft 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 BD PICK I           bc ft 1 0 0 1 0 pc register register always offsetFromDecoder 1 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0
 BE PICK I           de ft 1 0 0 1 0 pc register register always offsetFromDecoder 1 0 operand1 t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0
@@ -232,33 +232,33 @@ DE SWAP             de ft 0 0 0 0 0 register1 register zero always offsetFromDec
 DF SWAP             hl ft 0 0 0 0 0 register1 register zero always offsetFromDecoder 0 0 or t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0
 E0 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
 E1 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-E2 LS FT,R8         ft b 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-E3 LS FT,R8         ft c 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-E4 LS FT,R8         ft d 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-E5 LS FT,R8         ft e 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-E6 LS FT,R8         ft h 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-E7 LS FT,R8         ft l 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-E8 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-E9 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-EA RS FT,R8         ft b 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-EB RS FT,R8         ft c 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-EC RS FT,R8         ft d 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-ED RS FT,R8         ft e 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-EE RS FT,R8         ft h 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-EF RS FT,R8         ft l 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F0 NEG FT           ft ft 0 0 0 0 0 register1 zero register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F1 SUB FT,R16       ft bc 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F2 SUB FT,R16       ft de 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F3 SUB FT,R16       ft hl 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F4 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-F5 ADD FT,R16       ft bc 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 add t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F6 ADD FT,R16       ft de 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 add t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F7 ADD FT,R16       ft hl 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 add t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-F8 PUSHA            ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0
-F9 POPA             ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0
-FA RSA FT,R8        ft b 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-FB RSA FT,R8        ft c 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-FC RSA FT,R8        ft d 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-FD RSA FT,R8        ft e 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-FE RSA FT,R8        ft h 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-FF RSA FT,R8        ft l 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E2 RS FT,R8         ft b 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E3 RS FT,R8         ft c 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E4 RS FT,R8         ft d 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E5 RS FT,R8         ft e 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E6 RS FT,R8         ft h 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E7 RS FT,R8         ft l 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rs t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+E8 PUSHA            ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0
+E9 POPA             ft ft 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0
+EA RSA FT,R8        ft b 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+EB RSA FT,R8        ft c 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+EC RSA FT,R8        ft d 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ED RSA FT,R8        ft e 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+EE RSA FT,R8        ft h 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+EF RSA FT,R8        ft l 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 rsa t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F0 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
+F1 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
+F2 LS FT,R8         ft b 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F3 LS FT,R8         ft c 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F4 LS FT,R8         ft d 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F5 LS FT,R8         ft e 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F6 LS FT,R8         ft h 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F7 LS FT,R8         ft l 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 ls t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F8 NEG FT           ft ft 0 0 0 0 0 register1 zero register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+F9 SUB FT,R16       ft bc 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+FA SUB FT,R16       ft de 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+FB SUB FT,R16       ft hl 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+FC ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
+FD ADD FT,R16       ft bc 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 add t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+FE ADD FT,R16       ft de 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 add t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+FF ADD FT,R16       ft hl 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 add t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

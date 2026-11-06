@@ -23,7 +23,7 @@ SUB C
 ## Opcode
 | 765432 | 10 | Notes |
 |--------|----|-------|
-| 111100 | r  | Not valid when r = 0 |
+| 111110 | r  | Not valid when r = 0 |
 
 ## Operation
 ```

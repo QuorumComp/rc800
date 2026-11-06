@@ -42,7 +42,7 @@ ADD H,-87
 ## Opcode
 | 765432 | 10 | Notes |
 |--------|----|-------|
-| 111101 | r  | Not valid when r = 0 |
+| 111111 | r  | Not valid when r = 0 |
 
 ## Operation
 ```
