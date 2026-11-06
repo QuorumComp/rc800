@@ -121,7 +121,7 @@ case class OpcodeDecoder() extends Component {
 			.elsewhen (io.opcode === Opcodes.CMP_R8_I)  { cmp_R8_I() }
 			.elsewhen (io.opcode === Opcodes.CMP_T_R8)  { cmp_T_R8() }
 			.elsewhen (io.opcode === Opcodes.DJ_R8_I)   { dj_R8_I() }
-			.elsewhen (io.opcode === Opcodes.EXG_T_R8)  { exg_T_R8() }
+			.elsewhen (io.opcode === Opcodes.EXG_T_F)   { exg_T_F() }
 			.elsewhen (io.opcode === Opcodes.LD_MEM_R8) { ld_MEM_R8() }
 			.elsewhen (io.opcode === Opcodes.LD_R8_I)   { ld_R8_I() }
 			.elsewhen (io.opcode === Opcodes.LD_R8_MEM) { ld_R8_MEM() }
@@ -142,8 +142,9 @@ case class OpcodeDecoder() extends Component {
 			}
 	}
 
-	def exg_T_R8(): Unit = {
-		io.controlSignals.Destination.t.exchange(Destination.opcode_r8)
+	def exg_T_F(): Unit = {
+		// Opcode $10 exactly: the partner is F, so there is no opcode field to read.
+		io.controlSignals.Destination.t.exchange(io.controlSignals.Destination.f)
 	}
 
 	def exg_FT_R16(): Unit = {

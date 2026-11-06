@@ -4,7 +4,10 @@ import spinal.core._
 
 object Opcodes {
 	def illegals = List(
-		M"00010001",
+		// $11-$17: the byte exchange through T is gone, only $10 (EXG T,F) decodes.
+		M"00010--1",		// $11 $13 $15 $17
+		M"00010-1-",		// $12 $13 $16 $17
+		M"0001010-",		// $14 $15
 		M"00011---",		// T-indexed PICK/STOW removed; the immediate forms live at $B4-$B7/$BC-$BF
 		M"0010000-",
 		M"00101001",
@@ -72,7 +75,7 @@ object Opcodes {
 	def CMP_R8_I   = M"10101---"
 	def CMP_T_R8   = M"01001---"
 	def DJ_R8_I    = M"10001---"
-	def EXG_T_R8   = M"00010---"
+	def EXG_T_F    = M"00010000"		// EXG T,F; the only byte exchange ($11-$17 illegal)
 	def LD_MEM_R8  = M"00100---"
 	def LD_R8_I    = M"10000---"		// Load 8 bit immediate
 	def LD_R8_MEM  = M"00101---"

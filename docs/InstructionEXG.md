@@ -1,23 +1,25 @@
-# EXG (8 bit, exchange register contents)
+# EXG (8 bit, exchange T and F)
 
 ## Opcode
 | 76543 | 210 | Notes |
 |-------|-----|-------|
-| 00010 | r   | Not valid when r = 1 |
+| 00010 | 000 | The only byte exchange; $11-$17 are illegal |
 
 ## Operation
 ```
 Temp <- T
-T <- Reg8[r]
-Reg8[r] <- Temp
+T <- F
+F <- Temp
 PC <- PC + 1
 ```
 
 ## Assembler syntax examples
 ```
-EXG T,D
-EXG D
+EXG T,F
 ```
+
+Exchanging a byte other than T or F goes through the 16 bit form below: `EXG`
+of the containing pair moves both halves at once.
 
 ---
 # EXG (16 bit, exchange register contents)

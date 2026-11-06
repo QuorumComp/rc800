@@ -95,7 +95,7 @@ The `!CC` is the inverse condition (for example, `EQ` → `NE`, `LT` → `GE`). 
 ## Register transfer
 | Mnemonic        | Operation | Remarks |
 |-----------------|-----------|---------|
-| EXG&nbsp;T,R8   | Exchange contents of T with 8 bit register ||
+| EXG&nbsp;T,F    | Exchange contents of T with F ||
 | EXG&nbsp;FT,R16 | Exchange contents of FT with 16 bit register ||
 | LD&nbsp;R8,i8   | Load 8 bit register with immediate byte ||
 | LD&nbsp;T,R8    | Load T register with contents of 8 bit register ||

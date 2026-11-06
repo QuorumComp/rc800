@@ -153,8 +153,9 @@ Register lists use `/` to separate registers, e.g., `PUSH FT/HL`, `PUSH BC/DE/HL
 
 | Assembler syntax | Instruction generated |
 |------------------|------------------------|
-| `EXG R8,R8` | `EXG T,src` / `EXG T,dest` / `EXG T,src` (3-exchange via T) |
 | `EXG R16,R16` | `EXG FT,src` / `EXG FT,dest` / `EXG FT,src` (3-exchange via FT) |
+
+There is no byte-to-byte exchange: the assembler does not synthesize one, because its expansion needed `EXG T,R8` (`$12-$17`), which is an illegal opcode (see `ISA-V2-WISHLIST.md` A1). `EXG B,C` and friends are operand errors. A byte swap is three `LD`s through `T`, or a pair exchange when the bytes are low halves of pairs.
 
 ## Conditional Execution — INST/CC
 

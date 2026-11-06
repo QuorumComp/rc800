@@ -75,7 +75,7 @@ object OpcodeMap {
 		DecodeEntry("CMP_R8_I",  Opcodes.CMP_R8_I),
 		DecodeEntry("CMP_T_R8",  Opcodes.CMP_T_R8),
 		DecodeEntry("DJ_R8_I",   Opcodes.DJ_R8_I),
-		DecodeEntry("EXG_T_R8",  Opcodes.EXG_T_R8),
+		DecodeEntry("EXG_T_F",   Opcodes.EXG_T_F),
 		DecodeEntry("LD_MEM_R8", Opcodes.LD_MEM_R8),
 		DecodeEntry("LD_R8_I",   Opcodes.LD_R8_I),
 		DecodeEntry("LD_R8_MEM", Opcodes.LD_R8_MEM),
