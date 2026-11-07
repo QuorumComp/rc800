@@ -50,6 +50,11 @@ class PairSimTop extends Component {
 	opcodeDecoder.io.stackPointers.foreach(_ := U(0xFF, 8 bits))
 	io.combWord := opcodeDecoder.io.output.asBits.asUInt
 
+	// The generic (inferred-memory) ROM: the golden control words are the
+	// contract, so they must not depend on which ROM implementation a build
+	// happens to select.
+	implicit val lpmComponents: rc800.lpm.Components = rc800.lpm.generic.Components
+
 	private val lookupDecoder = LookupDecoder()
 	lookupDecoder.io.opcode := io.opcode
 	lookupDecoder.io.nmiActive := False

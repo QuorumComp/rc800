@@ -24,13 +24,13 @@ object LookupTableGen {
 		assert(words.map(w => w >= 0 && w < (BigInt(1) << width)).reduce(_ && _),
 			"control word exceeds layout width")
 
-		def binary(w: BigInt): String = {
-			val s = w.toString(2)
-			"0" * (width - s.length) + s
+		def hex(w: BigInt): String = {
+			val s = w.toString(16)
+			"0" * ((width + 3) / 4 - s.length) + s
 		}
 
 		val rows = words.zipWithIndex.map { case (w, op) =>
-			f"""		B"${binary(w)}", // $op%02X ${OpcodeMap.label(op)}"""
+			f"""		BigInt("${hex(w)}", 16), // $op%02X ${OpcodeMap.label(op)}"""
 		}
 
 		val source =
@@ -41,6 +41,7 @@ object LookupTableGen {
 				|import rc800.alu.Condition
 				|import rc800.control.PipelineControl
 				|import rc800.control.AluStageControl
+				|import rc800.lpm
 				|
 				|
 				|/**
@@ -50,7 +51,7 @@ object LookupTableGen {
 				| * Regenerate with: sbt "runMain rc800.decoder.LookupTableGen"
 				| * Field legend: rc800/spinal/decoder-golden.txt (layout header).
 				| */
-				|case class LookupDecoder() extends Component {
+				|case class LookupDecoder(implicit lpmComponents: lpm.Components) extends Component {
 				|\tval io = new Bundle {
 				|\t\tval opcode = in Bits(8 bits)
 				|\t\tval strobe = in Bool()
@@ -60,19 +61,23 @@ object LookupTableGen {
 				|\t\tdef controlSignals = output.stageControl
 				|\t}
 				|
-				|\tprivate val signalMem = Mem(Array(
+				|	// The table is a component rather than a memory spelled out
+				|	// here, so a build can select a vendor ROM primitive instead
+				|	// of inferred memory (see rc800.lpm.Rom).  The read is
+				|	// synchronous: the ROM's own output register is the stage
+				|	// register holding the control word for the window that
+				|	// executes the instruction, which is why the pipeline areas
+				|	// read it directly instead of each carrying a duplicate
+				|	// flop.  A build that wants block memory has to ask for a
+				|	// primitive: contents loaded by $$readmemb are not ROM
+				|	// content to the mapper.  See BRAM-DECODE-PLAN.md.
+				|\tprivate val table = lpmComponents.rom($width, Seq(
 				|${rows.mkString("\n")}
 				|\t))
 				|
-				|	// Synchronous read: the table is clocked by the pipeline
-				|	// strobe, so its own output register is the stage register
-				|	// that holds the control word for the window executing the
-				|	// instruction, and the pipeline areas read it directly
-				|	// instead of each carrying a duplicate flop.  (This does
-				|	// not make the table infer as block RAM: the $$readmemb
-				|	// initialisation is not ROM content for the mapper.  See
-				|	// BRAM-DECODE-PLAN.md.)
-				|\tio.output := signalMem.readSync(io.opcode.asUInt, io.strobe).as(DecoderOutput())
+				|\ttable.io.enable  <> io.strobe
+				|\ttable.io.address <> io.opcode.asUInt
+				|\tio.output := table.io.data.as(DecoderOutput())
 				|	// NMI must not interrupt NMI: the fault flags drop while
 				|	// NMI mode is active.  ROM words are captured with the
 				|	// faults inactive, so only the flags need masking.

@@ -60,7 +60,30 @@ object AddSub {
 }
 
 
+trait Rom extends Component {
+	def width: Int = ???
+	def depth: Int = ???
+
+	// Contents, one number per address, in address order.  A generic
+	// implementation builds an inferred memory from it; a vendor primitive
+	// takes the same numbers as its initialisation attributes, so the content
+	// travels with the component instead of living in a file someone has to
+	// keep in step by hand.
+	def init: Seq[BigInt] = ???
+
+	val io = new Bundle {
+		val enable  = in Bool()
+		val address = in UInt(log2Up(depth) bits)
+		// Registered: the read answers the address held when enable was
+		// asserted, which is what lets the caller treat the output as its own
+		// stage register rather than adding one of its own.
+		val data    = out Bits(width bits)
+	}
+}
+
+
 trait Components {
 	def clShift(shiftType: CLShift.ShiftType.Value, width: Int, direction: CLShift.ShiftDirection.Value = CLShift.ShiftDirection.left): CLShift
 	def addSub(dataWidth: Int, representation: AddSub.Representation.Value, direction: AddSub.Direction.Value): AddSub
+	def rom(dataWidth: Int, content: Seq[BigInt]): Rom
 } 

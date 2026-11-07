@@ -8,4 +8,7 @@ object Components extends lpm.Components {
 
 	def addSub(dataWidth: Int, representation: lpm.AddSub.Representation.Value, direction: lpm.AddSub.Direction.Value): AddSub =
 		new AddSub(dataWidth, representation, direction)
+
+	def rom(dataWidth: Int, content: Seq[BigInt]): Rom =
+		new Rom(dataWidth, content)
 }

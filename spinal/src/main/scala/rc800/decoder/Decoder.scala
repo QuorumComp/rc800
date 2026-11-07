@@ -10,6 +10,8 @@ import rc800.alu.ShiftOperation
 import rc800.control.PipelineControl
 import rc800.control.RC811Control
 
+import rc800.lpm
+
 import rc800.registers.RegisterName
 
 import rc800.Vectors
@@ -22,7 +24,7 @@ case class DecoderOutput() extends Bundle {
 }
 
 
-case class Decoder() extends Component {
+case class Decoder(implicit lpmComponents: lpm.Components) extends Component {
 	import Pipeline._
 
 	val io = new Bundle {
