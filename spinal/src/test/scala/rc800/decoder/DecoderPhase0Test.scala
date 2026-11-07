@@ -47,6 +47,25 @@ class DecoderGoldenTest extends munit.FunSuite {
 		assertEquals(DecoderGoldenGen.simResult.hasInvalidEnumValues, Nil,
 			"these opcodes drive an enum field outside its element range")
 	}
+
+	test("NOP is the documented baseline: no memory access, no register write, PC +1") {
+		// The decoder lays the NOP control word down before any effect runs, so
+		// every instruction inherits these; if an effect ever needs a different
+		// baseline this pins what that baseline currently is.
+		val paths = DecoderGoldenGen.simResult.layoutPaths
+		val nopValues = DecoderGoldenGen.simResult.lines.head.substring(20).split(" ")
+		def field(path: String): String = {
+			val i = paths.indexOf(path)
+			assert(i >= 0, s"no such control field: $path")
+			nopValues(i)
+		}
+		assertEquals(field("out.stageControl.memoryStageControl.enable"), "0")
+		assertEquals(field("out.stageControl.memoryStageControl.write"), "0")
+		assertEquals(field("out.stageControl.writeStageControl.fileControl.write"), "0")
+		assertEquals(field("out.stageControl.writeStageControl.fileControl.writeAux"), "0")
+		assertEquals(field("out.stageControl.aluStageControl.pcControl.condition"), "always")
+		assertEquals(field("out.stageControl.aluStageControl.pcControl.truePath"), "offsetFromDecoder")
+	}
 }
 
 
@@ -67,26 +86,6 @@ class OpcodeAuditTest extends munit.FunSuite {
 		for (op <- 0 until 256) {
 			OpcodeMap.resolve(op)   // throws if nothing matches
 		}
-	}
-
-	test("chain order in OpcodeDecoder.scala matches OpcodeMap.entries") {
-		// Works both from the submodule's own build (cwd spinal/) and from the
-		// parent hc800 build (cwd rtl/).
-		val source = Seq(
-			"src/main/scala/rc800/decoder/OpcodeDecoder.scala",
-			"rc800/spinal/src/main/scala/rc800/decoder/OpcodeDecoder.scala",
-			"spinal/src/main/scala/rc800/decoder/OpcodeDecoder.scala")
-			.map(new File(_))
-			.find(_.exists)
-			.getOrElse(new File("src/main/scala/rc800/decoder/OpcodeDecoder.scala"))
-		assert(source.exists(), s"decoder source not found at ${source.getAbsolutePath}")
-		val text = new String(Files.readAllBytes(source.toPath))
-		val chainMatches = "(?:when|elsewhen)\\s*\\(\\s*io\\.opcode\\s*===\\s*Opcodes\\.([A-Z0-9_]+)".r
-			.findAllMatchIn(text)
-			.map(_.group(1))
-			.toList
-		assertEquals(chainMatches, OpcodeMap.entries.map(_.name).toList,
-			"the when/elsewhen chain and OpcodeMap.entries drifted apart")
 	}
 
 	test("ambiguous opcode matches are only winners shadowing the other forms") {

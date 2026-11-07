@@ -17,6 +17,20 @@ import rc800.registers.RegisterName
 
 
 object Pipeline {
+
+	/**
+	 * The opcode-field-to-register mapping, in one place and documented.  RC800
+	 * puts the register index directly in the opcode: bits 2..0 select one of the
+	 * eight 8-bit registers and bits 1..0 select one of the four 16-bit pairs.  The
+	 * prefixes make the raw field land in the right region of the shared
+	 * RegisterName enum - "0" ## r8 in its 8-bit bank (f..l), "10" ## r16 in its
+	 * pair bank (ft..hl).
+	 */
+	object RegisterField {
+		def r8(opcode: Bits): RegisterName.C = (B"0" ## opcode(2 downto 0)).as(RegisterName())
+		def r16(opcode: Bits): RegisterName.C = (B"10" ## opcode(1 downto 0)).as(RegisterName())
+	}
+
 	implicit class PipelineControlPimp(pipeline: PipelineControl) {
 		def loadImmediateByte(): Unit = {
 			readMemory(MemoryStageAddressSource.pc, doIo = False, code = True)
@@ -86,28 +100,38 @@ object Pipeline {
 		def destination(register: RegisterName.C) =
 			Destination(register)
 
+		// A destination register, written by one of three distinct actions.  They
+		// were once three overloads of `:=`, which meant `dest.t := x` hid which of
+		// them a line performed until you checked x's type; they are now named.
 		case class Destination(val register: RegisterName.C) {
 			private val control = pipeline.writeStageControl.fileControl
-			private val registerControl = control.registerControl(register)
-			def := (source: WriteBackValueSource.E): Unit = {
+
+			// Take the value from a writeback source (the ALU result or memory).
+			def write(source: WriteBackValueSource.E): Unit = {
 				pipeline.writeStageControl.source := source
 
 				control.write := True
 				control.writeRegister := register
 			}
 
-			def := (source: Operand): Unit = {
-				operand1 := source
+			// Move an operand into the destination.  RC800 has no direct
+			// register-to-register transfer, so a move is the ALU passing its first
+			// operand straight through.
+			def move(src: Operand): Unit = {
+				operand1 := src
 				pipeline.aluStageControl.aluControl.operation := AluOperation.operand1
-				this := WriteBackValueSource.alu
+				this.write(WriteBackValueSource.alu)
 			}
 
-			def := (source: RegisterName.C): Unit = {
-				this := Operand(source, OperandSource.register)
-			}
+			// Move another register into the destination (see move).
+			def moveReg(src: RegisterName.C): Unit =
+				this.move(Operand(src, OperandSource.register))
 
+			// Exchange this register with another: this takes the other's value via
+			// the move above, and the other takes this register's value on the
+			// auxiliary write port.
 			def exchange(opcodeRegister: PipelineControlPimp#Destination): Unit = {
-				this := opcodeRegister.register
+				this.moveReg(opcodeRegister.register)
 				operand2 := register
 
 				val opcodeControl = pipeline.writeStageControl.fileControl
@@ -132,7 +156,19 @@ object Pipeline {
 			def hl = destination(RegisterName.hl)
 		}
 
-		def setDefaults(): Unit = {
+		// Shorthands so a decode-table row reads as the recipe it is instead of a
+		// chain of stage-control field paths: `p.alu := add` and `p.dest.t.write(...)`
+		// rather than spelling the whole control-word location each time.  For a
+		// register chosen at runtime (an opcode field), use `destination(register)`.
+		def alu = pipeline.aluStageControl.aluControl.operation
+		def dest = Destination
+
+		// The control word for NOP, and the baseline every instruction starts from:
+		// the decoder lays this down, then an instruction's effect overrides only the
+		// fields it uses.  So an instruction that forgets a field silently inherits
+		// NOP's - which is memory off, register-file write off, ALU = and, PC = +1.
+		// NopIsBaselineTest pins this meaning.
+		def nopEffect(): Unit = {
 			pipeline.readStageControl.registers.foreach(_ := RegisterName.ft)
 
 			pipeline.memoryStageControl.enable  := False
