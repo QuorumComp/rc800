@@ -5,8 +5,8 @@
 |----------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
 | 00000xxx | NOP         | LD (BC),T   | LD (DE),T   | LD (HL),T   | LD T,(FT)   | LD T,(BC)   | LD T,(DE)   | LD T,(HL)   |
 | 00001xxx | EI          | DI          | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
-| 00010xxx | EXG T,F     |             |             |             |             |             |             |             |
-| 00011xxx |             |             |             |             |             |             |             |             |
+| 00010xxx | EXG T,F     |             | LD (FT+),B  | LD (FT+),C  | LD (FT+),D  | LD (FT+),E  | LD (FT+),H  | LD (FT+),L  |
+| 00011xxx |             |             | LD B,(FT+)  | LD C,(FT+)  | LD D,(FT+)  | LD E,(FT+)  | LD H,(FT+)  | LD L,(FT+)  |
 | 00100xxx |             |             | LD (FT),B   | LD (FT),C   | LD (FT),D   | LD (FT),E   | LD (FT),H   | LD (FT),L   |
 | 00101xxx | LD F,(FT)   |             | LD B,(FT)   | LD C,(FT)   | LD D,(FT)   | LD E,(FT)   | LD H,(FT)   | LD L,(FT)   |
 | 00110xxx | NOT F       | LIO (BC),T  | LIO (DE),T  | LIO (HL),T  | LIO T,(FT)  | LIO T,(BC)  | LIO T,(DE)  | LIO T,(HL)  |

@@ -23,21 +23,21 @@
 0E LD T,CODE        de ft 1 0 0 1 0 register1 register register always offsetFromDecoder 0 0 and t memory 1 t 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 0F LD T,CODE        hl ft 1 0 0 1 0 register1 register register always offsetFromDecoder 0 0 and t memory 1 t 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 10 EXG T,F          f t 0 0 0 0 0 register1 register register always offsetFromDecoder 0 0 operand1 t alu 1 t 1 f 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-11 LD MEM,T,INC     bc t 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 bc 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-12 LD MEM,T,INC     de t 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 de 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-13 LD MEM,T,INC     hl t 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-14 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-15 LD T,MEM,INC     bc ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 bc 1 t 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-16 LD T,MEM,INC     de ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 de 1 t 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-17 LD T,MEM,INC     hl ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 hl 1 t 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+11 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
+12 LD MEM,R8,INC    ft b 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+13 LD MEM,R8,INC    ft c 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+14 LD MEM,R8,INC    ft d 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+15 LD MEM,R8,INC    ft e 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+16 LD MEM,R8,INC    ft h 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+17 LD MEM,R8,INC    ft l 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 18 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-19 LD MEM,T,DEC     bc t 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 add t alu 1 bc 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-1A LD MEM,T,DEC     de t 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 add t alu 1 de 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-1B LD MEM,T,DEC     hl t 1 1 0 0 0 register1 register ones always offsetFromDecoder 0 0 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-1C ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
-1D LD T,MEM,DEC     bc ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 add t alu 1 bc 1 t 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-1E LD T,MEM,DEC     de ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 add t alu 1 de 1 t 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-1F LD T,MEM,DEC     hl ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 add t alu 1 hl 1 t 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+19 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
+1A LD R8,MEM,INC    ft ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 1 b 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1B LD R8,MEM,INC    ft ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 1 c 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1C LD R8,MEM,INC    ft ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 1 d 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1D LD R8,MEM,INC    ft ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 1 e 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1E LD R8,MEM,INC    ft ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 1 h 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+1F LD R8,MEM,INC    ft ft 1 0 0 0 0 register1 register ones always offsetFromDecoder 0 0 sub t alu 1 ft 1 l 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 20 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
 21 ILLEGAL          ft ft 0 0 0 0 0 register1 pc ones always vectorFromDecoder 0 3 add t alu 1 hl 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0
 22 LD MEM,R8        ft b 1 1 0 0 0 register1 register register always offsetFromDecoder 0 0 and t alu 0 ft 0 ft 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

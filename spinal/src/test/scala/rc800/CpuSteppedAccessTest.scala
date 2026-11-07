@@ -4,14 +4,19 @@ import spinal.core._
 import spinal.core.sim._
 
 /*
- * Runs real instruction streams through the core to check the stepped access
- * block ($11-$1F: LD (R16),T and LD T,(R16) with one step of the pointer
- * afterwards) from the outside.  Three things are new there and only the core
- * can show them: a load that writes two registers at once, the loaded byte
- * arriving on the auxiliary write port, and a store whose ALU adds a step while
- * the memory stage reads its data out of the same register lane.  The streams
- * also check that a stepped pointer keeps its stack entry, since the pair write
- * is what duplicates the top cell.
+ * Runs real instruction streams through the core to check the stepped byte
+ * block ($10-$1F: LD (FT+),r8 and LD r8,(FT+) - the plain FT-indirect access of
+ * $20-$2F plus one step of FT afterwards) from the outside.  Three things are
+ * new there and only the core can show them: the byte operand is named by the
+ * opcode's r8 field (not the hub), a load delivers that byte on the auxiliary
+ * write port while the main port steps FT, and a store reads its byte out of the
+ * same register lane the memory stage drives while its ALU adds the step.  The
+ * streams also check that a stepped FT keeps its stack entry, since the pair
+ * write is what duplicates the top cell, and that two LD r8,(FT+) fill a register
+ * pair directly - the little-endian word load that is the point of the form.
+ *
+ * Note the pointer is FT, whose low half is T: routing a loaded byte through T
+ * (to store it) clobbers the cursor, so a walk finishes before any T use.
  */
 class CpuSteppedAccessTest extends munit.FunSuite {
 
@@ -55,124 +60,98 @@ class CpuSteppedAccessTest extends munit.FunSuite {
 		}
 	}
 
-	test("LD (HL+),T walks upward and leaves the pointer stepped") {
+	test("LD (FT+),r8 walks FT upward, storing the named byte at each step") {
 		run(Seq(
-			0x86, 0x01,		// ld  h,$01
-			0x87, 0x00,		// ld  l,$00
-			0x81, 0xAA,		// ld  t,$AA
-			0x13,			// ld  (hl+),t  $0100 <- $AA, HL = $0101
-			0x81, 0xBB,		// ld  t,$BB
-			0x13,			// ld  (hl+),t  $0101 <- $BB, HL = $0102
-			0x5E,			// ld  t,h
-			0x03,			// ld  (hl),t   $0102 <- H
-			0x9F, 0x01,		// add hl,#1    HL = $0103
-			0x5F,			// ld  t,l      the pointer as stepped, not as it was
-			0x03			// ld  (hl),t   $0103 <- L
+			0x80, 0x01,		// ld  f,$01    FT high
+			0x81, 0x00,		// ld  t,$00    FT = $0100
+			0x82, 0xAA,		// ld  b,$AA
+			0x12,			// ld  (ft+),b   $0100 <- $AA, FT = $0101
+			0x82, 0xBB,		// ld  b,$BB
+			0x12,			// ld  (ft+),b   $0101 <- $BB, FT = $0102
+			0x82, 0xCC,		// ld  b,$CC
+			0x12,			// ld  (ft+),b   $0102 <- $CC, FT = $0103
+			0x84, 0xDD,		// ld  d,$DD
+			0x14			// ld  (ft+),d   $0103 <- $DD via a different r8, FT = $0104
 		)) { mem =>
 			assertEquals(mem(0x100), 0xAA, "first byte stored")
 			assertEquals(mem(0x101), 0xBB, "second byte stored one further")
-			assertEquals(mem(0x102), 0x01, "pointer stepped by both stores")
-			assertEquals(mem(0x103), 0x03, "low byte stepped too")
+			assertEquals(mem(0x102), 0xCC, "third byte stored one further still")
+			assertEquals(mem(0x103), 0xDD, "a different r8 stores through the same cursor")
 		}
 	}
 
-	test("LD T,(HL+) walks upward, and the loaded byte keeps the hub's stack entry") {
+	test("LD r8,(FT+) walks FT upward, delivering each byte to the named register") {
+		// The three loads run back-to-back so the cursor is never clobbered by the
+		// T-routing the dump needs; B, C and D show the loaded byte landing in the
+		// r8 register the opcode named, on the auxiliary write port.
 		run(Seq(
-			0x86, 0x02,		// ld  h,$02
-			0x87, 0x00,		// ld  l,$00
-			0x17,			// ld  t,(hl+)  T = $11, HL = $0201
-			0x82, 0x03,		// ld  b,$03    dump window at $03F0
-			0x83, 0xF0,		// ld  c,$F0
-			0x01,			// ld  (bc),t   $03F0 <- T
-			0x9D, 0x01,		// add bc,#1
-			0x17,			// ld  t,(hl+)  T = $22, HL = $0202
-			0x01,			// ld  (bc),t   $03F1 <- T
-			0x9D, 0x01,		// add bc,#1
-			0xC0,			// push ft      duplicate the byte the auxiliary port wrote
-			0xC4,			// pop  ft      and take it back from the stack cell
-			0x01,			// ld  (bc),t   $03F2 <- T
-			0x9D, 0x01,		// add bc,#1
-			0x5E,			// ld  t,h
-			0x01,			// ld  (bc),t   $03F3 <- H
-			0x9D, 0x01,		// add bc,#1
-			0x5F,			// ld  t,l
-			0x01			// ld  (bc),t   $03F4 <- L
-		), Seq(0x200 -> 0x11, 0x201 -> 0x22)) { mem =>
-			assertEquals(mem(0x3F0), 0x11, "first byte loaded")
-			assertEquals(mem(0x3F1), 0x22, "second byte loaded one further")
-			assertEquals(mem(0x3F2), 0x22, "the load duplicated the hub's top cell")
-			assertEquals(mem(0x3F3), 0x02, "pointer stepped by both loads")
-			assertEquals(mem(0x3F4), 0x02, "low byte stepped too")
-		}
-	}
-
-	test("LD (DE-),T walks downward and steps down") {
-		run(Seq(
-			0x84, 0x01,		// ld  d,$01
-			0x85, 0x00,		// ld  e,$00    DE = $0100
-			0x81, 0xAA,		// ld  t,$AA
-			0x1A,			// ld  (de-),t  $0100 <- $AA, DE = $00FF
-			0x81, 0xBB,		// ld  t,$BB
-			0x1A,			// ld  (de-),t  $00FF <- $BB, DE = $00FE
-			0x5D,			// ld  t,e
-			0x02,			// ld  (de),t   $00FE <- E
-			0x9E, 0xFF,		// add de,#-1   DE = $00FD
+			0x80, 0x02,		// ld  f,$02
+			0x81, 0x00,		// ld  t,$00    FT = $0200
+			0x1A,			// ld  b,(ft+)  B = $11, FT = $0201
+			0x1B,			// ld  c,(ft+)  C = $22, FT = $0202
+			0x1C,			// ld  d,(ft+)  D = $33, FT = $0203
+			0x86, 0x03,		// ld  h,$03
+			0x87, 0x00,		// ld  l,$00    HL = $0300 (dump window)
+			0x5A,			// ld  t,b
+			0x03,			// ld  (hl),t   $0300 <- B
+			0x9F, 0x01,		// add hl,#1
+			0x5B,			// ld  t,c
+			0x03,			// ld  (hl),t   $0301 <- C
+			0x9F, 0x01,		// add hl,#1
 			0x5C,			// ld  t,d
-			0x02			// ld  (de),t   $00FD <- D
-		)) { mem =>
-			assertEquals(mem(0x100), 0xAA, "first byte stored at the starting address")
-			assertEquals(mem(0x0FF), 0xBB, "second byte stored one lower")
-			assertEquals(mem(0x0FE), 0xFE, "pointer stepped down by both stores")
-			assertEquals(mem(0x0FD), 0x00, "high byte stepped too")
+			0x03			// ld  (hl),t   $0302 <- D
+		), Seq(0x200 -> 0x11, 0x201 -> 0x22, 0x202 -> 0x33)) { mem =>
+			assertEquals(mem(0x300), 0x11, "first byte loaded into B")
+			assertEquals(mem(0x301), 0x22, "second byte loaded into C one further")
+			assertEquals(mem(0x302), 0x33, "third byte loaded into D one further still")
 		}
 	}
 
-	test("LD T,(BC-) walks downward and steps down") {
+	test("two LD r8,(FT+) fill a pair - the little-endian word load, no exg") {
+		// The payoff of the form: a 16-bit little-endian value lands in BC from two
+		// byte loads straight into the halves, FT stepping between them.
 		run(Seq(
-			0x82, 0x01,		// ld  b,$01
-			0x83, 0x00,		// ld  c,$00    BC = $0100
-			0x1D,			// ld  t,(bc-)  T = $11, BC = $00FF
+			0x80, 0x02,		// ld  f,$02
+			0x81, 0x00,		// ld  t,$00    FT = $0200
+			0x1B,			// ld  c,(ft+)  C = $AB (low),  FT = $0201
+			0x1A,			// ld  b,(ft+)  B = $CD (high), FT = $0202   BC = $CDAB
 			0x86, 0x03,		// ld  h,$03
-			0x87, 0xF0,		// ld  l,$F0
-			0x03,			// ld  (hl),t   $03F0 <- T
-			0x9F, 0x01,		// add hl,#1
-			0x1D,			// ld  t,(bc-)  T = $22, BC = $00FE
-			0x03,			// ld  (hl),t   $03F1 <- T
-			0x9F, 0x01,		// add hl,#1
+			0x87, 0x00,		// ld  l,$00    HL = $0300 (dump window)
 			0x5A,			// ld  t,b
-			0x03,			// ld  (hl),t   $03F2 <- B
+			0x03,			// ld  (hl),t   $0300 <- B
 			0x9F, 0x01,		// add hl,#1
 			0x5B,			// ld  t,c
-			0x03			// ld  (hl),t   $03F3 <- C
-		), Seq(0x100 -> 0x11, 0x0FF -> 0x22)) { mem =>
-			assertEquals(mem(0x3F0), 0x11, "first byte loaded")
-			assertEquals(mem(0x3F1), 0x22, "second byte loaded one lower")
-			assertEquals(mem(0x3F2), 0x00, "pointer stepped down by both loads")
-			assertEquals(mem(0x3F3), 0xFE, "low byte stepped too")
+			0x03			// ld  (hl),t   $0301 <- C
+		), Seq(0x200 -> 0xAB, 0x201 -> 0xCD)) { mem =>
+			assertEquals(mem(0x300), 0xCD, "high half loaded second, from the higher byte")
+			assertEquals(mem(0x301), 0xAB, "low half loaded first, from the lower byte")
 		}
 	}
 
-	test("a stepped pointer keeps the entry at its new stack top") {
+	test("a stepped FT keeps the entry at its new stack top") {
+		// The stepped store writes FT as an ordinary pair write, so the top cell
+		// follows the pointer; push/pop through the cell recovers the stepped value,
+		// not the pre-step one.  FT starts $0102 and steps to $0103, so the low byte
+		// is a distinct $03 that only the stepped write could have left in the cell.
 		run(Seq(
-			0x82, 0x01,		// ld  b,$01
-			0x83, 0x00,		// ld  c,$00    BC = $0100
-			0x81, 0x77,		// ld  t,$77
-			0x11,			// ld  (bc+),t  $0100 <- $77, BC = $0101
-			0xC1,			// push bc      moves the pointer and duplicates
-			0xC5,			// pop  bc      reads the entry back out of the cell
-			0x86, 0x03,		// ld  h,$03
-			0x87, 0xE0,		// ld  l,$E0
-			0x5A,			// ld  t,b
-			0x03,			// ld  (hl),t   $03E0 <- B
-			0x9F, 0x01,		// add hl,#1
-			0x5B,			// ld  t,c
-			0x03			// ld  (hl),t   $03E1 <- C
+			0x80, 0x01,		// ld  f,$01
+			0x81, 0x02,		// ld  t,$02    FT = $0102
+			0x82, 0xAA,		// ld  b,$AA
+			0x12,			// ld  (ft+),b  $0102 <- $AA, FT = $0103
+			0xC0,			// push ft      duplicate the stepped pointer
+			0xC4,			// pop  ft      read it back out of the cell, FT = $0103
+			0x82, 0x03,		// ld  b,$03
+			0x83, 0xE0,		// ld  c,$E0    BC = $03E0 (dump window)
+			0x01,			// ld  (bc),t   $03E0 <- T   (stepped low byte)
+			0x9D, 0x01,		// add bc,#1
+			0x58,			// ld  t,f
+			0x01			// ld  (bc),t   $03E1 <- F   (stepped high byte)
 		)) { mem =>
-			assertEquals(mem(0x100), 0x77, "byte stored through the pointer")
-			// The pop reads the stack cell rather than the register, so this pair is
-			// $0101 only if the stepped write also wrote the top cell.
-			assertEquals(mem(0x3E0), 0x01, "stepped high byte reached the top cell")
-			assertEquals(mem(0x3E1), 0x01, "stepped low byte reached the top cell")
+			assertEquals(mem(0x102), 0xAA, "byte stored through the pointer")
+			// The pop reads the stack cell rather than the register, so the low byte
+			// is $03 only if the stepped write also wrote the top cell.
+			assertEquals(mem(0x3E0), 0x03, "stepped low byte reached the top cell")
+			assertEquals(mem(0x3E1), 0x01, "stepped high byte reached the top cell")
 		}
 	}
 }

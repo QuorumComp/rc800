@@ -53,12 +53,6 @@ case class OpcodeDecoder() extends Component {
 		def opcode_r16 = Pipeline.Operand(register = registerPair, selection = OperandSource.register)
 	}
 
-
-	object Destination {
-		def opcode_r8 = io.controlSignals.destination(register)
-		def opcode_r16 = io.controlSignals.destination(registerPair)
-	}
-
 	io.output.illegal := False
 	io.output.overflow := False
 	io.output.stageControl.nopEffect()
@@ -84,43 +78,42 @@ case class OpcodeDecoder() extends Component {
 	// The only methods the table needs are these four, each used by more than one
 	// row.  Every other instruction writes its whole effect at its own row above.
 
-	// The stepped access block ($11-$1F): the plain access of $01-$07 plus one
-	// step of the pointer afterwards, which is what the multi-byte moves and the
-	// byte walks spell out today as an access and an ADD R16,s8 in sequence.
-	// Nothing at all is added to the datapath: the address is still the pointer as
-	// the memory stage reads it, the step is the ALU working on a pair with the
-	// ones operand - adding $FFFF wraps to minus one, subtracting it wraps to plus
-	// one - and the pointer write is an ordinary pair write in the writeback
-	// stage, so the stack top cell follows the pointer exactly as it does for
-	// ADD R16,s8.  Neither direction disturbs the flags: only CMP writes them, and
-	// it does so by putting the flag word on the result bus.
-	def ld_MEM_T_step(step: AluOperation.C): Unit = {
-		io.controlSignals.operand1 := Operand.opcode_r16
-		io.controlSignals.memoryWriteData(RegisterName.t)
+	// The stepped byte block ($10-$1F): the plain FT-indirect access of $20-$2F
+	// plus one step of FT afterwards, which is what a byte walk spells out today
+	// as an access and an ADD FT,#1 in sequence.  Nothing is added to the
+	// datapath: the address is FT as the memory stage reads it, the step is the
+	// ALU subtracting the ones operand (FT - $FFFF wraps to FT + 1), and the
+	// pointer write is an ordinary pair write in the writeback stage, so the FT
+	// stack-top cell follows the pointer exactly as it does for ADD FT,#1.  The
+	// step does not disturb the flags: only CMP writes them.  The byte operand is
+	// named by the opcode's r8 field; F and T are illegal there because they are
+	// the two halves of the stepped pointer.
+	def ld_MEM_R8_inc: Unit = {
+		io.controlSignals.operand1 := Pipeline.Operand.ft
+		io.controlSignals.memoryWriteData(register)
 		io.controlSignals.writeMemory(MemoryStageAddressSource.register1)
 
-		// Lane 1 carries the stored byte for the memory stage while the ALU adds
-		// the step.
+		// Lane 1 carries the stored byte to the memory stage while the ALU steps FT.
 		io.controlSignals.aluStageControl.selection(1) := Pipeline.Operand.ones.selection
-		io.controlSignals.aluStageControl.aluControl.operation := step
-		Destination.opcode_r16.write(WriteBackValueSource.alu)
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.sub
+		io.controlSignals.dest.ft.write(WriteBackValueSource.alu)
 	}
 
-	def ld_T_MEM_step(step: AluOperation.C): Unit = {
-		io.controlSignals.operand1 := Operand.opcode_r16
+	def ld_R8_MEM_inc: Unit = {
+		io.controlSignals.operand1 := Pipeline.Operand.ft
 		io.controlSignals.readMemory(MemoryStageAddressSource.register1)
 
 		io.controlSignals.aluStageControl.selection(1) := Pipeline.Operand.ones.selection
-		io.controlSignals.aluStageControl.aluControl.operation := step
-		Destination.opcode_r16.write(WriteBackValueSource.alu)
+		io.controlSignals.aluStageControl.aluControl.operation := AluOperation.sub
+		io.controlSignals.dest.ft.write(WriteBackValueSource.alu)
 
-		// Two registers move: the stepped pointer on the main write port with the
-		// ALU result, and the loaded byte on the auxiliary one (see the writeback
-		// stage).  The pointer cannot be FT here - the byte would land inside it -
-		// which is why the FT column of the block is illegal.
+		// Two registers move: the stepped FT on the main write port with the ALU
+		// result, and the loaded byte on the auxiliary one (see the writeback
+		// stage).  The byte cannot be F or T - it would land inside the stepped
+		// pointer - which is why those two r8 cells of the block are illegal.
 		val fileControl = io.controlSignals.writeStageControl.fileControl
 		fileControl.writeAux := True
-		fileControl.writeAuxRegister := RegisterName.t
+		fileControl.writeAuxRegister := register
 		fileControl.auxFromMemory := True
 	}
 
@@ -201,8 +194,8 @@ object OpcodeDecoder {
 			p.alu := AluOperation.extend1
 			p.dest.f.write(WriteBackValueSource.alu)
 		}),
-		// A constant opcode, and it must be tested before LD_MEM_T_INC: $10 is
-		// also the illegal FT cell of the stepped store row.
+		// A constant opcode, and it must be tested before LD_MEM_R8_INC: $10 is
+		// also that stepped-store row's r8 = F cell (the pointer's high half).
 		Instruction("EXG_T_F", Opcodes.EXG_T_F, d => d.io.controlSignals.dest.t.exchange(d.io.controlSignals.dest.f)),
 		Instruction("LD_CR_T", Opcodes.LD_CR_T, d => { val p = d.io.controlSignals
 			p.operand1 := Pipeline.Operand.c
@@ -334,8 +327,6 @@ object OpcodeDecoder {
 			p.operand2 := Pipeline.Operand.t
 			p.writeMemory(MemoryStageAddressSource.register1)
 		}),
-		Instruction("LD_MEM_T_DEC", Opcodes.LD_MEM_T_DEC, d => d.ld_MEM_T_step(AluOperation.add)),
-		Instruction("LD_MEM_T_INC", Opcodes.LD_MEM_T_INC, d => d.ld_MEM_T_step(AluOperation.sub)),
 		Instruction("LD_R16_FT", Opcodes.LD_R16_FT, d => d.io.controlSignals.destination(d.registerPair).move(Pipeline.Operand.ft)),
 		Instruction("LD_T_IO", Opcodes.LD_T_IO, d => { val p = d.io.controlSignals
 			p.operand1 := d.Operand.opcode_r16
@@ -352,8 +343,6 @@ object OpcodeDecoder {
 			p.readMemory(MemoryStageAddressSource.register1)
 			p.dest.t.write(WriteBackValueSource.memory)
 		}),
-		Instruction("LD_T_MEM_DEC", Opcodes.LD_T_MEM_DEC, d => d.ld_T_MEM_step(AluOperation.add)),
-		Instruction("LD_T_MEM_INC", Opcodes.LD_T_MEM_INC, d => d.ld_T_MEM_step(AluOperation.sub)),
 		Instruction("PICK_I", Opcodes.PICK_I, d => { val p = d.io.controlSignals
 			// The stack index is the immediate operand byte, fetched on the existing
 			// immediate plumbing; T - and the whole hub - survive the access.
@@ -435,6 +424,7 @@ object OpcodeDecoder {
 			p.operand2 := d.Operand.opcode_r8
 			p.writeMemory(MemoryStageAddressSource.register1)
 		}),
+		Instruction("LD_MEM_R8_INC", Opcodes.LD_MEM_R8_INC, d => d.ld_MEM_R8_inc),
 		Instruction("LD_R8_I", Opcodes.LD_R8_I, d => { val p = d.io.controlSignals
 			p.loadImmediateByte()
 			p.destination(d.register).write(WriteBackValueSource.memory)
@@ -444,6 +434,7 @@ object OpcodeDecoder {
 			p.readMemory(MemoryStageAddressSource.register1)
 			p.destination(d.register).write(WriteBackValueSource.memory)
 		}),
+		Instruction("LD_R8_MEM_INC", Opcodes.LD_R8_MEM_INC, d => d.ld_R8_MEM_inc),
 		Instruction("LD_R8_T", Opcodes.LD_R8_T, d => d.io.controlSignals.destination(d.register).move(Pipeline.Operand.t)),
 		Instruction("LD_T_R8", Opcodes.LD_T_R8, d => d.io.controlSignals.dest.t.move(d.Operand.opcode_r8)),
 		Instruction("LS_FT_R8", Opcodes.LS_FT_R8, d => { val p = d.io.controlSignals
