@@ -10,6 +10,8 @@ import rc800.alu.ShiftOperation
 import rc800.control.PipelineControl
 import rc800.control.RC811Control
 
+import rc800.registers.RegisterName
+
 import rc800.Vectors
 
 
@@ -40,7 +42,7 @@ case class Decoder() extends Component {
 		val output = out (RC811Control())
 	}
 
-	private val useLookup = false
+	private val useLookup = true	// experiment: ROM decoder vs 2024.1 mis-synthesis
 
 	private val opcodeIn = RegNextWhen(io.opcodeAsync, io.strobe) init(0)
 	private val opcode = io.strobe ? io.opcodeAsync | opcodeIn
@@ -48,9 +50,14 @@ case class Decoder() extends Component {
 	opcodeOut := opcode
 
 	private def lookupDecoder = {
+		// Synchronous read: the table's own output register is the pipeline
+		// register that holds the control word for the window which executes
+		// it, which is what lets the table infer as block RAM.  See
+		// BRAM-DECODE-PLAN.md; the chain flavour below reproduces this timing
+		// contract explicitly so both decoders are interchangeable.
 		val v = LookupDecoder()
 		v.io.opcode <> opcodeOut
-		v.io.strobe <> True
+		v.io.strobe <> io.strobe
 		v.io.nmiActive := io.nmiActive
 		v.io.controlSignals <> io.output.stageControl
 		v.io.output.illegal <> decoderIllegal
@@ -63,7 +70,12 @@ case class Decoder() extends Component {
 		v.io.opcode <> opcodeOut
 		v.io.nmiActive := io.nmiActive
 		v.io.stackPointers := io.stackPointers
-		v.io.controlSignals <> io.output.stageControl
+		// The chain is combinational, so hold its word to the same schedule
+		// the ROM's output register gives the table flavour: captured on the
+		// strobe that admits the opcode, valid for the rest of the window.
+		val chainControl = cloneOf(io.output.stageControl)
+		chainControl := v.io.controlSignals
+		io.output.stageControl := RegNextWhen(chainControl, io.strobe)
 		v.io.output.illegal <> decoderIllegal
 		v.io.output.overflow <> decoderOverflow
 		v
@@ -72,6 +84,28 @@ case class Decoder() extends Component {
 	val decoderIllegal = Bool()
 	val decoderOverflow = Bool()
 	val decoder = if (useLookup) lookupDecoder else opcodeDecoder
+
+	// The ROM table cannot see the stack pointers, so the zero-SP faults that
+	// OpcodeDecoder raises inline for PUSH and PUSHA have to be raised here
+	// instead.  The fault word replaces the table word's pushes: only the
+	// vector's HL push survives, exactly as in the OpcodeDecoder fault path.
+	if (useLookup) {
+		val pushPair = (B"10" ## opcode(1 downto 0)).as(RegisterName())
+		def stackFault(vector: Int): Unit = {
+			decoderOverflow := True
+			for(r <- Seq(RegisterName.ft, RegisterName.bc, RegisterName.de, RegisterName.hl))
+				io.output.stageControl.writeStageControl.fileControl.registerControl(r).push := False
+			io.output.stageControl.interrupt(U(vector >> 3, 3 bits))
+		}
+		when(!io.nmiActive) {
+			when(opcode === Opcodes.PUSHA && (0 to 3).map(i => io.stackPointers(i) === 0).reduce(_ || _)) {
+				stackFault(Vectors.StackOverflow)
+			}
+			when(opcode === Opcodes.PUSH && io.stackPointers(pushPair.asBits(1 downto 0).asUInt) === 0) {
+				stackFault(Vectors.StackOverflow)
+			}
+		}
+	}
 
 	private val anyActive = io.nmiActive || io.intActive || io.sysActive
 

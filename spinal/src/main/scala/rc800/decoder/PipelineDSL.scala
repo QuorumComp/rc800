@@ -39,6 +39,13 @@ object Pipeline {
 			pipeline.memoryStageControl.code := code
 		}
 
+		// The memory stage takes its write data straight from a register lane, so a
+		// store can name that lane without deciding what the ALU makes of it - which
+		// a stepped store needs, because its ALU second operand is the step.
+		def memoryWriteData(register: RegisterName.C): Unit = {
+			pipeline.readStageControl.registers(1) := register
+		}
+
 		def pushValueHL(): Unit = {
 			pipeline.writeStageControl.source := WriteBackValueSource.alu
 			pipeline.writeStageControl.fileControl.write := True
@@ -104,8 +111,8 @@ object Pipeline {
 				operand2 := register
 
 				val opcodeControl = pipeline.writeStageControl.fileControl
-				opcodeControl.writeExg := True
-				opcodeControl.writeExgRegister := opcodeRegister.register
+				opcodeControl.writeAux := True
+				opcodeControl.writeAuxRegister := opcodeRegister.register
 			}
 		}
 
@@ -139,12 +146,13 @@ object Pipeline {
 			pipeline.aluStageControl.aluControl.operation := AluOperation.and
 			pipeline.aluStageControl.aluControl.condition := Condition.t
 
-			pipeline.writeStageControl.source    := WriteBackValueSource.alu
+			pipeline.writeStageControl.source := WriteBackValueSource.alu
 			val fileControl = pipeline.writeStageControl.fileControl
 			fileControl.write := False
 			fileControl.writeRegister := RegisterName.ft
-			fileControl.writeExg := False
-			fileControl.writeExgRegister := RegisterName.ft
+			fileControl.writeAux := False
+			fileControl.writeAuxRegister := RegisterName.ft
+			fileControl.auxFromMemory := False
 			for (i <- 0 to 3) {
 				val registerControl = fileControl.registerControl(i)
 				registerControl.push  := False

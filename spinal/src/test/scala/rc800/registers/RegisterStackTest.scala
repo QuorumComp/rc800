@@ -36,7 +36,7 @@ class RegisterStackTest extends munit.FunSuite {
 			dut.io.memReadControl.swap #= false
 			dut.io.memReadControl.pick #= false
 			dut.io.write #= false
-			dut.io.writeExg #= false
+			dut.io.writeAux #= false
 			dut.io.stackReload #= false
 		}
 

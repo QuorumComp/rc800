@@ -8,8 +8,9 @@ case class RegisterFileControl() extends Bundle {
 	val write = Bool()
 	val writeRegister = RegisterName()
 
-	val writeExg = Bool()
-	val writeExgRegister = RegisterName()
+	val writeAux = Bool()
+	val writeAuxRegister = RegisterName()
+	val auxFromMemory = Bool()
 
 	val registerControl = Vec(RegisterControl(), 4)
 

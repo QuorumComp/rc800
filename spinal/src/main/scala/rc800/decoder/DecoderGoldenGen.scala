@@ -198,8 +198,19 @@ object DecoderGoldenGen {
 
 	def main(args: Array[String]): Unit = {
 		val path = args.headOption.getOrElse(defaultPath)
-		val writer = new PrintWriter(new File(path))
-		try writer.print(goldenText) finally writer.close()
-		println(s"wrote $path (${simResult.lines.size} opcodes)")
+		val file = new File(path)
+		val text = goldenText
+		val status =
+			if (file.exists) {
+				val onDisk = new String(java.nio.file.Files.readAllBytes(file.toPath)).replace("\r\n", "\n")
+				if (onDisk == text.replace("\r\n", "\n")) "already up to date" else {
+					val writer = new PrintWriter(file); try writer.print(text) finally writer.close()
+					"rewrote"
+				}
+			} else {
+				val writer = new PrintWriter(file); try writer.print(text) finally writer.close()
+				"wrote"
+			}
+		println(s"$status $path (${simResult.lines.size} opcodes)")
 	}
 }

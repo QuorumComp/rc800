@@ -64,6 +64,14 @@ object LookupTableGen {
 				|${rows.mkString("\n")}
 				|\t))
 				|
+				|	// Synchronous read: the table is clocked by the pipeline
+				|	// strobe, so its own output register is the stage register
+				|	// that holds the control word for the window executing the
+				|	// instruction, and the pipeline areas read it directly
+				|	// instead of each carrying a duplicate flop.  (This does
+				|	// not make the table infer as block RAM: the $$readmemb
+				|	// initialisation is not ROM content for the mapper.  See
+				|	// BRAM-DECODE-PLAN.md.)
 				|\tio.output := signalMem.readSync(io.opcode.asUInt, io.strobe).as(DecoderOutput())
 				|	// NMI must not interrupt NMI: the fault flags drop while
 				|	// NMI mode is active.  ROM words are captured with the
@@ -76,8 +84,23 @@ object LookupTableGen {
 				|""".stripMargin
 
 		val path = args.headOption.getOrElse(targetPath)
-		val writer = new java.io.PrintWriter(new java.io.File(path))
-		try writer.print(source) finally writer.close()
-		println(s"regenerated $path ($width bits x 256 rows)")
+		writeIfChanged(new java.io.File(path), source)
+		println(s"$path: $status ($width bits x 256 rows)")
+	}
+
+	// Writing unconditionally bumps the file's mtime, which makes every
+	// downstream build stage - including the board Verilog, whose inputs are
+	// the Scala sources - look stale after a regeneration that changed
+	// nothing.  Generators run on every RTL build now, so they must be
+	// idempotent in both content and timestamp.
+	private var status = "regenerated"
+
+	private def writeIfChanged(file: java.io.File, text: String): Unit = {
+		if (file.exists) {
+			val onDisk = new String(java.nio.file.Files.readAllBytes(file.toPath)).replace("\r\n", "\n")
+			if (onDisk == text.replace("\r\n", "\n")) { status = "already up to date"; return }
+		}
+		val writer = new java.io.PrintWriter(file)
+		try writer.print(text) finally writer.close()
 	}
 }

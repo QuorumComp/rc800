@@ -58,18 +58,21 @@ case class OpcodeDecoder() extends Component {
 	} otherwise {
 			// Opcodes with no fields
 			when      (io.opcode === Opcodes.AND_T_I)  { operation_T_I(AluOperation.and) }
-			.elsewhen (io.opcode === Opcodes.DI)       { }
-			.elsewhen (io.opcode === Opcodes.EI)       { }
-			.elsewhen (io.opcode === Opcodes.EXT_T)    { ext_T() }
-			.elsewhen (io.opcode === Opcodes.LD_CR_T)  { ld_CR_T() }
-			.elsewhen (io.opcode === Opcodes.LD_T_CR)  { ld_T_CR() }
-			.elsewhen (io.opcode === Opcodes.LS_FT_I)  { shift_FT(AluOperation.ls, Pipeline.Operand.immediate_byte) }
-			.elsewhen (io.opcode === Opcodes.NEG_T)    { operation_T(Pipeline.Operand.zero, AluOperation.sub) }
-			.elsewhen (io.opcode === Opcodes.NEG_FT)   { modifyRegisterPair(Pipeline.Operand.zero, AluOperation.sub) }
-			.elsewhen (io.opcode === Opcodes.NOP)      { }
-			.elsewhen (io.opcode === Opcodes.NOT_F)    { not_F() }
-			.elsewhen (io.opcode === Opcodes.OR_T_I)   { operation_T_I(AluOperation.or) }
-			.elsewhen (io.opcode === Opcodes.POPA)     { stackAll(_.pop := True) }
+			.elsewhen (io.opcode === Opcodes.DI)        { }
+			.elsewhen (io.opcode === Opcodes.EI)        { }
+			.elsewhen (io.opcode === Opcodes.EXT_T)     { ext_T() }
+			// A constant opcode, and it must be tested before LD_MEM_T_INC: $10 is
+			// also the illegal FT cell of the stepped store row.
+			.elsewhen (io.opcode === Opcodes.EXG_T_F)   { exg_T_F() }
+			.elsewhen (io.opcode === Opcodes.LD_CR_T)   { ld_CR_T() }
+			.elsewhen (io.opcode === Opcodes.LD_T_CR)   { ld_T_CR() }
+			.elsewhen (io.opcode === Opcodes.LS_FT_I)   { shift_FT(AluOperation.ls, Pipeline.Operand.immediate_byte) }
+			.elsewhen (io.opcode === Opcodes.NEG_T)     { operation_T(Pipeline.Operand.zero, AluOperation.sub) }
+			.elsewhen (io.opcode === Opcodes.NEG_FT)    { modifyRegisterPair(Pipeline.Operand.zero, AluOperation.sub) }
+			.elsewhen (io.opcode === Opcodes.NOP)       { }
+			.elsewhen (io.opcode === Opcodes.NOT_F)     { not_F() }
+			.elsewhen (io.opcode === Opcodes.OR_T_I)    { operation_T_I(AluOperation.or) }
+			.elsewhen (io.opcode === Opcodes.POPA)      { stackAll(_.pop := True) }
 			.elsewhen (io.opcode === Opcodes.PUSHA)    {
 				when(!io.nmiActive && (0 to 3).map(i => io.stackPointers(i) === 0).reduce(_ || _)) {
 					io.output.overflow := True
@@ -78,30 +81,34 @@ case class OpcodeDecoder() extends Component {
 					stackAll(_.push := True)
 				}
 			}
-			.elsewhen (io.opcode === Opcodes.RETI)     { reti() }
-			.elsewhen (io.opcode === Opcodes.RS_FT_I)  { shift_FT(AluOperation.rs, Pipeline.Operand.immediate_byte) }
-			.elsewhen (io.opcode === Opcodes.RSA_FT_I) { shift_FT(AluOperation.rsa, Pipeline.Operand.immediate_byte) }
-			.elsewhen (io.opcode === Opcodes.SWAPA)    { stackAll(_.swap := True) }
-			.elsewhen (io.opcode === Opcodes.SYS_I)    { sys() }
-			.elsewhen (io.opcode === Opcodes.XOR_T_I)  { operation_T_I(AluOperation.xor) }
+			.elsewhen (io.opcode === Opcodes.RETI)      { reti() }
+			.elsewhen (io.opcode === Opcodes.RS_FT_I)   { shift_FT(AluOperation.rs, Pipeline.Operand.immediate_byte) }
+			.elsewhen (io.opcode === Opcodes.RSA_FT_I)  { shift_FT(AluOperation.rsa, Pipeline.Operand.immediate_byte) }
+			.elsewhen (io.opcode === Opcodes.SWAPA)     { stackAll(_.swap := True) }
+			.elsewhen (io.opcode === Opcodes.SYS_I)     { sys() }
+			.elsewhen (io.opcode === Opcodes.XOR_T_I)   { operation_T_I(AluOperation.xor) }
 
 			// Opcodes with two-bit field
-			.elsewhen (io.opcode === Opcodes.ADD_FT_R16) { operation_FT_R16(AluOperation.add) }
-			.elsewhen (io.opcode === Opcodes.ADD_R16_I)  { add_R16_I() }
-			.elsewhen (io.opcode === Opcodes.CMP_FT_R16) { cmp_FT_R16() }
-			.elsewhen (io.opcode === Opcodes.EXG_FT_R16) { exg_FT_R16() }
-			.elsewhen (io.opcode === Opcodes.JAL_R16)    { jal_R16() }
-			.elsewhen (io.opcode === Opcodes.J_R16)      { j_R16() }
-			.elsewhen (io.opcode === Opcodes.LD_FT_R16)  { ld_FT_R16() }
-			.elsewhen (io.opcode === Opcodes.LD_IO_T)    { ld_IO_T() }
-			.elsewhen (io.opcode === Opcodes.LD_MEM_T)   { ld_MEM_T() }
-			.elsewhen (io.opcode === Opcodes.LD_R16_FT)  { ld_R16_FT() }
-			.elsewhen (io.opcode === Opcodes.LD_T_IO)    { ld_T_IO() }
-			.elsewhen (io.opcode === Opcodes.LD_T_CODE)  { ld_T_CODE() }
-			.elsewhen (io.opcode === Opcodes.LD_T_MEM)   { ld_T_MEM() }
-			.elsewhen (io.opcode === Opcodes.PICK_I)     { pickImm() }
-			.elsewhen (io.opcode === Opcodes.POP)        { stack(_.pop := True) }
-			.elsewhen (io.opcode === Opcodes.PUSH)       {
+			.elsewhen (io.opcode === Opcodes.ADD_FT_R16)    { operation_FT_R16(AluOperation.add) }
+			.elsewhen (io.opcode === Opcodes.ADD_R16_I)     { add_R16_I() }
+			.elsewhen (io.opcode === Opcodes.CMP_FT_R16)    { cmp_FT_R16() }
+			.elsewhen (io.opcode === Opcodes.EXG_FT_R16)    { exg_FT_R16() }
+			.elsewhen (io.opcode === Opcodes.JAL_R16)       { jal_R16() }
+			.elsewhen (io.opcode === Opcodes.J_R16)         { j_R16() }
+			.elsewhen (io.opcode === Opcodes.LD_FT_R16)     { ld_FT_R16() }
+			.elsewhen (io.opcode === Opcodes.LD_IO_T)       { ld_IO_T() }
+			.elsewhen (io.opcode === Opcodes.LD_MEM_T)      { ld_MEM_T() }
+			.elsewhen (io.opcode === Opcodes.LD_MEM_T_DEC)  { ld_MEM_T_step(AluOperation.add) }
+			.elsewhen (io.opcode === Opcodes.LD_MEM_T_INC)  { ld_MEM_T_step(AluOperation.sub) }
+			.elsewhen (io.opcode === Opcodes.LD_R16_FT)     { ld_R16_FT() }
+			.elsewhen (io.opcode === Opcodes.LD_T_IO)       { ld_T_IO() }
+			.elsewhen (io.opcode === Opcodes.LD_T_CODE)     { ld_T_CODE() }
+			.elsewhen (io.opcode === Opcodes.LD_T_MEM)      { ld_T_MEM() }
+			.elsewhen (io.opcode === Opcodes.LD_T_MEM_DEC)  { ld_T_MEM_step(AluOperation.add) }
+			.elsewhen (io.opcode === Opcodes.LD_T_MEM_INC)  { ld_T_MEM_step(AluOperation.sub) }
+			.elsewhen (io.opcode === Opcodes.PICK_I)        { pickImm() }
+			.elsewhen (io.opcode === Opcodes.POP)           { stack(_.pop := True) }
+			.elsewhen (io.opcode === Opcodes.PUSH)          {
 				when(!io.nmiActive && io.stackPointers(registerPair.asBits(1 downto 0).asUInt) === 0) {
 					io.output.overflow := True
 					io.controlSignals.interrupt(U(Vectors.StackOverflow >> 3, 3 bits))
@@ -109,11 +116,10 @@ case class OpcodeDecoder() extends Component {
 					stack(_.push := True)
 				}
 			}
-			.elsewhen (io.opcode === Opcodes.STOW_I)     { stowImm() }
-			.elsewhen (io.opcode === Opcodes.SUB_FT_R16) { operation_FT_R16(AluOperation.sub) }
-			.elsewhen (io.opcode === Opcodes.SWAP)       { stack(_.swap := True) }
-			.elsewhen (io.opcode === Opcodes.TST_R16)    { tst_R16() }
-
+			.elsewhen (io.opcode === Opcodes.STOW_I)        { stowImm() }
+			.elsewhen (io.opcode === Opcodes.SUB_FT_R16)    { operation_FT_R16(AluOperation.sub) }
+			.elsewhen (io.opcode === Opcodes.SWAP)          { stack(_.swap := True) }
+			.elsewhen (io.opcode === Opcodes.TST_R16)       { tst_R16() }
 			// Opcodes with three-bit field
 			.elsewhen (io.opcode === Opcodes.ADD_T_R8)  { operation_T_R8(AluOperation.add) }
 			.elsewhen (io.opcode === Opcodes.ADD_R8_I)  { add_R8_I() }
@@ -121,7 +127,6 @@ case class OpcodeDecoder() extends Component {
 			.elsewhen (io.opcode === Opcodes.CMP_R8_I)  { cmp_R8_I() }
 			.elsewhen (io.opcode === Opcodes.CMP_T_R8)  { cmp_T_R8() }
 			.elsewhen (io.opcode === Opcodes.DJ_R8_I)   { dj_R8_I() }
-			.elsewhen (io.opcode === Opcodes.EXG_T_F)   { exg_T_F() }
 			.elsewhen (io.opcode === Opcodes.LD_MEM_R8) { ld_MEM_R8() }
 			.elsewhen (io.opcode === Opcodes.LD_R8_I)   { ld_R8_I() }
 			.elsewhen (io.opcode === Opcodes.LD_R8_MEM) { ld_R8_MEM() }
@@ -353,6 +358,46 @@ case class OpcodeDecoder() extends Component {
 		io.controlSignals.operand1 := Operand.opcode_r16
 		io.controlSignals.readMemory(MemoryStageAddressSource.register1)
 		io.controlSignals.Destination.t := WriteBackValueSource.memory
+	}
+
+	// The stepped access block ($11-$1F): the plain access of $01-$07 plus one
+	// step of the pointer afterwards, which is what the multi-byte moves and the
+	// byte walks spell out today as an access and an ADD R16,s8 in sequence.
+	// Nothing at all is added to the datapath: the address is still the pointer as
+	// the memory stage reads it, the step is the ALU working on a pair with the
+	// ones operand - adding $FFFF wraps to minus one, subtracting it wraps to plus
+	// one - and the pointer write is an ordinary pair write in the writeback
+	// stage, so the stack top cell follows the pointer exactly as it does for
+	// ADD R16,s8.  Neither direction disturbs the flags: only CMP writes them, and
+	// it does so by putting the flag word on the result bus.
+	def ld_MEM_T_step(step: AluOperation.C): Unit = {
+		io.controlSignals.operand1 := Operand.opcode_r16
+		io.controlSignals.memoryWriteData(RegisterName.t)
+		io.controlSignals.writeMemory(MemoryStageAddressSource.register1)
+
+		// Lane 1 carries the stored byte for the memory stage while the ALU adds
+		// the step.
+		io.controlSignals.aluStageControl.selection(1) := Pipeline.Operand.ones.selection
+		io.controlSignals.aluStageControl.aluControl.operation := step
+		Destination.opcode_r16 := WriteBackValueSource.alu
+	}
+
+	def ld_T_MEM_step(step: AluOperation.C): Unit = {
+		io.controlSignals.operand1 := Operand.opcode_r16
+		io.controlSignals.readMemory(MemoryStageAddressSource.register1)
+
+		io.controlSignals.aluStageControl.selection(1) := Pipeline.Operand.ones.selection
+		io.controlSignals.aluStageControl.aluControl.operation := step
+		Destination.opcode_r16 := WriteBackValueSource.alu
+
+		// Two registers move: the stepped pointer on the main write port with the
+		// ALU result, and the loaded byte on the auxiliary one (see the writeback
+		// stage).  The pointer cannot be FT here - the byte would land inside it -
+		// which is why the FT column of the block is illegal.
+		val fileControl = io.controlSignals.writeStageControl.fileControl
+		fileControl.writeAux := True
+		fileControl.writeAuxRegister := RegisterName.t
+		fileControl.auxFromMemory := True
 	}
 
 	def ld_R8_MEM(): Unit = {

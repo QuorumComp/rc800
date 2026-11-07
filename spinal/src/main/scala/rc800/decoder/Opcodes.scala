@@ -4,11 +4,12 @@ import spinal.core._
 
 object Opcodes {
 	def illegals = List(
-		// $11-$17: the byte exchange through T is gone, only $10 (EXG T,F) decodes.
-		M"00010--1",		// $11 $13 $15 $17
-		M"00010-1-",		// $12 $13 $16 $17
-		M"0001010-",		// $14 $15
-		M"00011---",		// T-indexed PICK/STOW removed; the immediate forms live at $B4-$B7/$BC-$BF
+		// $14 $18 $1C: the FT column of the stepped access block.  A stepped
+		// access cannot have the pointer and the hub byte in the same register,
+		// and the byte it moves is T, which is inside FT.  $10 is that column's
+		// other cell, and EXG T,F lives there.
+		M"0001-100",		// $14 $1C
+		M"00011000",		// $18
 		M"0010000-",
 		M"00101001",
 		M"01100001",
@@ -56,11 +57,15 @@ object Opcodes {
 	def J_R16      = M"001111--"
 	def LD_FT_R16  = M"110110--"		// Load FT with register pair
 	def LD_IO_T    = M"001100--"		// Load I/O with T
-	def LD_MEM_T   = M"000000--"		// Store T in memory
+	def LD_MEM_T      = M"000000--"		// Store T in memory
+	def LD_MEM_T_DEC  = M"000110--"		// Store T in memory, then step the pointer down
+	def LD_MEM_T_INC  = M"000100--"		// Store T in memory, then step the pointer up
 	def LD_R16_FT  = M"110100--"		// Load register pair with FT
 	def LD_T_CODE  = M"000011--"
 	def LD_T_IO    = M"001101--"		// Load T with I/O
-	def LD_T_MEM   = M"000001--"		// Load T from memory
+	def LD_T_MEM      = M"000001--"		// Load T from memory
+	def LD_T_MEM_DEC  = M"000111--"		// Load T from memory, then step the pointer down
+	def LD_T_MEM_INC  = M"000101--"		// Load T from memory, then step the pointer up
 	def PICK_I     = M"101111--"		// Pick stack entry at immediate index
 	def POP        = M"110001--"
 	def PUSH       = M"110000--"

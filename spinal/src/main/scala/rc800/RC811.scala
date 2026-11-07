@@ -120,7 +120,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		val stackPointers = Vec(Reg(UInt(8 bits)) init(0xFF), 4)
 
 		writeControl.write init(False)
-		writeControl.writeExg init(False)
+		writeControl.writeAux init(False)
 		for (i <- 0 to 3) {
 			val ctrl = writeControl.registerControl(i)
 			ctrl.push init(False)
@@ -135,9 +135,14 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 		registers.io.readRegisters := readControl.registers
 
+		// What the auxiliary port writes when the instruction asks for the memory
+		// result; the register file switches between this byte and the operand bus.
+		val dataInMemory = Bits(8 bits)
+
 		registers.io.control   <> writeControl
 		registers.io.dataIn    <> writeData
 		registers.io.dataInAux <> writeDataAux
+		registers.io.dataInMemory <> dataInMemory
 		registers.io.pointers  <> stackPointers
 
 		registers.io.stackReload := stackReload
@@ -154,7 +159,11 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 	 */
 
 	private val memoryArea = new Area {
-		private val control = RegNext(decodeArea.memoryControl)
+		// No stage register here: the decoder presents its control word already
+		// registered against the window that admits the opcode (the table's
+		// output register, or an equivalent flop behind the chain), so a second
+		// register here would delay every stage by one.  See BRAM-DECODE-PLAN.md.
+		private val control = decodeArea.memoryControl
 
 		val result = Reg(Bits(8 bits)) init(0)
 
@@ -247,10 +256,12 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 	private val aluArea = new Area {
 		private val memoryIn = RegNextWhen(io.dataIn, stage === 2)
-		private val control = RegNext(decodeArea.aluControl)
+		// Control and register operands arrive already aligned to this window
+		// (see the note in the memory area), so neither is re-registered here.
+		private val control = decodeArea.aluControl
 
 		private val alu = AluStage()
-		alu.io.registers := RegNext(registers.readValues)
+		alu.io.registers := registers.readValues
 		alu.io.pc        := pcPlusOne
 		alu.io.memory    := memoryIn
 		alu.io.control   := control
@@ -265,7 +276,17 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 
 	val stage3 = new Area {
 		private val pcOut = aluArea.pcOut
-		private val control = RegNext(decodeArea.writeControl)
+		// Already registered by the decoder for this window (see the memory
+		// area's note); a second register here would shift writeback by one.
+		private val control = decodeArea.writeControl
+
+		// The byte a memory read brings back, fed to both write ports: the main one
+		// for a plain load, the auxiliary one for a load that steps its pointer,
+		// which the register file switches on its own control bit.  Each port puts
+		// the byte in its own high byte lane.  Always driven: this is a wire, not
+		// one of the stage-gated registers the other buses are, and the ports only
+		// read it during their write window anyway.
+		registers.dataInMemory := memoryArea.result
 
 		private def fetchInstruction() {
 			io.address := pcOut
@@ -279,7 +300,7 @@ class RC811()(implicit lpmComponents: lpm.Components) extends Component {
 		}
 
 		registers.writeControl.write := False
-		registers.writeControl.writeExg := False
+		registers.writeControl.writeAux := False
 		for (i <- 0 to 3) {
 			val ctrl = registers.writeControl.registerControl(i)
 			ctrl.push  := False

@@ -38,12 +38,12 @@ import rc800.control.component.RegisterControl
 case class Register() extends Component {
 	val io = new Bundle {
 		val dataIn    = in (Bits(8 bits))
-		// Auxiliary operand bus: the EXG partner value at writeback, or
-		// the PICK/STOW immediate index in the read/write windows.
+		// Second write port's operand: what an exchange writes to both of its
+		// registers, or the PICK/STOW immediate index in the read/write windows.
 		val dataInAux = in (Bits(8 bits))
 		val control   = in (RegisterControl())
 		val write     = in (Bool())
-		val writeExg  = in (Bool())
+		val writeAux  = in (Bool())
 
 		// Stack index for PICK and STOW: the instruction's immediate
 		// operand byte.
@@ -101,8 +101,12 @@ case class Register() extends Component {
 	// Write data
 	// ----------------------------------------------------------------------
 
-	// One shared write port: a plain write takes dataIn; EXG writes the same
-	// value to both exchanged registers, so it takes dataInAux.
+	// The two ports share one data input per register: the plain port takes dataIn,
+	// the auxiliary port takes dataInAux.  An exchange aims both ports at the two
+	// registers it is swapping, so each receives the other's value; a load that
+	// steps its pointer aims the plain port at the pointer and the auxiliary one at
+	// the hub.  Nothing aims both at one register - were it to, the plain port
+	// would win.
 	private val writeValue = io.write ? io.dataIn | io.dataInAux
 
 	// PICK 0 leaves the register alone, so there is nothing to load.
@@ -112,7 +116,7 @@ case class Register() extends Component {
 	// A write wins over a reload: when an instruction both moves the pointer
 	// and writes, the written value is the final one.
 	private val topNext = Select(
-		(io.write || io.writeExg) -> writeValue,
+		(io.write || io.writeAux) -> writeValue,
 		loadTop                   -> readValue,
 		default                   -> top
 	)
@@ -121,7 +125,7 @@ case class Register() extends Component {
 	// The top cell follows the register. PUSH uses the same write: its
 	// writeback control arrives after the pointer has moved, so the new top
 	// cell receives the register's current value.
-	val topWrite  = io.write || io.writeExg || io.control.push ||
+	val topWrite  = io.write || io.writeAux || io.control.push ||
 	                io.control.swap || pickLoad
 	val swapWrite = io.control.swap
 
