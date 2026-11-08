@@ -3,20 +3,20 @@
 
 |          | 000         | 001         | 010         | 011         | 100         | 101         | 110         | 111         |
 |----------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| 00000xxx | NOP         | LD (BC),T   | LD (DE),T   | LD (HL),T   | LD T,(FT)   | LD T,(BC)   | LD T,(DE)   | LD T,(HL)   |
-| 00001xxx | EI          | DI          | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC)  | LCO T,(DE)  | LCO T,(HL)  |
-| 00010xxx | EXG T,F     |             | LD (FT+),B  | LD (FT+),C  | LD (FT+),D  | LD (FT+),E  | LD (FT+),H  | LD (FT+),L  |
-| 00011xxx |             |             | LD B,(FT+)  | LD C,(FT+)  | LD D,(FT+)  | LD E,(FT+)  | LD H,(FT+)  | LD L,(FT+)  |
-| 00100xxx |             |             | LD (FT),B   | LD (FT),C   | LD (FT),D   | LD (FT),E   | LD (FT),H   | LD (FT),L   |
-| 00101xxx | LD F,(FT)   |             | LD B,(FT)   | LD C,(FT)   | LD D,(FT)   | LD E,(FT)   | LD H,(FT)   | LD L,(FT)   |
-| 00110xxx | NOT F       | LIO (BC),T  | LIO (DE),T  | LIO (HL),T  | LIO T,(FT)  | LIO T,(BC)  | LIO T,(DE)  | LIO T,(HL)  |
+| 00000xxx | NOP         |             |             |             |             |             |             |             |
+| 00001xxx |             |             | LCR (C),T   | LCR T,(C)   | LCO T,(FT)  | LCO T,(BC+) | LCO T,(DE+) | LCO T,(HL+) |
+| 00010xxx | EXG T,F     | LD (BC+),T  | LD (DE+),T  | LD (HL+),T  |             | LD T,(BC+)  | LD T,(DE+)  | LD T,(HL+)  |
+| 00011xxx |             | LD (BC+),F  | LD (DE+),F  | LD (HL+),F  |             | LD F,(BC+)  | LD F,(DE+)  | LD F,(HL+)  |
+| 00100xxx |             |             | LD (FT+),B  | LD (FT+),C  | LD (FT+),D  | LD (FT+),E  | LD (FT+),H  | LD (FT+),L  |
+| 00101xxx | LD F,(FT)   | LD T,(FT)   | LD B,(FT+)  | LD C,(FT+)  | LD D,(FT+)  | LD E,(FT+)  | LD H,(FT+)  | LD L,(FT+)  |
+| 00110xxx | NOT F       | LIO (BC+),T | LIO (DE+),T | LIO (HL+),T | LIO T,(FT)  | LIO T,(BC+) | LIO T,(DE+) | LIO T,(HL+) |
 | 00111xxx | JAL (FT)    | JAL (BC)    | JAL (DE)    | JAL (HL)    | J (FT)      | J (BC)      | J (DE)      | J (HL)      |
 | 01000xxx | ADD T,F     | ADD T,T     | ADD T,B     | ADD T,C     | ADD T,D     | ADD T,E     | ADD T,H     | ADD T,L     |
 | 01001xxx | CMP T,F     | EXT         | CMP T,B     | CMP T,C     | CMP T,D     | CMP T,E     | CMP T,H     | CMP T,L     |
 | 01010xxx | SUB T,F     | NEG T       | SUB T,B     | SUB T,C     | SUB T,D     | SUB T,E     | SUB T,H     | SUB T,L     |
 | 01011xxx | LD T,F      | RETI        | LD T,B      | LD T,C      | LD T,D      | LD T,E      | LD T,H      | LD T,L      |
-| 01100xxx | OR T,F      |             | OR T,B      | OR T,C      | OR T,D      | OR T,E      | OR T,H      | OR  T,L     |
-| 01101xxx | AND T,F     |             | AND T,B     | AND T,C     | AND T,D     | AND T,E     | AND T,H     | AND T,L     |
+| 01100xxx | OR T,F      | DI          | OR T,B      | OR T,C      | OR T,D      | OR T,E      | OR T,H      | OR  T,L     |
+| 01101xxx | AND T,F     | EI          | AND T,B     | AND T,C     | AND T,D     | AND T,E     | AND T,H     | AND T,L     |
 | 01110xxx | XOR T,F     |             | XOR T,B     | XOR T,C     | XOR T,D     | XOR T,E     | XOR T,H     | XOR T,L     |
 | 01111xxx | LD F,T      |             | LD B,T      | LD C,T      | LD D,T      | LD E,T      | LD H,T      | LD L,T      |
 | 10000xxx | LD F,i8     | LD T,i8     | LD B,i8     | LD C,i8     | LD D,i8     | LD E,i8     | LD H,i8     | LD L,i8     |

@@ -3,7 +3,11 @@
 ## Opcode
 | 76543210 |
 |----------|
-| 00001001 |
+| 01100001 |
+
+Moved from `$09` on 2026-11-12, directly under `RETI` in the encoding map;
+`$09` was `LD T,(FT)` for a day and has been illegal since 2026-11-13, when
+the hub load went back to `$29`.
 
 ## Operation
 ```

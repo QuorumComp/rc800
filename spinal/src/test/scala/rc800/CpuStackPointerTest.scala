@@ -62,13 +62,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x0A,			// lcr (c),t   SP_FT := $30, FT := Stack[$30]
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
-			0x03,			// ld  (hl),t  $0100 <- $55
+			0x13, 0x9F, 0xFF,			// ld  (hl),t  $0100 <- $55 (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x58,			// ld  t,f
-			0x03,			// ld  (hl),t  $0101 <- $22
+			0x13, 0x9F, 0xFF,			// ld  (hl),t  $0101 <- $22 (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x03			// ld  (hl),t  $0102 <- $5A (program reached the end)
+			0x13, 0x9F, 0xFF			// ld  (hl),t  $0102 <- $5A (program reached the end) (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0x55, "register refreshed from the new stack cell")
 			assertEquals(mem(0x101), 0x22, "high byte refreshed from the new stack cell")
@@ -86,13 +86,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0xC4,			// pop ft       T <- Stack[$FE] = $55
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
-			0x03,			// ld  (hl),t   $0100 <- $55
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0100 <- $55 (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0xC4,			// pop ft       T <- Stack[$FF] = $AA
-			0x03,			// ld  (hl),t   $0101 <- $AA
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0101 <- $AA (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x03			// ld  (hl),t   $0102 <- $5A
+			0x13, 0x9F, 0xFF			// ld  (hl),t   $0102 <- $5A (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0x55, "entry pushed last")
 			assertEquals(mem(0x101), 0xAA, "entry pushed first")
@@ -111,13 +111,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x5B,			// ld  t,c
-			0x03,			// ld  (hl),t   $0100 <- $BB
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0100 <- $BB (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
-			0x03,			// ld  (hl),t   $0101 <- $AA
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0101 <- $AA (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x03			// ld  (hl),t   $0102 <- $5A
+			0x13, 0x9F, 0xFF			// ld  (hl),t   $0102 <- $5A (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0xBB, "low half of the stored pair")
 			assertEquals(mem(0x101), 0xAA, "high half of the stored pair")
@@ -139,13 +139,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x82, 0x01,		// ld  b,$01
 			0x83, 0x00,		// ld  c,$00
 			0x5D,			// ld  t,e
-			0x01,			// ld  (bc),t   $0100 <- $78
+			0x11, 0x9D, 0xFF,			// ld  (bc),t   $0100 <- $78 (stepped + rewind)
 			0x9D, 0x01,		// add bc,#1
 			0x5C,			// ld  t,d
-			0x01,			// ld  (bc),t   $0101 <- $56
+			0x11, 0x9D, 0xFF,			// ld  (bc),t   $0101 <- $56 (stepped + rewind)
 			0x9D, 0x01,		// add bc,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x01			// ld  (bc),t   $0102 <- $5A
+			0x11, 0x9D, 0xFF,			// ld  (bc),t   $0102 <- $5A (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0x78, "low half written at depth 2")
 			assertEquals(mem(0x101), 0x56, "high half written at depth 2")
@@ -164,13 +164,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x82, 0x01,		// ld  b,$01
 			0x83, 0x00,		// ld  c,$00
 			0x5F,			// ld  t,l
-			0x01,			// ld  (bc),t   $0100 <- $BC
+			0x11, 0x9D, 0xFF,			// ld  (bc),t   $0100 <- $BC (stepped + rewind)
 			0x9D, 0x01,		// add bc,#1
 			0x5E,			// ld  t,h
-			0x01,			// ld  (bc),t   $0101 <- $9A
+			0x11, 0x9D, 0xFF,			// ld  (bc),t   $0101 <- $9A (stepped + rewind)
 			0x9D, 0x01,		// add bc,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x01			// ld  (bc),t   $0102 <- $5A
+			0x11, 0x9D, 0xFF,			// ld  (bc),t   $0102 <- $5A (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0xBC, "low half of the stored pair")
 			assertEquals(mem(0x101), 0x9A, "high half of the stored pair")
@@ -192,13 +192,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x5B,			// ld  t,c
-			0x03,			// ld  (hl),t   $0100 <- $BB
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0100 <- $BB (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
-			0x03,			// ld  (hl),t   $0101 <- $AA
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0101 <- $AA (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x03			// ld  (hl),t   $0102 <- $5A
+			0x13, 0x9F, 0xFF			// ld  (hl),t   $0102 <- $5A (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0xBB, "low half of the picked pair")
 			assertEquals(mem(0x101), 0xAA, "high half of the picked pair")
@@ -220,13 +220,13 @@ class CpuStackPointerTest extends munit.FunSuite {
 			0x86, 0x01,		// ld  h,$01
 			0x87, 0x00,		// ld  l,$00
 			0x5B,			// ld  t,c
-			0x03,			// ld  (hl),t   $0100 <- $22
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0100 <- $22 (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
-			0x03,			// ld  (hl),t   $0101 <- $11
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $0101 <- $11 (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x81, 0x5A,		// ld  t,$5A
-			0x03			// ld  (hl),t   $0102 <- $5A
+			0x13, 0x9F, 0xFF			// ld  (hl),t   $0102 <- $5A (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x100), 0x22, "low half after the swap")
 			assertEquals(mem(0x101), 0x11, "high half after the swap")

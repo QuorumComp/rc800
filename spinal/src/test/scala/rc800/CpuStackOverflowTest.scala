@@ -77,7 +77,7 @@ class CpuStackOverflowTest extends munit.FunSuite {
 		0x86, 0x01,		// ld  h,$01
 		0x87, 0x00,		// ld  l,$00
 		0x81, 0xEE,		// ld  t,$EE
-		0x03,			// ld  (hl),t    $0100 <- $EE  (handler ran)
+		0x13, 0x9F, 0xFF,			// ld  (hl),t    $0100 <- $EE  (handler ran) (stepped + rewind)
 		0x5A,			// ld  t,b
 		0x7E,			// ld  h,t
 		0x5B,			// ld  t,c
@@ -90,7 +90,7 @@ class CpuStackOverflowTest extends munit.FunSuite {
 		0x86, 0x01,		// ld  h,$01
 		0x87, 0x02,		// ld  l,$02
 		0x81, 0xCD,		// ld  t,$CD
-		0x03,			// ld  (hl),t    $0102 <- $CD  (resumed)
+		0x13, 0x9F, 0xFF,			// ld  (hl),t    $0102 <- $CD  (resumed) (stepped + rewind)
 		0x86, 0x00,		// ld  h,$00
 		0x87, 0x0C,		// ld  l,$0C
 		0x3F			// j  (hl)       halt
@@ -131,7 +131,7 @@ class CpuStackOverflowTest extends munit.FunSuite {
 				0x86, 0x01,		// ld  h,$01
 				0x87, 0x00,		// ld  l,$00
 				0x81, 0x11,		// ld  t,$11
-				0x03,			// ld  (hl),t  $0100 <- $11 (no handler marker)
+				0x13, 0x9F, 0xFF,			// ld  (hl),t  $0100 <- $11 (no handler marker) (stepped + rewind)
 				0x86, 0x00,		// ld  h,$00
 				0x87, 0x0C,		// ld  l,$0C
 				0x3F			// j  (hl)     halt

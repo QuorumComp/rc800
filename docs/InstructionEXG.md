@@ -3,7 +3,7 @@
 ## Opcode
 | 76543 | 210 | Notes |
 |-------|-----|-------|
-| 00010 | 000 | The only byte exchange; $11-$17 are illegal |
+| 00010 | 000 | The only byte exchange; $11-$13 are `LD (R16+),T`, $14 is illegal |
 
 ## Operation
 ```

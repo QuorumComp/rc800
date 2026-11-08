@@ -100,9 +100,9 @@ object Pipeline {
 		def destination(register: RegisterName.C) =
 			Destination(register)
 
-		// A destination register, written by one of three distinct actions.  They
-		// were once three overloads of `:=`, which meant `dest.t := x` hid which of
-		// them a line performed until you checked x's type; they are now named.
+		// A destination register, written by one of three distinct actions.  The
+		// actions are named rather than overloads of `:=`: `dest.t := x` would
+		// hide which action a line performs until you check x's type.
 		case class Destination(val register: RegisterName.C) {
 			private val control = pipeline.writeStageControl.fileControl
 

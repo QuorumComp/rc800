@@ -10,10 +10,10 @@ import spinal.core.sim._
  * exactly as it is when the result goes out through a debug print.
  *
  * The point is operand 2.  The ALU takes a registered copy of the read bus
- * while the memory stage takes it directly, so a stream like this is what tells
- * the two paths apart: every store of a byte register here has been observed to
- * write the right value on hardware while the matching ALU op saw a value from
- * an earlier instruction.  Each case pins one operand register, and the last
+ * while the memory stage takes it directly, so a stream like this is what
+ * tells the two paths apart: a store of a byte register can write the right
+ * value on hardware while the matching ALU op reads a value from an earlier
+ * instruction.  Each case pins one operand register, and the last
  * two reload B before using it, which is where a stale operand shows up.
  */
 class CpuAluOperandTest extends munit.FunSuite {
@@ -62,7 +62,7 @@ class CpuAluOperandTest extends munit.FunSuite {
 	private def ldT(immediate: Int)       = Seq(0x81, immediate)
 	private def ldR8(register: Int, value: Int) = Seq(0x80 + register, value)
 	private def alu(operation: Int, register: Int) = Seq(operation + register)
-	private val storeT  = Seq(0x03)
+	private val storeT  = Seq(0x13, 0x9F, 0xFF)	// ld (hl+),t; sub hl,#1 - the synthesized plain $03
 	private val bumpHl  = Seq(0x9F, 0x01)
 	private val saveAll = Seq(0xE8)
 	private val restoreAll = Seq(0xE9)

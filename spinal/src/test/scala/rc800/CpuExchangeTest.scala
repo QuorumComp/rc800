@@ -65,10 +65,10 @@ class CpuExchangeTest extends munit.FunSuite {
 			0xC4,			// pop  ft      ...and read both bytes back from it
 			0x86, 0x03,		// ld  h,$03
 			0x87, 0xD0,		// ld  l,$D0
-			0x03,			// ld  (hl),t   $03D0 <- T
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $03D0 <- T (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x58,			// ld  t,f
-			0x03			// ld  (hl),t   $03D1 <- F
+			0x13, 0x9F, 0xFF			// ld  (hl),t   $03D1 <- F (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x3D0), 0xAA, "T took the value that was in F")
 			assertEquals(mem(0x3D1), 0x55, "F took the value that was in T")
@@ -88,16 +88,16 @@ class CpuExchangeTest extends munit.FunSuite {
 			0xC5,			// pop  bc
 			0x86, 0x03,		// ld  h,$03
 			0x87, 0xE0,		// ld  l,$E0
-			0x03,			// ld  (hl),t   $03E0 <- T
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $03E0 <- T (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x58,			// ld  t,f
-			0x03,			// ld  (hl),t   $03E1 <- F
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $03E1 <- F (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x5A,			// ld  t,b
-			0x03,			// ld  (hl),t   $03E2 <- B
+			0x13, 0x9F, 0xFF,			// ld  (hl),t   $03E2 <- B (stepped + rewind)
 			0x9F, 0x01,		// add hl,#1
 			0x5B,			// ld  t,c
-			0x03			// ld  (hl),t   $03E3 <- C
+			0x13, 0x9F, 0xFF			// ld  (hl),t   $03E3 <- C (stepped + rewind)
 		)) { mem =>
 			assertEquals(mem(0x3E0), 0xCD, "the hub took the low byte of the pair")
 			assertEquals(mem(0x3E1), 0xAB, "the hub took the high byte of the pair")

@@ -103,10 +103,10 @@ The `!CC` is the inverse condition (for example, `EQ` → `NE`, `LT` → `GE`). 
 | LD&nbsp;FT,R16  | Load FT register with contents of 16 bit register ||
 | LD&nbsp;R16,FT  | Load 16 bit register with contents of FT ||
 | LD&nbsp;R16,i16 | Load 16 bit register with immediate 16 bit value |(synthesized)|
-| LD&nbsp;T,(R16+) | Load T from data at R16, then increment R16 | (synthesized) |
-| LD&nbsp;(R16+),T | Store T to data at R16, then increment R16 | (synthesized) |
-| LD&nbsp;T,(-R16) | Decrement R16, then load T from data at R16 | (synthesized) |
-| LD&nbsp;(-R16),T | Decrement R16, then store T to data at R16 | (synthesized) |
+| LD&nbsp;T,(R16+) | Load T from data at R16, then increment R16 | native over BC/DE/HL; the FT cell ($14) is illegal |
+| LD&nbsp;(R16+),T | Store T to data at R16, then increment R16 | native over BC/DE/HL; the FT cell ($18) is illegal |
+| LD&nbsp;F,(R16+) | Load F from data at R16, then increment R16 | native over BC/DE/HL |
+| LD&nbsp;(R16+),F | Store F to data at R16, then increment R16 | native over BC/DE/HL |
 | POP&nbsp;R16    | Pop contents of 16 bit register stack ||
 | POP&nbsp;Rlist  | Pop contents of specified 16 bit register stacks | (synthesized) |
 | POPA            | Pop contents of all 16 bit registers stacks ||
@@ -122,21 +122,23 @@ The `!CC` is the inverse condition (for example, `EQ` → `NE`, `LT` → `GE`). 
 # External Memory and I/O
 | Mnemonic          | Operation | Remarks |
 |-------------------|-----------|---------|
-| LCO&nbsp;T,(R16)  | Load T with byte in code area pointed to by 16 bit register ||
-| LD&nbsp;T,(R16)   | Load T with byte in data area pointed to by 16 bit register ||
-| LD&nbsp;(R16),T   | Store T in data area pointed to by 16 bit register ||
-| LD&nbsp;R8,(FT)   | Load 8 bit register with byte in data area pointed to by FT ||
-| LD&nbsp;(FT),R8   | Store 8 bit register in data area pointed to by FT ||
+| LCO&nbsp;T,(R16+) | Load T with byte in code area pointed to by 16 bit register, then increment the register | `$0D–$0F`; `LCO T,(FT)` at `$0C` does not step — the byte is a half of the pointer it would step; the plain `LCO T,(R16)` spelling is synthesized as the stepped load plus `SUB R16,1` |
+| LD&nbsp;T,(R16)   | Load T with byte in data area pointed to by 16 bit register |(synthesized) — through BC/DE/HL it is the stepped load plus `ADD R16,-1`; `$01–$07` were retired 2026-11-12, and through FT it is `LD r8,(FT+)` with a `SUB FT,1` rewind |
+| LD&nbsp;(R16),T   | Store T in data area pointed to by 16 bit register |(synthesized) — stepped store plus `ADD R16,-1`; no native plain store through a pair |
+| LD&nbsp;R8,(FT+)  | Load 8 bit register with byte in data area pointed to by FT, then increment FT | `$2A–$2F`; the hub bytes cannot step — see `LD F/T,(FT)` below |
+| LD&nbsp;(FT+),R8  | Store 8 bit register in data area pointed to by FT, then increment FT | `$22–$27`; the plain `LD (FT),R8` / `LD R8,(FT)` spellings are synthesized as the stepped form plus `SUB FT,1` |
+| LD&nbsp;F,(FT)    | Load F with byte in data area pointed to by FT | `$28`, no step — the byte is a half of the pointer it would step; was at `$08`/`$09` in the interim of 2026-11-12, back home since 2026-11-13 |
+| LD&nbsp;T,(FT)    | Load T with byte in data area pointed to by FT | `$29`, no step; was `$09` (and `$04` before that) |
 | LCR&nbsp;T,(C)    | Load T with contents of configuration register ||
 | LCR&nbsp;(C),T    | Load configuration register with contents of T ||
-| LIO&nbsp;T,(R16)  | Load T with byte in I/O space pointed to by 16 bit register ||
-| LIO&nbsp;(R16),T  | Store T in I/O space pointed to by 16 bit register ||
+| LIO&nbsp;T,(R16+) | Load T with byte in I/O space pointed to by 16 bit register, then increment the register | `$35–$37`; `LIO T,(FT)` at `$34` does not step; the plain `LIO T,(R16)` spelling is synthesized as the stepped load plus `SUB R16,1` |
+| LIO&nbsp;(R16+),T | Store T in I/O space pointed to by 16 bit register, then increment the register | `$31–$33`; `$30` is `NOT F`, so there is no FT store cell; the plain spelling synthesizes with a `SUB R16,1` rewind |
 
 ## System control
 | Mnemonic | Operation | Remarks |
 |----------|-----------|---------|
-| DI | Disable external interrupts ||
-| EI | Enable external interrupts ||
+| DI | Disable external interrupts | `$61` since 2026-11-12, under `RETI`; was `$09` |
+| EI | Enable external interrupts | `$69` since 2026-11-12, under `DI`; was `$08` |
 | NOP | No operation ||
 
 # Continue reading
