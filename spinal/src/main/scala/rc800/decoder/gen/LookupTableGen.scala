@@ -1,4 +1,6 @@
-package rc800.decoder
+package rc800.decoder.gen
+
+import rc800.decoder._
 
 
 /**
@@ -48,7 +50,7 @@ object LookupTableGen {
 				| * ROM decoder: one $width-bit control word per opcode.
 				| *
 				| * GENERATED FILE — do not edit by hand.
-				| * Regenerate with: sbt "runMain rc800.decoder.LookupTableGen"
+				| * Regenerate with: sbt "runMain rc800.decoder.gen.LookupTableGen"
 				| * Field legend: rc800/spinal/decoder-golden.txt (layout header).
 				| */
 				|case class LookupDecoder(implicit lpmComponents: lpm.Components) extends Component {

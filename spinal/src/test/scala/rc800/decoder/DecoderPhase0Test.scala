@@ -3,6 +3,8 @@ package rc800.decoder
 import java.io.File
 import java.nio.file.Files
 
+import rc800.decoder.gen._
+
 /**
  * Phase 0 regression tests for the RC811 instruction decoder.
  *
@@ -22,7 +24,7 @@ class DecoderGoldenTest extends munit.FunSuite {
 		val file = new File(DecoderGoldenGen.defaultPath)
 		assert(file.exists(),
 			s"golden file missing at ${file.getAbsolutePath}: generate it with " +
-			"sbt \"runMain rc800.decoder.DecoderGoldenGen\" and commit it")
+			"sbt \"runMain rc800.decoder.gen.DecoderGoldenGen\" and commit it")
 
 		val committed = new String(Files.readAllBytes(file.toPath)).replace("\r\n", "\n")
 		val fresh = DecoderGoldenGen.goldenText
@@ -75,7 +77,7 @@ class DecoderLookupEquivalenceTest extends munit.FunSuite {
 		val mismatches = DecoderGoldenGen.lookupMismatches
 		assertEquals(mismatches, Nil,
 			"opcodes where the ROM table disagrees with the chain (regenerate " +
-			"LookupDecoder.scala with sbt \"runMain rc800.decoder.LookupTableGen\")")
+			"LookupDecoder.scala with sbt \"runMain rc800.decoder.gen.LookupTableGen\")")
 	}
 }
 

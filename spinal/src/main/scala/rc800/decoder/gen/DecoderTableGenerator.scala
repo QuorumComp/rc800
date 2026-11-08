@@ -1,5 +1,6 @@
-package rc800.decoder
+package rc800.decoder.gen
 
+import rc800.decoder._
 import rc800.utils._
 
 import spinal.core._

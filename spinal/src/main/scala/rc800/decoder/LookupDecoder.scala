@@ -12,7 +12,7 @@ import rc800.lpm
  * ROM decoder: one 71-bit control word per opcode.
  *
  * GENERATED FILE — do not edit by hand.
- * Regenerate with: sbt "runMain rc800.decoder.LookupTableGen"
+ * Regenerate with: sbt "runMain rc800.decoder.gen.LookupTableGen"
  * Field legend: rc800/spinal/decoder-golden.txt (layout header).
  */
 case class LookupDecoder(implicit lpmComponents: lpm.Components) extends Component {
