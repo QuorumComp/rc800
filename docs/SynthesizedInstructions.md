@@ -68,74 +68,115 @@ The native instruction set does not include auto-increment/decrement addressing.
 
 ## 16-bit Memory Loads/Stores through R16
 
-Loading or storing a full 16-bit register pair through a non-FT pointer requires synthesized sequences.
+Loading or storing a full 16-bit register pair through a non-FT pointer (`BC`/`DE`/`HL`) borrows that pointer through `EXG FT,R16`, runs two native stepped-byte accesses, then returns the stepped pointer. `R16.lo` / `R16.hi` are the pointer pair's own byte halves (little-endian, low byte first). These contain no ALU op except the pre-decrement `ADD R16,-2`, so they leave the condition flags untouched.
 
 ### Expansions
 
-| Assembler syntax | Instruction generated |
-|------------------|------------------------|
-| `LD FT,(R16)` | `LD T,(R16)` / `ADD R16,1` / `EXG F,T` / `LD T,(R16)` / `ADD R16,-1` / `EXG F,T` |
-| `LD (R16),FT` | `LD (R16),T` / `ADD R16,1` / `EXG F,T` / `LD (R16),T` / `ADD R16,-1` / `EXG F,T` |
-| `LD FT,(R16+)` | `LD T,(R16)` / `ADD R16,1` / `EXG F,T` / `LD T,(R16)` / `EXG F,T` |
-| `LD (R16+),FT` | `LD (R16),T` / `ADD R16,1` / `EXG F,T` / `LD (R16),T` / `EXG F,T` |
-| `LD FT,(-R16)` | `LD T,(R16)` / `ADD R16,-1` / `EXG F,T` / `LD T,(R16)` |
-| `LD (-R16),FT` | `EXG F,T` / `LD (R16),T` / `ADD R16,-1` / `EXG F,T` / `LD (R16),T` |
+| Assembler syntax | Instruction generated | Instr |
+|------------------|------------------------|-------|
+| `LD FT,(R16)` | `EXG FT,R16` / `LD R16.lo,(FT+)` / `LD R16.hi,(FT)` / `ADD FT,-1` / `EXG FT,R16` | 5 |
+| `LD (R16),FT` | `EXG FT,R16` / `LD (FT+),R16.lo` / `LD (FT),R16.hi` / `ADD FT,-1` / `EXG FT,R16` | 5 |
+| `LD FT,(R16+)` | `EXG FT,R16` / `LD R16.lo,(FT+)` / `LD R16.hi,(FT+)` / `EXG FT,R16` | 4 |
+| `LD (R16+),FT` | `EXG FT,R16` / `LD (FT+),R16.lo` / `LD (FT+),R16.hi` / `EXG FT,R16` | 4 |
+| `LD FT,(-R16)` | `ADD R16,-2` / `EXG FT,R16` / `LD R16.lo,(FT+)` / `LD R16.hi,(FT)` / `ADD FT,-1` / `EXG FT,R16` | 6 |
+| `LD (-R16),FT` | `ADD R16,-2` / `EXG FT,R16` / `LD (FT+),R16.lo` / `LD (FT),R16.hi` / `ADD FT,-1` / `EXG FT,R16` | 6 |
 
 ## 16-bit Memory Loads/Stores through FT
 
-Loading or storing a full 16-bit register pair through `FT` also uses synthesized sequences. These temporarily swap `F` and `T` via `EXG F,T` to avoid corrupting the `FT` pointer.
+When `FT` is the pointer and `BC`/`DE`/`HL` is the data, each byte step is a native stepped-byte opcode (`LD R8,(FT+)` / `LD (FT+),R8`), low byte first. Only the `ADD FT,±N` pointer adjustment touches the ALU, so the flags are left untouched.
 
 ### Expansions
 
-| Assembler syntax | Instruction generated |
-|------------------|------------------------|
-| `LD R16,(FT)` | `LD low,(FT)` / `ADD FT,1` / `LD high,(FT)` / `ADD FT,-1` |
-| `LD (FT),R16` | `LD (FT),low` / `ADD FT,1` / `LD (FT),high` / `ADD FT,-1` |
-| `LD R16,(FT+)` | `LD low,(FT)` / `ADD FT,1` / `LD high,(FT)` |
-| `LD (FT+),R16` | `LD (FT),low` / `ADD FT,1` / `LD (FT),high` |
-| `LD R16,(-FT)` | `LD high,(FT)` / `ADD FT,-1` / `LD low,(FT)` |
-| `LD (-FT),R16` | `ADD FT,-1` / `LD (FT),high` / `LD (FT),low` |
+| Assembler syntax | Instruction generated | Instr |
+|------------------|------------------------|-------|
+| `LD R16,(FT)` | `LD R16.lo,(FT+)` / `LD R16.hi,(FT)` / `ADD FT,-1` | 3 |
+| `LD (FT),R16` | `LD (FT+),R16.lo` / `LD (FT),R16.hi` / `ADD FT,-1` | 3 |
+| `LD R16,(FT+)` | `LD R16.lo,(FT+)` / `LD R16.hi,(FT+)` | 2 |
+| `LD (FT+),R16` | `LD (FT+),R16.lo` / `LD (FT+),R16.hi` | 2 |
+| `LD R16,(-FT)` | `ADD FT,-2` / `LD R16.lo,(FT+)` / `LD R16.hi,(FT)` / `ADD FT,-1` | 4 |
+| `LD (-FT),R16` | `ADD FT,-2` / `LD (FT+),R16.lo` / `LD (FT),R16.hi` / `ADD FT,-1` | 4 |
 
 ## 8-bit Memory Access through FT with Post-increment/Pre-decrement
 
-The native `LD R8,(FT)` and `LD (FT),R8` instructions transfer any 8-bit register (B, C, D, E, H, L) through the FT pointer without corrupting it — unlike `LD T,(FT)` which overwrites T. Their post-increment and pre-decrement forms are synthesized by appending or prepending `ADD FT,±1`. `F` is excluded because `LD F,(FT)` destroys the FT pointer, and `T` is covered by the [Post-increment and Pre-decrement Memory Access](#post-increment-and-pre-decrement-memory-access) section above.
+The native `LD R8,(FT)` and `LD (FT),R8` instructions transfer any 8-bit register (B, C, D, E, H, L) through the FT pointer without corrupting it — unlike `LD T,(FT)` which overwrites T. Their **post-increment forms are native** — `LD R8,(FT+)` (`$1A-$1F`) and `LD (FT+),R8` (`$12-$17`) advance FT by 1 in hardware, in a single instruction. Their **pre-decrement forms are synthesized** by prepending `ADD FT,-1` (there is no native pre-decrement byte opcode). `F` is rejected from all four stepped forms: writing `F` clobbers the very FT pointer being stepped, so a stepped `F` access is a bug rather than a synthesis (the plain `LD F,(FT)` / `LD (FT),F` remain valid). `T` is covered by the [Post-increment and Pre-decrement Memory Access](#post-increment-and-pre-decrement-memory-access) section above.
 
 ### Expansions
 
-| Assembler syntax | Instruction generated |
-|------------------|------------------------|
-| `LD R8,(FT+)` | `LD R8,(FT)` / `ADD FT,1` |
-| `LD (FT+),R8` | `LD (FT),R8` / `ADD FT,1` |
-| `LD R8,(-FT)` | `ADD FT,-1` / `LD R8,(FT)` |
-| `LD (-FT),R8` | `ADD FT,-1` / `LD (FT),R8` |
+| Assembler syntax | Instruction generated | Instr |
+|------------------|------------------------|-------|
+| `LD R8,(FT+)` | native stepped-byte opcode (`$1A-$1F`) | 1 |
+| `LD (FT+),R8` | native stepped-byte opcode (`$12-$17`) | 1 |
+| `LD R8,(-FT)` | `ADD FT,-1` / `LD R8,(FT)` | 2 |
+| `LD (-FT),R8` | `ADD FT,-1` / `LD (FT),R8` | 2 |
 
 ## LIO with Post-increment/Pre-decrement
 
-Supported for any 16-bit register pair (`FT`, `BC`, `DE`, `HL`).
+Supported for any 16-bit register pair (`FT`, `BC`, `DE`, `HL`). The `IO` access-type signal is asserted through each native step.
 
-### Expansions
+**Byte forms** follow the `LD` byte pattern (replace `LD` with `LIO`):
 
-`LIO` follows the same expansion pattern as the corresponding `LD` form: replace `LD` with `LIO` in each line. The `IO` access-type signal is asserted through each native step.
+| Assembler syntax | Instruction generated | Instr |
+|------------------|------------------------|-------|
+| `LIO T,(R16+)` | `LIO T,(R16)` / `ADD R16,1` | 2 |
+| `LIO (R16+),T` | `LIO (R16),T` / `ADD R16,1` | 2 |
+| `LIO T,(-R16)` | `ADD R16,-1` / `LIO T,(R16)` | 2 |
+| `LIO (-R16),T` | `ADD R16,-1` / `LIO (R16),T` | 2 |
 
-| Assembler syntax | Instruction generated |
-|------------------|------------------------|
-| `LIO T,(R16+)` | `LIO T,(R16)` / `ADD R16,1` |
-| `LIO (R16+),T` | `LIO (R16),T` / `ADD R16,1` |
-| `LIO T,(-R16)` | `ADD R16,-1` / `LIO T,(R16)` |
-| `LIO (-R16),T` | `ADD R16,-1` / `LIO (R16),T` |
+**Word forms differ from `LD`.** There is no native stepped I/O opcode, so a full-word `LIO` cannot borrow the pointer through `EXG FT,R16` and run stepped bytes; it walks the pair pointer with two single-byte I/O accesses, an `EXG F,T` between them (which also preserves `FT` across a store), and explicit `ADD`s. Word forms exist only through a **general pair** (`BC`/`DE`/`HL`) — a word form through `FT` is an operand error. Every word form is more expensive than the matching `LD`:
+
+| Assembler syntax | Instruction generated | Instr |
+|------------------|------------------------|-------|
+| `LIO FT,(R16)` | `LIO T,(R16)` / `ADD R16,1` / `EXG F,T` / `LIO T,(R16)` / `ADD R16,-1` / `EXG F,T` | 6 |
+| `LIO (R16),FT` | `LIO (R16),T` / `ADD R16,1` / `EXG F,T` / `LIO (R16),T` / `ADD R16,-1` / `EXG F,T` | 6 |
+| `LIO FT,(R16+)` | `LIO T,(R16)` / `ADD R16,1` / `EXG F,T` / `LIO T,(R16)` / `ADD R16,1` / `EXG F,T` | 6 |
+| `LIO (R16+),FT` | `LIO (R16),T` / `ADD R16,1` / `EXG F,T` / `LIO (R16),T` / `ADD R16,1` / `EXG F,T` | 6 |
+| `LIO FT,(-R16)` | `ADD R16,-2` / `LIO T,(R16)` / `ADD R16,1` / `EXG F,T` / `LIO T,(R16)` / `ADD R16,-1` / `EXG F,T` | 7 |
+| `LIO (-R16),FT` | `ADD R16,-2` / `LIO (R16),T` / `ADD R16,1` / `EXG F,T` / `LIO (R16),T` / `ADD R16,-1` / `EXG F,T` | 7 |
 
 ## LCO with Post-increment/Pre-decrement
 
-Supported for any 16-bit register pair (`FT`, `BC`, `DE`, `HL`). `LCO` is load-only (no store form).
+Supported for byte accesses on any 16-bit register pair (`FT`, `BC`, `DE`, `HL`); word accesses only through a general pair, as with `LIO`. `LCO` is load-only (no store form), so `LCO (R16),FT` and its stepped forms are operand errors. The `CODE` access-type signal is asserted through each native step. The **byte** forms follow the `LD` byte pattern; the **word load** forms follow the `LIO` word pattern above (same instruction counts, `LCO` in place of `LIO`):
 
-### Expansions
+| Assembler syntax | Instruction generated | Instr |
+|------------------|------------------------|-------|
+| `LCO T,(R16+)` | `LCO T,(R16)` / `ADD R16,1` | 2 |
+| `LCO T,(-R16)` | `ADD R16,-1` / `LCO T,(R16)` | 2 |
+| `LCO FT,(R16)` | `LCO T,(R16)` / `ADD R16,1` / `EXG F,T` / `LCO T,(R16)` / `ADD R16,-1` / `EXG F,T` | 6 |
+| `LCO FT,(R16+)` | `LCO T,(R16)` / `ADD R16,1` / `EXG F,T` / `LCO T,(R16)` / `ADD R16,1` / `EXG F,T` | 6 |
+| `LCO FT,(-R16)` | `ADD R16,-2` / `LCO T,(R16)` / `ADD R16,1` / `EXG F,T` / `LCO T,(R16)` / `ADD R16,-1` / `EXG F,T` | 7 |
 
-Load-only subset of the `LD` pattern. The `CODE` access-type signal is asserted through each native step.
+## Expansion cost and ranking
 
-| Assembler syntax | Instruction generated |
-|------------------|------------------------|
-| `LCO T,(R16+)` | `LCO T,(R16)` / `ADD R16,1` |
-| `LCO T,(-R16)` | `ADD R16,-1` / `LCO T,(R16)` |
+Every native instruction costs 4 cycles. The tables below rank the indirect/stepped access forms by how many native instructions each expands to — fastest first. The pointer you choose and whether you step matter more than you might expect.
+
+### 16-bit access, ranked (fewest instructions first)
+
+| Rank | Form | Instr | Cycles | Notes |
+|---|------|-------|--------|-------|
+| 1 | `LD R16,(FT+)` / `LD (FT+),R16` | 2 | 8 | Two native stepped bytes — the cheapest 16-bit access |
+| 2 | `LD R16,(FT)` / `LD (FT),R16` | 3 | 12 | FT-pointer plain (adds `ADD FT,-1` to restore the pointer) |
+| 3 | `LD FT,(R16+)` / `LD (R16+),FT` | 4 | 16 | Pair-pointer post-increment |
+| 3 | `LD R16,(-FT)` / `LD (-FT),R16` | 4 | 16 | FT-pointer pre-decrement |
+| 5 | `LD FT,(R16)` / `LD (R16),FT` | 5 | 20 | Pair-pointer plain |
+| 6 | `LD FT,(-R16)` / `LD (-R16),FT` | 6 | 24 | Pair-pointer pre-decrement |
+| 7 | `LIO` / `LCO` word, plain or post-inc `(R16)`/`(R16+)` | 6 | 24 | No native stepped I/O opcode; word through a pair only |
+| 8 | `LIO` / `LCO` word, pre-dec `(-R16)` | 7 | 28 | |
+
+### Byte access, for reference
+
+| Form | Instr | Cycles |
+|------|-------|--------|
+| `LD T,(R16)` / `LD (R16),T` / `LD R8,(FT)` / `LD (FT),R8` | 1 | 4 |
+| `LD R8,(FT+)` / `LD (FT+),R8` | 1 | 4 | native stepped-byte opcode |
+| `LD T,(R16+)` / `LD T,(-R16)` / `LD R8,(-FT)` / … | 2 | 8 |
+
+### What surprises people
+
+- **Post-increment is cheaper than plain.** `LD FT,(R16+)` (4) beats `LD FT,(R16)` (5); `LD R16,(FT+)` (2) beats `LD R16,(FT)` (3). The plain form must walk the borrowed pointer back with `ADD FT,-1`; the post-increment form just runs two stepped bytes and lets the pointer land where it lands. When the pointer's final value is dead — or you can compensate a neighbouring offset — prefer `(R16+)`: it is shorter *and* faster.
+- **Using `FT` as the pointer is much cheaper than `BC`/`DE`/`HL`.** A word through FT costs 2–3 instructions; the same word through a general pair costs 4–6, because FT has native stepped-byte opcodes while a general pair must be borrowed through `EXG FT,R16`. When FT is free, route the access through it.
+- **Pre-decrement is the most expensive** stepping mode — it adds `ADD ±2` plus the walk-back.
+- **Byte stepped accesses through FT are a single native instruction**, but the same through `BC`/`DE`/`HL` costs two (no native stepped byte for those pointers).
+- **`LIO`/`LCO` word accesses cost more than `LD`** (6–7 versus 2–6) because there is no native stepped I/O opcode to borrow the pointer.
 
 ## Multi-register Stack Operations
 
